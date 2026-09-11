@@ -173,6 +173,10 @@
             body { background-color: #fff !important; margin: 0 !important; padding: 0 !important; }
             .container { display: none !important; }
             #printTemplate { display: block !important; width: 100% !important; }
+            img {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
@@ -251,7 +255,7 @@
 </div>
 
 <script>
-    const stampImageData = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA... (আপনার সিল ইমেজ ডেটা যথারীতি থাকবে)";
+    const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
 
     let items = [];
     let slCounter = 1;
@@ -501,7 +505,6 @@
         if (editIndex === -1) {
             items.push(itemData);
             slCounter = slNo + 1;
-            // ইনপুট ফিল্ডের মান মোছা হবে না, শুধু সিরিয়াল নম্বর স্বয়ংক্রিয়ভাবে এক ঘর বাড়িয়ে দেওয়া হলো
             const nextSl = document.getElementById('slNo');
             if(nextSl) nextSl.value = slCounter;
         } else {
@@ -514,7 +517,6 @@
 
         saveDataToStorage();
         updateTable();
-        // clearInputs() ফাংশনটি এখান থেকে সরিয়ে দেওয়া হয়েছে যাতে ইউজার ইনপুটগুলো নিজে মুছতে পারেন।
     }
 
     function editItem(index) {
@@ -1190,9 +1192,10 @@
                     <tr>
                         <td style="width: 50%; border: none; padding: 0; vertical-align: bottom;">
                             <b>For Sterling Accessories Ltd.</b><br>
-                            <div style="margin: 5px 0;">
-                                <img src="${stampImageData}" style="height: 85px; width: auto; display: block;" alt="Seal & Signature" />
-                            </div>
+                           <div style="margin: 8px 0;">
+        <img src="${stampImageUrl}" style="height: 65px; width: auto; display: inline-block;" alt="Seal & Signature" />
+    </div>
+    <div style="display: inline-block; text-align: center;">
                             ________________________<br> Authorised Signature
                         </td>
                         <td style="width: 50%; text-align: right; border: none; padding: 0; vertical-align: bottom;">
