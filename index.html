@@ -98,7 +98,7 @@
         .btn-container {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             margin-top: 20px;
             flex-wrap: wrap;
         }
@@ -119,10 +119,22 @@
         .btn-reset { background-color: #e74c3c; color: white; flex: 0.5; }
         .btn-reset:hover { background-color: #c0392b; }
         
+        /* Customization Controls Bar above Table */
+        .customization-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            background: #f9fbfb;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 5px;
         }
         th, td {
             border: 1px solid #000;
@@ -183,23 +195,17 @@
 <body>
 
 <div class="container">
-    <!-- Header with Dropdown -->
+    <!-- Header with PI Dropdown Only -->
     <div class="header-container">
         <h2>Proforma Invoice (PI) Generator</h2>
-        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <div class="pi-type-container no-print" style="background: #fff3cd; border: 1px solid #ffeeba;">
-                <label for="headerFontSize">Header Font Size:</label>
-                <input type="number" id="headerFontSize" value="24" min="10" max="30" style="width: 60px; padding: 4px; text-align: center;">
-            </div>
-            <div class="pi-type-container no-print">
-                <label for="piType">PI Item:</label>
-                <select id="piType" onchange="handlePiTypeChange()">
-                    <option value="elastic">1. Elastic/Twill tape/Drawstring</option>
-                    <option value="poly">2. Poly</option>
-                    <option value="label" selected>3. Label</option>
-                    <option value="thread">4. Swing thread</option>
-                </select>
-            </div>
+        <div class="pi-type-container no-print">
+            <label for="piType">PI Item:</label>
+            <select id="piType" onchange="handlePiTypeChange()">
+                <option value="elastic">1. Elastic/Twill tape/Drawstring</option>
+                <option value="poly">2. Poly</option>
+                <option value="label" selected>3. Label</option>
+                <option value="thread">4. Swing thread</option>
+            </select>
         </div>
     </div>
 
@@ -244,6 +250,22 @@
         <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ রিসেট (Reset All)</button>
     </div>
 
+    <!-- Customization Controls Bar (Placed right above the table) -->
+    <div class="customization-bar no-print">
+        <div class="pi-type-container" style="background: #fff3cd; border: 1px solid #ffeeba;">
+            <label for="headerFontSize">Header Font:</label>
+            <input type="number" id="headerFontSize" value="24" min="10" max="30" style="width: 55px; padding: 4px; text-align: center;">
+        </div>
+        <div class="pi-type-container" style="background: #e8f4fd; border: 1px solid #bbe1fa;">
+            <label for="rowHeightInput">Row Padding:</label>
+            <input type="number" id="rowHeightInput" value="8" min="2" max="25" style="width: 55px; padding: 4px; text-align: center;" oninput="updateTableStyles()">
+        </div>
+        <div class="pi-type-container" style="background: #e8f4fd; border: 1px solid #bbe1fa;">
+            <label for="colWidthInput">Col Min-Width:</label>
+            <input type="number" id="colWidthInput" value="80" min="40" max="250" style="width: 65px; padding: 4px; text-align: center;" oninput="updateTableStyles()">
+        </div>
+    </div>
+
     <!-- Data Table -->
     <table id="dataTable">
         <thead>
@@ -256,6 +278,7 @@
 
 <script>
     const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
+    const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
 
     let items = [];
     let slCounter = 1;
@@ -289,18 +312,48 @@
                 if (headerObj.headerFontSize) {
                     document.getElementById('headerFontSize').value = headerObj.headerFontSize;
                 }
+                if (headerObj.rowHeight) {
+                    document.getElementById('rowHeightInput').value = headerObj.rowHeight;
+                }
+                if (headerObj.colWidth) {
+                    document.getElementById('colWidthInput').value = headerObj.colWidth;
+                }
             } catch (e) {}
         }
 
         handlePiTypeChange(); 
+        updateTableStyles();
         updateTable();
         
-        ['piNo', 'piDate', 'buyerName', 'buyerAddress', 'buyerRef', 'attn', 'headerFontSize'].forEach(id => {
+        ['piNo', 'piDate', 'buyerName', 'buyerAddress', 'buyerRef', 'attn', 'headerFontSize', 'rowHeightInput', 'colWidthInput'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.addEventListener('input', saveHeaderToStorage);
         });
         document.getElementById('piType').addEventListener('change', saveHeaderToStorage);
     };
+
+    function updateTableStyles() {
+        const rowHeight = document.getElementById('rowHeightInput').value || 8;
+        const colWidth = document.getElementById('colWidthInput').value || 80;
+        
+        let styleTag = document.getElementById('dynamicTableStyle');
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'dynamicTableStyle';
+            document.head.appendChild(styleTag);
+        }
+        styleTag.innerHTML = `
+            #dataTable th, #dataTable td {
+                padding: ${rowHeight}px !important;
+                min-width: ${colWidth}px !important;
+            }
+            #printTemplate th, #printTemplate td {
+                padding: ${rowHeight}px !important;
+                min-width: ${colWidth}px !important;
+            }
+        `;
+        saveHeaderToStorage();
+    }
 
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
@@ -425,6 +478,7 @@
         }
         
         saveHeaderToStorage();
+        updateTableStyles();
         updateTable();
         const slInput = document.getElementById('slNo');
         if(slInput) slInput.value = slCounter;
@@ -439,7 +493,9 @@
             buyerAddress: document.getElementById('buyerAddress').value,
             buyerRef: document.getElementById('buyerRef').value,
             attn: document.getElementById('attn').value,
-            headerFontSize: document.getElementById('headerFontSize').value
+            headerFontSize: document.getElementById('headerFontSize').value,
+            rowHeight: document.getElementById('rowHeightInput').value,
+            colWidth: document.getElementById('colWidthInput').value
         };
         localStorage.setItem('pi_header_data', JSON.stringify(headerObj));
     }
@@ -766,6 +822,7 @@
         }
 
         const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 24;
+        const colWidthVal = parseInt(document.getElementById('colWidthInput').value) || 80;
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
@@ -784,6 +841,13 @@
             left: { style: 'thin', color: { rgb: '000000' } },
             right: { style: 'thin', color: { rgb: '000000' } }
         };
+        const bottomThickBorder = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'medium', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+        };
+
         const alignLeft = { vertical: 'center', horizontal: 'left', wrapText: true };
         const alignCenter = { vertical: 'center', horizontal: 'center' };
         const alignRight = { vertical: 'center', horizontal: 'right' };
@@ -800,9 +864,18 @@
         }
 
         let rawData = [
-            [{ v: "STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize }, alignment: alignCenter } }],
-            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { size: 9 }, alignment: alignCenter } }],
-            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, size: 9 }, alignment: alignCenter } }],
+            [
+                { v: "LOGO", s: { font: { bold: true, sz: 12 }, alignment: alignCenter } },
+                { v: "STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize }, alignment: alignCenter } }, "", "", "", "", "", "", "", ""
+            ],
+            [
+                "",
+                { v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { size: 9 }, alignment: alignCenter } }, "", "", "", "", "", "", "", ""
+            ],
+            [
+                "",
+                { v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, size: 9 }, alignment: alignCenter, border: bottomThickBorder } }, "", "", "", "", "", "", "", ""
+            ],
             [],
             [
                 { v: `PI No: ${piNo}`, s: { font: { bold: true }, alignment: alignLeft } },
@@ -973,10 +1046,18 @@
 
         const worksheet = XLSX.utils.aoa_to_sheet(rawData);
 
+        let excelColWidth = Math.max(10, Math.round(colWidthVal / 7));
+        let colsConfig = [];
+        for(let i=0; i<headerCols.length; i++) {
+            colsConfig.push({ wch: excelColWidth });
+        }
+        worksheet['!cols'] = colsConfig;
+
         worksheet['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
-            { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
-            { s: { r: 2, c: 0 }, e: { r: 2, c: 9 } },
+            { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Logo merge for 3 rows
+            { s: { r: 0, c: 1 }, e: { r: 0, c: 9 } },
+            { s: { r: 1, c: 1 }, e: { r: 1, c: 9 } },
+            { s: { r: 2, c: 1 }, e: { r: 2, c: 9 } },
             { s: { r: 4, c: 4 }, e: { r: 4, c: 6 } }
         ];
 
@@ -1013,66 +1094,66 @@
             if(piType === 'label') {
                 rowsHtml += `
                     <tr>
-                        <td style="text-align:center; padding: 4px;">${item.slNo}</td>
-                        <td style="padding: 4px;">${item.hsCode || ''}</td>
-                        <td style="padding: 4px;">${item.item || ''}</td>
-                        <td style="padding: 4px;">${item.descriptionGoods || ''}</td>
-                        <td style="padding: 4px;">${item.projectNo || ''}</td>
-                        <td style="padding: 4px;">${item.articleNo || ''}</td>
-                        <td style="padding: 4px;">${item.color || ''}</td>
-                        <td style="text-align:right; padding: 4px;">${item.qty}</td>
-                        <td style="text-align:center; padding: 4px;">${item.unitDropdown || 'Pcs'}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.qtyKg || 0).toFixed(2)}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.unitPrice || 0).toFixed(4)}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.amount || 0).toFixed(2)}</td>
+                        <td style="text-align:center;">${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.item || ''}</td>
+                        <td>${item.descriptionGoods || ''}</td>
+                        <td>${item.projectNo || ''}</td>
+                        <td>${item.articleNo || ''}</td>
+                        <td>${item.color || ''}</td>
+                        <td style="text-align:right;">${item.qty}</td>
+                        <td style="text-align:center;">${item.unitDropdown || 'Pcs'}</td>
+                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td style="text-align:right;">${(item.unitPrice || 0).toFixed(4)}</td>
+                        <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
                     </tr>
                 `;
             } else if(piType === 'elastic') {
                 rowsHtml += `
                     <tr>
-                        <td style="text-align:center; padding: 4px;">${item.slNo}</td>
-                        <td style="padding: 4px;">${item.hsCode || ''}</td>
-                        <td style="padding: 4px;">${item.desc || ''}</td>
-                        <td style="padding: 4px;">${item.measurement || ''}</td>
-                        <td style="padding: 4px;">Sty: ${item.styNo || ''}, PO: ${item.poNo || ''}</td>
-                        <td style="padding: 4px;">${item.color || ''}</td>
-                        <td style="text-align:right; padding: 4px;">${item.qty}</td>
-                        <td style="text-align:center; padding: 4px;">${item.unit || 'Yds'}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.qtyKg || 0).toFixed(2)}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.price || 0).toFixed(4)}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.amount || 0).toFixed(2)}</td>
+                        <td style="text-align:center;">${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.desc || ''}</td>
+                        <td>${item.measurement || ''}</td>
+                        <td>Sty: ${item.styNo || ''}, PO: ${item.poNo || ''}</td>
+                        <td>${item.color || ''}</td>
+                        <td style="text-align:right;">${item.qty}</td>
+                        <td style="text-align:center;">${item.unit || 'Yds'}</td>
+                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td style="text-align:right;">${(item.price || 0).toFixed(4)}</td>
+                        <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
                     </tr>
                 `;
             } else if(piType === 'thread') {
                 rowsHtml += `
                     <tr>
-                        <td style="text-align:center; padding: 4px;">${item.slNo}</td>
-                        <td style="padding: 4px;">${item.hsCode || ''}</td>
-                        <td style="padding: 4px;">${item.desc || ''}</td>
-                        <td style="padding: 4px;">${item.measurement || ''}</td>
-                        <td style="padding: 4px;">${item.style || ''}</td>
-                        <td style="padding: 4px;">${item.color || ''}</td>
-                        <td style="padding: 4px;">${item.bleach || ''}</td>
-                        <td style="text-align:right; padding: 4px;">${item.qty}</td>
-                        <td style="text-align:center; padding: 4px;">${item.unit || 'Cone'}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.qtyKg || 0).toFixed(2)}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.price || 0).toFixed(4)}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.amount || 0).toFixed(2)}</td>
+                        <td style="text-align:center;">${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.desc || ''}</td>
+                        <td>${item.measurement || ''}</td>
+                        <td>${item.style || ''}</td>
+                        <td>${item.color || ''}</td>
+                        <td>${item.bleach || ''}</td>
+                        <td style="text-align:right;">${item.qty}</td>
+                        <td style="text-align:center;">${item.unit || 'Cone'}</td>
+                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td style="text-align:right;">${(item.price || 0).toFixed(4)}</td>
+                        <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
                     </tr>
                 `;
             } else {
                 rowsHtml += `
                     <tr>
-                        <td style="text-align:center; padding: 4px;">${item.slNo}</td>
-                        <td style="padding: 4px;">${item.hsCode || ''}</td>
-                        <td style="padding: 4px;">${item.desc || ''}</td>
-                        <td style="padding: 4px;">${item.measurement || ''}</td>
-                        <td style="padding: 4px;">${item.style || ''}</td>
-                        <td style="text-align:right; padding: 4px;">${item.qty}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.qtyKg || 0).toFixed(2)}</td>
-                        <td style="text-align:center; padding: 4px;">${item.unit || 'Pcs'}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.price || 0).toFixed(4)}</td>
-                        <td style="text-align:right; padding: 4px;">${(item.amount || 0).toFixed(2)}</td>
+                        <td style="text-align:center;">${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.desc || ''}</td>
+                        <td>${item.measurement || ''}</td>
+                        <td>${item.style || ''}</td>
+                        <td style="text-align:right;">${item.qty}</td>
+                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td style="text-align:center;">${item.unit || 'Pcs'}</td>
+                        <td style="text-align:right;">${(item.price || 0).toFixed(4)}</td>
+                        <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
                     </tr>
                 `;
             }
@@ -1086,25 +1167,25 @@
             totalColspanVal = 7;
             unitTextLabel = '-';
             tableHeaderHtml = `
-                <th style="padding: 4px;">SL No.</th><th style="padding: 4px;">H.S CODE</th><th style="padding: 4px;">Item</th><th style="padding: 4px;">Description of Goods</th><th style="padding: 4px;">Project No.</th><th style="padding: 4px;">Article No.</th><th style="padding: 4px;">Color</th><th style="padding: 4px;">QTY</th><th style="padding: 4px;">Unit</th><th style="padding: 4px;">QTY (KG)</th><th style="padding: 4px;">Unit Price (USD)</th><th style="padding: 4px;">Amount (USD)</th>
+                <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
             `;
         } else if(piType === 'elastic') {
             totalColspanVal = 6;
             unitTextLabel = 'Yds';
             tableHeaderHtml = `
-                <th style="padding: 4px;">SL No.</th><th style="padding: 4px;">H.S CODE</th><th style="padding: 4px;">Description of Goods</th><th style="padding: 4px;">Measurement</th><th style="padding: 4px;">PO/Style NO.</th><th style="padding: 4px;">Color</th><th style="padding: 4px;">QTY</th><th style="padding: 4px;">Unit</th><th style="padding: 4px;">QTY (KG)</th><th style="padding: 4px;">Unit Price (USD)</th><th style="padding: 4px;">Amount (USD)</th>
+                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
             `;
         } else if(piType === 'thread') {
             totalColspanVal = 7;
             unitTextLabel = 'Cone';
             tableHeaderHtml = `
-                <th style="padding: 4px;">SL No.</th><th style="padding: 4px;">H.S CODE</th><th style="padding: 4px;">Description of Goods</th><th style="padding: 4px;">Measurement</th><th style="padding: 4px;">Style/ PO No.</th><th style="padding: 4px;">Color</th><th style="padding: 4px;">Bleach/ Non Bleach</th><th style="padding: 4px;">QTY</th><th style="padding: 4px;">Unit</th><th style="padding: 4px;">QTY (KG)</th><th style="padding: 4px;">Unit Price (USD)</th><th style="padding: 4px;">Amount (USD)</th>
+                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
             `;
         } else {
             totalColspanVal = 5;
             unitTextLabel = 'Pcs';
             tableHeaderHtml = `
-                <th style="padding: 4px;">SL No.</th><th style="padding: 4px;">H.S CODE</th><th style="padding: 4px;">Description of Goods</th><th style="padding: 4px;">Measurement</th><th style="padding: 4px;">Style/PO No.</th><th style="padding: 4px;">QTY (Pcs)</th><th style="padding: 4px;">QTY (KG)</th><th style="padding: 4px;">Unit</th><th style="padding: 4px;">Unit Price (USD)</th><th style="padding: 4px;">Amount (USD)</th>
+                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
             `;
         }
 
@@ -1112,11 +1193,21 @@
 
         const template = `
             <div id="printTemplate" style="font-family: Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.2;">
-                <div style="text-align: center; margin-bottom: 12px;">
-                    <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000;">STERLING ACCESSORIES LIMITED.</h2>
-                    <div style="font-size: 10px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
-                    <div style="font-size: 10px; font-weight: bold;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
-                </div>
+                <!-- Header with Logo right beside company name and bottom border line -->
+                <table style="width: 100%; border-collapse: collapse; border: none; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+                    <tr>
+                        <td style="width: 100%; border: none; padding: 0; text-align: center; vertical-align: middle;">
+                            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 15px;">
+                                <img src="${companyLogoUrl}" style="height: 55px; width: auto; display: block;" alt="Logo" />
+                                <div style="text-align: left;">
+                                    <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1;">STERLING ACCESSORIES LIMITED.</h2>
+                                    <div style="font-size: 10px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
+                                    <div style="font-size: 10px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
 
                 <table style="width: 100%; border: none; margin-bottom: 12px; font-size: 12px; font-weight: bold;">
                     <tr>
@@ -1153,12 +1244,12 @@
                     <tbody>
                         ${rowsHtml}
                         <tr style="font-weight: bold;">
-                            <td colspan="${totalColspanVal}" style="text-align: right; padding: 4px;">Total =</td>
-                            <td style="text-align: right; padding: 4px;">${totalQty}</td>
-                            <td style="text-align: center; padding: 4px;">${unitTextLabel}</td>
-                            <td style="text-align: right; padding: 4px;">${totalKg.toFixed(2)}</td>
-                            <td style="padding: 4px;"></td>
-                            <td style="text-align: right; padding: 4px;">${totalAmount.toFixed(2)}</td>
+                            <td colspan="${totalColspanVal}" style="text-align: right;">Total =</td>
+                            <td style="text-align: right;">${totalQty}</td>
+                            <td style="text-align: center;">${unitTextLabel}</td>
+                            <td style="text-align: right;">${totalKg.toFixed(2)}</td>
+                            <td></td>
+                            <td style="text-align: right;">${totalAmount.toFixed(2)}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1192,11 +1283,12 @@
                     <tr>
                         <td style="width: 50%; border: none; padding: 0; vertical-align: bottom;">
                             <b>For Sterling Accessories Ltd.</b><br>
-                           <div style="margin: 8px 0;">
-        <img src="${stampImageUrl}" style="height: 65px; width: auto; display: inline-block;" alt="Seal & Signature" />
-    </div>
-    <div style="display: inline-block; text-align: center;">
-                            ________________________<br> Authorised Signature
+                            <div style="margin: 8px 0;">
+                                <img src="${stampImageUrl}" style="height: 65px; width: auto; display: inline-block;" alt="Seal & Signature" />
+                            </div>
+                            <div style="display: block;">
+                                ________________________<br> Authorised Signature
+                            </div>
                         </td>
                         <td style="width: 50%; text-align: right; border: none; padding: 0; vertical-align: bottom;">
                             <b>Buyer Approval</b><br><br><br><br><br><br>
@@ -1213,7 +1305,6 @@
         document.body.insertAdjacentHTML('beforeend', template);
         window.print();
     }
-    
 </script>
 
 </body>
