@@ -119,7 +119,6 @@
         .btn-reset { background-color: #e74c3c; color: white; flex: 0.5; }
         .btn-reset:hover { background-color: #c0392b; }
         
-        /* Customization Controls Bar above Table */
         .customization-bar {
             display: flex;
             gap: 15px;
@@ -195,7 +194,6 @@
 <body>
 
 <div class="container">
-    <!-- Header with PI Dropdown Only -->
     <div class="header-container">
         <h2>Proforma Invoice (PI) Generator</h2>
         <div class="pi-type-container no-print">
@@ -209,7 +207,6 @@
         </div>
     </div>
 
-    <!-- Header & Buyer Information Form -->
     <div class="section-title">১. ইনভয়েস ও বায়ারের তথ্য (Invoice & Buyer Info)</div>
     <div class="form-grid">
         <div class="form-group">
@@ -238,11 +235,9 @@
         </div>
     </div>
 
-    <!-- Product Input Form -->
     <div class="section-title">২. প্রোডাক্ট তথ্য যোগ করুন (Product Details)</div>
     <div class="form-grid" id="dynamicInputContainer"></div>
 
-    <!-- Buttons -->
     <div class="btn-container no-print">
         <button type="button" class="btn-add" onclick="addItem()">+ ডাটা যোগ করুন (Add Row)</button>
         <button type="button" class="btn-export" onclick="exportToExcel()">📥 এক্সেল ডাউনলোড (Export to Excel)</button>
@@ -250,11 +245,10 @@
         <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ রিসেট (Reset All)</button>
     </div>
 
-    <!-- Customization Controls Bar (Placed right above the table) -->
     <div class="customization-bar no-print">
         <div class="pi-type-container" style="background: #fff3cd; border: 1px solid #ffeeba;">
             <label for="headerFontSize">Header Font:</label>
-            <input type="number" id="headerFontSize" value="24" min="10" max="30" style="width: 55px; padding: 4px; text-align: center;">
+            <input type="number" id="headerFontSize" value="22" min="10" max="30" style="width: 55px; padding: 4px; text-align: center;">
         </div>
         <div class="pi-type-container" style="background: #e8f4fd; border: 1px solid #bbe1fa;">
             <label for="rowHeightInput">Row Padding:</label>
@@ -266,7 +260,6 @@
         </div>
     </div>
 
-    <!-- Data Table -->
     <table id="dataTable">
         <thead>
             <tr id="tableHeaderRow"></tr>
@@ -347,10 +340,6 @@
                 padding: ${rowHeight}px !important;
                 min-width: ${colWidth}px !important;
             }
-            #printTemplate th, #printTemplate td {
-                padding: ${rowHeight}px !important;
-                min-width: ${colWidth}px !important;
-            }
         `;
         saveHeaderToStorage();
     }
@@ -367,7 +356,7 @@
         `;
 
         if(piType === 'label') {
-            let labelInputs = `
+            inputContainer.innerHTML = `
                 ${baseInputs}
                 <div class="form-group"><label for="item">3. Item</label><input type="text" id="item" value="Printed Care Label"></div>
                 <div class="form-group"><label for="descriptionGoods">4. Description of Goods</label><input type="text" id="descriptionGoods" value="Size: 25mm X 70mm max."></div>
@@ -379,7 +368,6 @@
                 <div class="form-group"><label for="weightPerUnit">10. Weight/Unit (KG)</label><input type="number" step="0.0001" id="weightPerUnit" placeholder="0.0000"></div>
                 <div class="form-group"><label for="unitPrice">11. Unit Price (USD)</label><input type="number" step="0.0001" id="unitPrice" placeholder="0.0000"></div>
             `;
-            inputContainer.innerHTML = labelInputs;
 
             tableHeaderRow.innerHTML = `
                 <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY (Yds/Pcs)</th><th>Unit (Yds/Dzn)</th><th>QTY in (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
@@ -821,7 +809,7 @@
             return;
         }
 
-        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 24;
+        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 22;
         const colWidthVal = parseInt(document.getElementById('colWidthInput').value) || 80;
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
@@ -1054,10 +1042,10 @@
         worksheet['!cols'] = colsConfig;
 
         worksheet['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // Logo merge for 3 rows
-            { s: { r: 0, c: 1 }, e: { r: 0, c: 9 } },
-            { s: { r: 1, c: 1 }, e: { r: 1, c: 9 } },
-            { s: { r: 2, c: 1 }, e: { r: 2, c: 9 } },
+            { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, 
+            { s: { r: 0, c: 1 }, e: { r: 0, c: 9 } },  
+            { s: { r: 1, c: 1 }, e: { r: 1, c: 9 } },  
+            { s: { r: 2, c: 1 }, e: { r: 2, c: 9 } },  
             { s: { r: 4, c: 4 }, e: { r: 4, c: 6 } }
         ];
 
@@ -1072,7 +1060,7 @@
             return;
         }
 
-        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 24;
+        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 22;
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
@@ -1193,21 +1181,15 @@
 
         const template = `
             <div id="printTemplate" style="font-family: Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.2;">
-                <!-- Header with Logo right beside company name and bottom border line -->
-                <table style="width: 100%; border-collapse: collapse; border: none; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
-                    <tr>
-                        <td style="width: 100%; border: none; padding: 0; text-align: center; vertical-align: middle;">
-                            <div style="display: inline-flex; align-items: center; justify-content: center; gap: 15px;">
-                                <img src="${companyLogoUrl}" style="height: 55px; width: auto; display: block;" alt="Logo" />
-                                <div style="text-align: left;">
-                                    <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1;">STERLING ACCESSORIES LIMITED.</h2>
-                                    <div style="font-size: 10px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
-                                    <div style="font-size: 10px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
+                <!-- Updated Header: Logo size reduced, positioned close to 'S' and text block completely centered -->
+                <div style="border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; position: relative; min-height: 50px; display: flex; align-items: center; justify-content: center;">
+                    <img src="${companyLogoUrl}" style="height: 42px; width: auto; position: absolute; left: 30px; top: 50%; transform: translateY(-75%); display: block;" alt="Logo" />
+                    <div style="text-align: center;">
+                        <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px;">STERLING ACCESSORIES LIMITED.</h2>
+                        <div style="font-size: 9.5px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
+                        <div style="font-size: 9.5px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                    </div>
+                </div>
 
                 <table style="width: 100%; border: none; margin-bottom: 12px; font-size: 12px; font-weight: bold;">
                     <tr>
