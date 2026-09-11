@@ -189,7 +189,7 @@
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <div class="pi-type-container no-print" style="background: #fff3cd; border: 1px solid #ffeeba;">
                 <label for="headerFontSize">Header Font Size:</label>
-                <input type="number" id="headerFontSize" value="16" min="10" max="30" style="width: 60px; padding: 4px; text-align: center;">
+                <input type="number" id="headerFontSize" value="24" min="10" max="30" style="width: 60px; padding: 4px; text-align: center;">
             </div>
             <div class="pi-type-container no-print">
                 <label for="piType">PI Item:</label>
@@ -765,7 +765,7 @@
             return;
         }
 
-        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 16;
+        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 24;
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
@@ -991,7 +991,7 @@
             return;
         }
 
-        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 16;
+        const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 24;
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
@@ -1213,6 +1213,7 @@
         document.body.insertAdjacentHTML('beforeend', template);
         window.print();
     }
+    
 </script>
 
 </body>
