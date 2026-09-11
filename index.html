@@ -183,7 +183,6 @@
     <div class="header-container">
         <h2>Proforma Invoice (PI) Generator</h2>
         <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <!-- ফন্ট সাইজ পরিবর্তনের জন্য নতুন ইনপুট ফিল্ড -->
             <div class="pi-type-container no-print" style="background: #fff3cd; border: 1px solid #ffeeba;">
                 <label for="headerFontSize">Header Font Size:</label>
                 <input type="number" id="headerFontSize" value="16" min="10" max="30" style="width: 60px; padding: 4px; text-align: center;">
@@ -502,6 +501,9 @@
         if (editIndex === -1) {
             items.push(itemData);
             slCounter = slNo + 1;
+            // ইনপুট ফিল্ডের মান মোছা হবে না, শুধু সিরিয়াল নম্বর স্বয়ংক্রিয়ভাবে এক ঘর বাড়িয়ে দেওয়া হলো
+            const nextSl = document.getElementById('slNo');
+            if(nextSl) nextSl.value = slCounter;
         } else {
             items[editIndex] = itemData;
             editIndex = -1;
@@ -512,7 +514,7 @@
 
         saveDataToStorage();
         updateTable();
-        clearInputs();
+        // clearInputs() ফাংশনটি এখান থেকে সরিয়ে দেওয়া হয়েছে যাতে ইউজার ইনপুটগুলো নিজে মুছতে পারেন।
     }
 
     function editItem(index) {
@@ -761,9 +763,7 @@
             return;
         }
 
-        // ফন্ট সাইজ রিড করা
         const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 16;
-
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
@@ -937,7 +937,6 @@
         rawData.push([{ v: `Total Value In word: (${amountInWords})`, s: { font: { bold: true } } }]);
         rawData.push([]);
 
-        // Terms & Conditions
         rawData.push([{ v: "TERMS & CONDITIONS:", s: { font: { bold: true, underline: true } } }]);
         rawData.push([{ v: "1.PAYMENT TERMS :" }]);
         rawData.push([{ v: "A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." }]);
@@ -990,9 +989,7 @@
             return;
         }
 
-        // প্রিন্টের জন্য ফন্ট সাইজ রিড করা
         const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 16;
-
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
