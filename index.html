@@ -154,12 +154,14 @@
             padding: 10px;
             border-radius: 6px;
             border: 1px solid #e2e8f0;
+            align-items: center;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 5px;
+            table-layout: fixed; /* কলামের সাইজ স্বাধীনভাবে নিয়ন্ত্রণের জন্য অত্যন্ত জরুরি */
         }
         th, td {
             border: 1px solid #000;
@@ -167,6 +169,8 @@
             text-align: left;
             font-size: 12px;
             vertical-align: middle;
+            overflow: hidden;
+            word-wrap: break-word;
         }
         th {
             background-color: #f2f2f2;
@@ -271,6 +275,7 @@
         <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ রিসেট (Reset All)</button>
     </div>
 
+    <!-- কলাম সাইজ কাস্টমাইজেশন বার -->
     <div class="customization-bar no-print">
         <div class="pi-type-container" style="background: #fff3cd; border: 1px solid #ffeeba;">
             <label for="headerFontSize">Header Font:</label>
@@ -280,9 +285,18 @@
             <label for="rowHeightInput">Row Padding:</label>
             <input type="number" id="rowHeightInput" value="8" min="2" max="25" style="width: 55px; padding: 4px; text-align: center;" oninput="updateTableStyles()">
         </div>
+        <!-- কম্বাইন্ড কলাম সাইজ কন্ট্রোল -->
+        <div class="pi-type-container" style="background: #e2f0d9; border: 1px solid #c8e1b7;">
+            <label for="combinedSizeInput">Combined Size:</label>
+            <input type="number" id="combinedSizeInput" value="100" min="20" max="300" step="5" style="width: 65px; padding: 4px; text-align: center;" oninput="changeAllColumns(this.value)" title="সব কলাম একসাথে ছোট-বড় করুন">
+            <span style="font-size: 13px; font-weight: bold; color: #333;">%</span>
+        </div>
         <div class="pi-type-container" style="background: #e8f4fd; border: 1px solid #bbe1fa;">
-            <label for="colWidthInput">Col Min-Width:</label>
-            <input type="number" id="colWidthInput" value="80" min="40" max="250" style="width: 65px; padding: 4px; text-align: center;" oninput="updateTableStyles()">
+            <label for="targetColSelect">Target Col Width:</label>
+            <select id="targetColSelect" style="padding: 4px;" onchange="loadColumnWidthToInput()">
+                <!-- ডাইনামিক্যালি অপশন লোড হবে -->
+            </select>
+            <input type="number" id="colWidthInput" value="90" min="20" max="500" style="width: 65px; padding: 4px; text-align: center;" oninput="saveColumnWidth()">px
         </div>
     </div>
 
@@ -303,9 +317,25 @@
     let slCounter = 1;
     let editIndex = -1;
 
+    let piColumnWidths = {
+        elastic: { "SL No.": 40, "H.S CODE": 90, "Description of Goods": 100, "Measurement": 100, "PO/Style NO.": 100, "Color": 90, "QTY": 90, "Unit": 90, "QTY (KG)": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
+        poly: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 150, "Style/PO No.": 100, "QTY (Pcs)": 90, "QTY (KG)": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
+        label: { "SL No.": 50, "H.S CODE": 90, "Item": 90, "Description of Goods": 180, "Project No.": 90, "Article No.": 90, "Color": 90, "QTY": 90, "Unit": 90, "QTY in (KG)": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
+        thread: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 100, "Style/ PO No.": 100, "Color": 90, "Bleach/ Non Bleach": 110, "QTY": 90, "Unit": 90, "QTY (KG)": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 }
+    };
+
+    const defaultColumnWidthsBase = JSON.parse(JSON.stringify(piColumnWidths));
+
     window.onload = function() {
         const savedItems = localStorage.getItem('pi_items_data');
         const savedHeader = localStorage.getItem('pi_header_data');
+        const savedColWidths = localStorage.getItem('pi_col_widths_data');
+
+        if (savedColWidths) {
+            try {
+                piColumnWidths = JSON.parse(savedColWidths);
+            } catch(e) {}
+        }
 
         if (savedItems) {
             try {
@@ -334,9 +364,6 @@
                 if (headerObj.rowHeight) {
                     document.getElementById('rowHeightInput').value = headerObj.rowHeight;
                 }
-                if (headerObj.colWidth) {
-                    document.getElementById('colWidthInput').value = headerObj.colWidth;
-                }
             } catch (e) {}
         }
 
@@ -344,7 +371,7 @@
         updateTableStyles();
         updateTable();
         
-        ['piNo', 'piDate', 'buyerName', 'buyerAddress', 'buyerRef', 'attn', 'headerFontSize', 'rowHeightInput', 'colWidthInput'].forEach(id => {
+        ['piNo', 'piDate', 'buyerName', 'buyerAddress', 'buyerRef', 'attn', 'headerFontSize', 'rowHeightInput'].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.addEventListener('input', saveHeaderToStorage);
         });
@@ -353,7 +380,8 @@
 
     function updateTableStyles() {
         const rowHeight = document.getElementById('rowHeightInput').value || 8;
-        const colWidth = document.getElementById('colWidthInput').value || 80;
+        const piType = document.getElementById('piType').value;
+        const colWidths = piColumnWidths[piType] || {};
         
         let styleTag = document.getElementById('dynamicTableStyle');
         if (!styleTag) {
@@ -361,74 +389,139 @@
             styleTag.id = 'dynamicTableStyle';
             document.head.appendChild(styleTag);
         }
-        styleTag.innerHTML = `
+
+        let cssRules = `
             #dataTable th, #dataTable td {
                 padding: ${rowHeight}px !important;
-                min-width: ${colWidth}px !important;
             }
         `;
+
+        let colIndex = 1;
+        for (let colName in colWidths) {
+            let widthVal = colWidths[colName];
+            // min-width এবং max-width উভয়ই সেট করা হয়েছে যাতে ছোট বা বড় দুটোই পারফেক্টলি কাজ করে
+            cssRules += `
+                #dataTable th:nth-child(${colIndex}), #dataTable td:nth-child(${colIndex}) {
+                    min-width: ${widthVal}px !important;
+                    width: ${widthVal}px !important;
+                    max-width: ${widthVal}px !important;
+                }
+            `;
+            colIndex++;
+        }
+
+        styleTag.innerHTML = cssRules;
         saveHeaderToStorage();
     }
 
-// Poly Auto Measurement & Weight Calculation Function (Updated with QTY formula)
-function calculatePolyMeasurement() {
-    const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
-    const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
-    const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
-    const gussetInput = parseFloat(document.getElementById('polyG')?.value) || 0;
-    const thickness = parseFloat(document.getElementById('polyT')?.value) || 0;
-    const qtyInput = parseFloat(document.getElementById('qty')?.value) || 0;
-    const unit = document.getElementById('polyUnit')?.value || 'inch';
-    const isPrint = (document.getElementById('polyPrint')?.value || 'No').toLowerCase();
-    
-    // ১. Measurement String Format
-    let flapStr = flapInput > 0 ? `+F-${flapInput}` : ``;
-    let result = "";
+    function changeAllColumns(scalePercentage) {
+        let val = parseFloat(scalePercentage);
+        if (isNaN(val) || val <= 0) return;
 
-    if (unit === 'inch') {
-        let gussetStr = gussetInput > 0 ? `(${gussetInput}"+${gussetInput}")` : ``;
-        result = `L-${lengthInput}${flapStr}"XW-${widthInput}"${gussetStr}XT-${thickness}`;
-    } else {
-        let gussetStr = gussetInput > 0 ? `(${gussetInput}+${gussetInput}) CM ` : ` CM `;
-        result = `L-${lengthInput}${flapStr}XW-${widthInput}${gussetStr}XT-${thickness}`;
+        const piType = document.getElementById('piType').value;
+        const baseWidths = defaultColumnWidthsBase[piType] || {};
+        const multiplier = val / 100;
+
+        if (!piColumnWidths[piType]) {
+            piColumnWidths[piType] = {};
+        }
+
+        for (let colName in baseWidths) {
+            let calculatedWidth = Math.round(baseWidths[colName] * multiplier);
+            piColumnWidths[piType][colName] = calculatedWidth;
+        }
+
+        localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+        loadColumnWidthToInput();
+        updateTableStyles();
     }
 
-    const measInput = document.getElementById('measurement');
-    if (measInput) {
-        measInput.value = result;
+    function populateColumnSelect() {
+        const piType = document.getElementById('piType').value;
+        const colWidths = piColumnWidths[piType] || {};
+        const selectElem = document.getElementById('targetColSelect');
+        selectElem.innerHTML = '';
+
+        for (let colName in colWidths) {
+            let opt = document.createElement('option');
+            opt.value = colName;
+            opt.innerText = colName;
+            selectElem.appendChild(opt);
+        }
+        loadColumnWidthToInput();
     }
 
-    // ২. Inch থেকে CM কনভার্সন
-    let L = unit === 'inch' ? lengthInput * 2.54 : lengthInput;
-    let F = unit === 'inch' ? flapInput * 2.54 : flapInput;
-    let W = unit === 'inch' ? widthInput * 2.54 : widthInput;
-    let G = unit === 'inch' ? gussetInput * 2.54 : gussetInput;
-
-    // ৩. সূত্রের প্রতিটি অংশ সাজানো
-    let lengthPart = L + F;             // (L + F)
-    let widthPart = W + (G * 2);        // W + (G * 2)
-    let thicknessPart = thickness / 20;  // T / 2 (সংশোধিত)
-
-    let calculatedWeight = 0;
-
-    // ৪. মূল সূত্রের ক্যালকুলেশন
-    if (isPrint === 'yes') {
-        // Print: Yes হলে -> {(L + F) * (W + (G * 2)) * (T / 2) * ((0.92 * 2 * 1.07) / 1000)} + (QTY / 1000) * 0.000088
-        let printFactor = (0.92 * 2 * 1.07) / 1000;
-        let qtyAddon = (qtyInput / 1000) * 0.000088;
-        calculatedWeight = (lengthPart * widthPart * thicknessPart * printFactor) + qtyAddon;
-    } else {
-        // Print: No হলে -> {(L + F) * (W + (G * 2)) * (T / 2) * ((0.92 * 2 * 1.05) / 1000)}
-        let noPrintFactor = (0.92 * 2 * 1.05) / 1000;
-        calculatedWeight = (lengthPart * widthPart * thicknessPart * noPrintFactor);
+    function loadColumnWidthToInput() {
+        const piType = document.getElementById('piType').value;
+        const colName = document.getElementById('targetColSelect').value;
+        if (piColumnWidths[piType] && piColumnWidths[piType][colName] !== undefined) {
+            document.getElementById('colWidthInput').value = piColumnWidths[piType][colName];
+        }
     }
 
-    // ৫. ফলাফল আউটপুট বক্সে পাঠানো
-    const weightInput = document.getElementById('weightPerUnit');
-    if (weightInput) {
-        weightInput.value = calculatedWeight.toFixed(12);
+    function saveColumnWidth() {
+        const piType = document.getElementById('piType').value;
+        const colName = document.getElementById('targetColSelect').value;
+        const widthVal = parseInt(document.getElementById('colWidthInput').value) || 40;
+
+        if (piColumnWidths[piType]) {
+            piColumnWidths[piType][colName] = widthVal;
+            localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+            updateTableStyles();
+        }
     }
-}
+
+    function calculatePolyMeasurement() {
+        const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
+        const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
+        const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
+        const gussetInput = parseFloat(document.getElementById('polyG')?.value) || 0;
+        const thickness = parseFloat(document.getElementById('polyT')?.value) || 0;
+        const qtyInput = parseFloat(document.getElementById('qty')?.value) || 0;
+        const unit = document.getElementById('polyUnit')?.value || 'inch';
+        const isPrint = (document.getElementById('polyPrint')?.value || 'No').toLowerCase();
+        
+        let flapStr = flapInput > 0 ? `+F-${flapInput}` : ``;
+        let result = "";
+
+        if (unit === 'inch') {
+            let gussetStr = gussetInput > 0 ? `(${gussetInput}"+${gussetInput})` : ``;
+            result = `L-${lengthInput}${flapStr}"XW-${widthInput}"${gussetStr}XT-${thickness}`;
+        } else {
+            let gussetStr = gussetInput > 0 ? `(${gussetInput}+${gussetInput}) CM ` : ` CM `;
+            result = `L-${lengthInput}${flapStr}XW-${widthInput}${gussetStr}XT-${thickness}`;
+        }
+
+        const measInput = document.getElementById('measurement');
+        if (measInput) {
+            measInput.value = result;
+        }
+
+        let L = unit === 'inch' ? lengthInput * 2.54 : lengthInput;
+        let F = unit === 'inch' ? flapInput * 2.54 : flapInput;
+        let W = unit === 'inch' ? widthInput * 2.54 : widthInput;
+        let G = unit === 'inch' ? gussetInput * 2.54 : gussetInput;
+
+        let lengthPart = L + F;             
+        let widthPart = W + (G * 2);        
+        let thicknessPart = thickness / 20;  
+
+        let calculatedWeight = 0;
+
+        if (isPrint === 'yes') {
+            let printFactor = (0.92 * 2 * 1.07) / 1000;
+            let qtyAddon = (qtyInput / 1000) * 0.000088;
+            calculatedWeight = (lengthPart * widthPart * thicknessPart * printFactor) + qtyAddon;
+        } else {
+            let noPrintFactor = (0.92 * 2 * 1.05) / 1000;
+            calculatedWeight = (lengthPart * widthPart * thicknessPart * noPrintFactor);
+        }
+
+        const weightInput = document.getElementById('weightPerUnit');
+        if (weightInput) {
+            weightInput.value = calculatedWeight.toFixed(12);
+        }
+    }
 
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
@@ -456,7 +549,7 @@ function calculatePolyMeasurement() {
             `;
 
             tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY (Yds/Pcs)</th><th>Unit (Yds/Dzn)</th><th>QTY in (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY in (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
             `;
 
             tableFooter.innerHTML = `
@@ -470,49 +563,49 @@ function calculatePolyMeasurement() {
                     <td class="no-print">-</td>
                 </tr>
             `;
-} else if(piType === 'poly') {
-    inputContainer.innerHTML = `
-        ${baseInputs}
-        <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" value="PP Poly Bag" placeholder="Description..."></div>
-        <div class="form-group"><label for="measurement">Measurement (Auto-generated)</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
-        <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
-        <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="calculatePolyMeasurement()"></div>
-        <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
-        <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
-        <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
-        
-        <div class="poly-details-box">
-            <label style="color: #1e293b; font-weight: bold; margin-bottom: 8px; display: block;">Details Measurement & Options:</label>
-            <div class="poly-details-grid">
-                <div><b>L =</b> <input type="number" step="any" id="polyL" value="30" oninput="calculatePolyMeasurement()"></div>
-                <div><b>F =</b> <input type="number" step="any" id="polyF" value="5" oninput="calculatePolyMeasurement()"></div>
-                <div><b>W =</b> <input type="number" step="any" id="polyW" value="10" oninput="calculatePolyMeasurement()"></div>
-                <div><b>G =</b> <input type="number" step="any" id="polyG" value="5" oninput="calculatePolyMeasurement()"></div>
-                <div><b>T =</b> <input type="number" step="any" id="polyT" value="0.01" oninput="calculatePolyMeasurement()"></div>
-                <div>
-                    <b>Unit:</b>
-                    <select id="polyUnit" onchange="calculatePolyMeasurement()">
-                        <option value="inch" selected>inch</option>
-                        <option value="cm">cm</option>
-                    </select>
+        } else if(piType === 'poly') {
+            inputContainer.innerHTML = `
+                ${baseInputs}
+                <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" value="PP Poly Bag" placeholder="Description..."></div>
+                <div class="form-group"><label for="measurement">Measurement (Auto-generated)</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
+                <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
+                <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="calculatePolyMeasurement()"></div>
+                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
+                <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
+                <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
+                
+                <div class="poly-details-box">
+                    <label style="color: #1e293b; font-weight: bold; margin-bottom: 8px; display: block;">Details Measurement & Options:</label>
+                    <div class="poly-details-grid">
+                        <div><b>L =</b> <input type="number" step="any" id="polyL" value="30" oninput="calculatePolyMeasurement()"></div>
+                        <div><b>F =</b> <input type="number" step="any" id="polyF" value="5" oninput="calculatePolyMeasurement()"></div>
+                        <div><b>W =</b> <input type="number" step="any" id="polyW" value="10" oninput="calculatePolyMeasurement()"></div>
+                        <div><b>G =</b> <input type="number" step="any" id="polyG" value="5" oninput="calculatePolyMeasurement()"></div>
+                        <div><b>T =</b> <input type="number" step="any" id="polyT" value="0.01" oninput="calculatePolyMeasurement()"></div>
+                        <div>
+                            <b>Unit:</b>
+                            <select id="polyUnit" onchange="calculatePolyMeasurement()">
+                                <option value="inch" selected>inch</option>
+                                <option value="cm">cm</option>
+                            </select>
+                        </div>
+                        <div style="margin-left: 10px;">
+                            <b>Print:</b>
+                            <select id="polyPrint" onchange="calculatePolyMeasurement()">
+                                <option value="No" selected>No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                        <div>
+                            <b>Adhesive:</b>
+                            <select id="polyAdhesive">
+                                <option value="No" selected>No</option>
+                                <option value="Yes">Yes</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-left: 10px;">
-                    <b>Print:</b>
-                    <select id="polyPrint" onchange="calculatePolyMeasurement()">
-                        <option value="No" selected>No</option>
-                        <option value="Yes">Yes</option>
-                    </select>
-                </div>
-                <div>
-                    <b>Adhesive:</b>
-                    <select id="polyAdhesive">
-                        <option value="No" selected>No</option>
-                        <option value="Yes">Yes</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    `;
+            `;
             tableHeaderRow.innerHTML = `
                 <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
             `;
@@ -527,7 +620,7 @@ function calculatePolyMeasurement() {
                     <td class="no-print">-</td>
                 </tr>
             `;
-            calculatePolyMeasurement(); // Initial calculation
+            calculatePolyMeasurement(); 
         } else if(piType === 'elastic') {
             inputContainer.innerHTML = `
                 ${baseInputs}
@@ -542,7 +635,7 @@ function calculatePolyMeasurement() {
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
             `;
             tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY IN (Kg)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
             `;
             tableFooter.innerHTML = `
                 <tr class="total-row">
@@ -569,7 +662,7 @@ function calculatePolyMeasurement() {
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
             `;
             tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>QTY IN (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
             `;
             tableFooter.innerHTML = `
                 <tr class="total-row">
@@ -585,6 +678,7 @@ function calculatePolyMeasurement() {
         }
         
         saveHeaderToStorage();
+        populateColumnSelect();
         updateTableStyles();
         updateTable();
         const slInput = document.getElementById('slNo');
@@ -601,8 +695,7 @@ function calculatePolyMeasurement() {
             buyerRef: document.getElementById('buyerRef').value,
             attn: document.getElementById('attn').value,
             headerFontSize: document.getElementById('headerFontSize').value,
-            rowHeight: document.getElementById('rowHeightInput').value,
-            colWidth: document.getElementById('colWidthInput').value
+            rowHeight: document.getElementById('rowHeightInput').value
         };
         localStorage.setItem('pi_header_data', JSON.stringify(headerObj));
     }
@@ -947,7 +1040,6 @@ function calculatePolyMeasurement() {
         }
 
         const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 22;
-        const colWidthVal = parseInt(document.getElementById('colWidthInput').value) || 80;
         const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
@@ -1134,27 +1226,31 @@ function calculatePolyMeasurement() {
 
         rawData.push([]);
         const amountInWords = numToWords(totalAmount);
-        rawData.push([{ v: `Total Value In word: (${amountInWords})`, s: { font: { bold: true } } }]);
+        rawData.push([{ v: `Total Valor In word: (${amountInWords})`, s: { font: { bold: true } } }]); 
         rawData.push([]);
 
         rawData.push([{ v: "TERMS & CONDITIONS:", s: { font: { bold: true, underline: true } } }]);
-        rawData.push([{ v: "1.PAYMENT TERMS :" }]);
-        rawData.push([{ v: "A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." }]);
-        rawData.push([{ v: "B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS." }]);
-        rawData.push([{ v: "C) No LC will be Entertained which value less than US $ 2,000.00" }]);
-        rawData.push([{ v: "D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00" }]);
+        rawData.push([{ v: "1.PAYMENT TERMS : A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." }]);
+        rawData.push([{ v: " : B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS." }]);
+        rawData.push([{ v: " : C) No LC will be Entertained which value less than US $ 2,000.00" }]);
+        rawData.push([{ v: " : D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00" }]);
         rawData.push([{ v: "2.Delivery Lead Time: A) Goods will be ready for delivery within 14 working days after received of LC & UD both for customs UP issue." }]);
-        rawData.push([{ v: "3.Delivery/Inco Term: CPT." }]);
-        rawData.push([{ v: "4.Country of origin: Bangladesh." }]);
-        rawData.push([{ v: "5.Presentation Period: 30 days from the latest Shipment date in the LC." }]);
-        rawData.push([{ v: "6.Shipment Date: Should be 60 days minimum from the LC opening Date." }]);
-        rawData.push([{ v: "7.Expiry date of LC: LC Expiry date Should be 30 days from the latest Shipment date in the LC." }]);
-        rawData.push([{ v: "8.Validity: 30 days from the date of P/I issuance." }]);
-        rawData.push([{ v: "9.Advising Bank: DHAKA BANK LTD. Gulshan Branch, USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL." }]);
-        rawData.push([{ v: "10.Bank Charge: All Bank Charges except beneficiary's bank are on Opener's Account." }]);
-        rawData.push([{ v: "11.Overdue Interest: Payment will be made within the date of Maturity. If failed, overdue interest to be paid at 16%." }]);
-        rawData.push([{ v: "12.Deduction: Deduction clause for any discrepancies is not acceptable." }]);
-        rawData.push([{ v: "13.Claim/ Complain: Claim regarding Quantity/Quality must be informed within 3 days after receiving goods. Tolerance is 5/6%." }]);
+        rawData.push([{ v: " : B) Bhutan Execution (BB), may all the latest shipment date of LC or Bank Contract for it is to be given 2 working days at BTB LC." }]);
+        rawData.push([{ v: " : C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant." }]);
+        rawData.push([{ v: " : D) 1) Partial shipment: Allowed. 2) Transshipment : Not Allowed." }]);
+        rawData.push([{ v: " : E) Accessories for 100% Export Oriented Readymade Garments Industry." }]);
+        rawData.push([{ v: "3.Delivery/Inco Term : CPT." }]);
+        rawData.push([{ v: "4.Country of origin : Bangladesh." }]);
+        rawData.push([{ v: "5.Presentation Period : 30 days from the latest Shipment date in the LC." }]);
+        rawData.push([{ v: "6.Shipment Date : Should be 60 days minimum from the LC opening Date." }]);
+        rawData.push([{ v: "7.Expiry date of LC : LC Expiry date Should be 30 days from the latest Shipment date in the LC." }]);
+        rawData.push([{ v: "8.Validity : 30 days from the date of P/I issuance." }]);
+        rawData.push([{ v: "9.Advising Bank : DHAKA BANK LTD. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka-1212. SWIFT A/C No. 215130" }]);
+        rawData.push([{ v: "10.Bank Charge : All Bank Charges except beneficiary's bank are on Opener's Account." }]);
+        rawData.push([{ v: "11.Overdue Interest : Payment will be made within the date of Maturity. If failed, overdue interest to be paid at 16%." }]);
+        rawData.push([{ v: "12.Deduction : Deduction clause for any discrepancies is not acceptable." }]);
+        rawData.push([{ v: "13.Claim/ Complain : Claim/Complain regarding Quantity/Quality must be informed within 3 days after receiving goods. Re-new is template after this period. Non-Return will be over not to more then the PI Qty. Costs Strategy increase of BBX excess GMT unit. Will be resolution at starting until item is change." }]);
+        rawData.push([{ v: "M.D.This Proforma Invoice deemed to be an integral part of LC." }]);
 
         rawData.push([]);
         rawData.push([]);
@@ -1171,10 +1267,11 @@ function calculatePolyMeasurement() {
 
         const worksheet = XLSX.utils.aoa_to_sheet(rawData);
 
-        let excelColWidth = Math.max(10, Math.round(colWidthVal / 7));
+        let currentColsWidths = piColumnWidths[piType] || {};
         let colsConfig = [];
-        for(let i=0; i<headerCols.length; i++) {
-            colsConfig.push({ wch: excelColWidth });
+        for(let colName in currentColsWidths) {
+            let pxVal = currentColsWidths[colName];
+            colsConfig.push({ wch: Math.max(10, Math.round(pxVal / 7)) });
         }
         worksheet['!cols'] = colsConfig;
 
