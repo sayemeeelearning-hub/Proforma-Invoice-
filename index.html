@@ -75,6 +75,32 @@
         .form-group.full-width {
             grid-column: 1 / -1;
         }
+        .poly-details-box {
+            grid-column: 1 / -1;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .poly-details-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .poly-details-grid div {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .poly-details-grid input[type="number"] {
+            width: 70px;
+        }
+        .poly-details-grid select {
+            padding: 8px;
+        }
         label {
             font-weight: 600;
             margin-bottom: 5px;
@@ -200,8 +226,8 @@
             <label for="piType">PI Item:</label>
             <select id="piType" onchange="handlePiTypeChange()">
                 <option value="elastic">1. Elastic/Twill tape/Drawstring</option>
-                <option value="poly">2. Poly</option>
-                <option value="label" selected>3. Label</option>
+                <option value="poly" selected>2. Poly</option>
+                <option value="label">3. Label</option>
                 <option value="thread">4. Swing thread</option>
             </select>
         </div>
@@ -344,6 +370,66 @@
         saveHeaderToStorage();
     }
 
+// Poly Auto Measurement & Weight Calculation Function (Updated with QTY formula)
+function calculatePolyMeasurement() {
+    const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
+    const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
+    const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
+    const gussetInput = parseFloat(document.getElementById('polyG')?.value) || 0;
+    const thickness = parseFloat(document.getElementById('polyT')?.value) || 0;
+    const qtyInput = parseFloat(document.getElementById('qty')?.value) || 0;
+    const unit = document.getElementById('polyUnit')?.value || 'inch';
+    const isPrint = (document.getElementById('polyPrint')?.value || 'No').toLowerCase();
+    
+    // ১. Measurement String Format
+    let flapStr = flapInput > 0 ? `+F-${flapInput}` : ``;
+    let result = "";
+
+    if (unit === 'inch') {
+        let gussetStr = gussetInput > 0 ? `(${gussetInput}"+${gussetInput}")` : ``;
+        result = `L-${lengthInput}${flapStr}"XW-${widthInput}"${gussetStr}XT-${thickness}`;
+    } else {
+        let gussetStr = gussetInput > 0 ? `(${gussetInput}+${gussetInput}) CM ` : ` CM `;
+        result = `L-${lengthInput}${flapStr}XW-${widthInput}${gussetStr}XT-${thickness}`;
+    }
+
+    const measInput = document.getElementById('measurement');
+    if (measInput) {
+        measInput.value = result;
+    }
+
+    // ২. Inch থেকে CM কনভার্সন
+    let L = unit === 'inch' ? lengthInput * 2.54 : lengthInput;
+    let F = unit === 'inch' ? flapInput * 2.54 : flapInput;
+    let W = unit === 'inch' ? widthInput * 2.54 : widthInput;
+    let G = unit === 'inch' ? gussetInput * 2.54 : gussetInput;
+
+    // ৩. সূত্রের প্রতিটি অংশ সাজানো
+    let lengthPart = L + F;             // (L + F)
+    let widthPart = W + (G * 2);        // W + (G * 2)
+    let thicknessPart = thickness / 20;  // T / 2 (সংশোধিত)
+
+    let calculatedWeight = 0;
+
+    // ৪. মূল সূত্রের ক্যালকুলেশন
+    if (isPrint === 'yes') {
+        // Print: Yes হলে -> {(L + F) * (W + (G * 2)) * (T / 2) * ((0.92 * 2 * 1.07) / 1000)} + (QTY / 1000) * 0.000088
+        let printFactor = (0.92 * 2 * 1.07) / 1000;
+        let qtyAddon = (qtyInput / 1000) * 0.000088;
+        calculatedWeight = (lengthPart * widthPart * thicknessPart * printFactor) + qtyAddon;
+    } else {
+        // Print: No হলে -> {(L + F) * (W + (G * 2)) * (T / 2) * ((0.92 * 2 * 1.05) / 1000)}
+        let noPrintFactor = (0.92 * 2 * 1.05) / 1000;
+        calculatedWeight = (lengthPart * widthPart * thicknessPart * noPrintFactor);
+    }
+
+    // ৫. ফলাফল আউটপুট বক্সে পাঠানো
+    const weightInput = document.getElementById('weightPerUnit');
+    if (weightInput) {
+        weightInput.value = calculatedWeight.toFixed(12);
+    }
+}
+
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
         const inputContainer = document.getElementById('dynamicInputContainer');
@@ -352,7 +438,7 @@
         
         let baseInputs = `
             <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${slCounter}" min="1"></div>
-            <div class="form-group"><label for="hsCode">2. H.S CODE</label><input type="text" id="hsCode" placeholder="e.g. 5806.20.00"></div>
+            <div class="form-group"><label for="hsCode">2. H.S CODE</label><input type="text" id="hsCode" placeholder="e.g. 3923.21.00"></div>
         `;
 
         if(piType === 'label') {
@@ -365,7 +451,7 @@
                 <div class="form-group"><label for="color">7. Color</label><textarea id="color" rows="2" placeholder="Color..."></textarea></div>
                 <div class="form-group"><label for="qty">8. QTY (Yds/Pcs)</label><input type="number" id="qty" placeholder="0"></div>
                 <div class="form-group"><label for="unitDropdown">9. Unit (Yds/Dzn)</label><select id="unitDropdown"><option value="Pcs">Pcs</option><option value="Yds">Yds</option><option value="Dzn">Dzn</option></select></div>
-                <div class="form-group"><label for="weightPerUnit">10. Weight/Unit (KG)</label><input type="number" step="0.0001" id="weightPerUnit" placeholder="0.0000"></div>
+                <div class="form-group"><label for="weightPerUnit">10. Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.0000"></div>
                 <div class="form-group"><label for="unitPrice">11. Unit Price (USD)</label><input type="number" step="0.0001" id="unitPrice" placeholder="0.0000"></div>
             `;
 
@@ -384,6 +470,64 @@
                     <td class="no-print">-</td>
                 </tr>
             `;
+} else if(piType === 'poly') {
+    inputContainer.innerHTML = `
+        ${baseInputs}
+        <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" value="PP Poly Bag" placeholder="Description..."></div>
+        <div class="form-group"><label for="measurement">Measurement (Auto-generated)</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
+        <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
+        <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="calculatePolyMeasurement()"></div>
+        <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
+        <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
+        <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
+        
+        <div class="poly-details-box">
+            <label style="color: #1e293b; font-weight: bold; margin-bottom: 8px; display: block;">Details Measurement & Options:</label>
+            <div class="poly-details-grid">
+                <div><b>L =</b> <input type="number" step="any" id="polyL" value="30" oninput="calculatePolyMeasurement()"></div>
+                <div><b>F =</b> <input type="number" step="any" id="polyF" value="5" oninput="calculatePolyMeasurement()"></div>
+                <div><b>W =</b> <input type="number" step="any" id="polyW" value="10" oninput="calculatePolyMeasurement()"></div>
+                <div><b>G =</b> <input type="number" step="any" id="polyG" value="5" oninput="calculatePolyMeasurement()"></div>
+                <div><b>T =</b> <input type="number" step="any" id="polyT" value="0.01" oninput="calculatePolyMeasurement()"></div>
+                <div>
+                    <b>Unit:</b>
+                    <select id="polyUnit" onchange="calculatePolyMeasurement()">
+                        <option value="inch" selected>inch</option>
+                        <option value="cm">cm</option>
+                    </select>
+                </div>
+                <div style="margin-left: 10px;">
+                    <b>Print:</b>
+                    <select id="polyPrint" onchange="calculatePolyMeasurement()">
+                        <option value="No" selected>No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+                <div>
+                    <b>Adhesive:</b>
+                    <select id="polyAdhesive">
+                        <option value="No" selected>No</option>
+                        <option value="Yes">Yes</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+            tableHeaderRow.innerHTML = `
+                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+            `;
+            tableFooter.innerHTML = `
+                <tr class="total-row">
+                    <td colspan="5" style="text-align: right; font-weight: bold;">Total =</td>
+                    <td id="totalQty" style="font-weight: bold;">0</td>
+                    <td id="totalKg" style="font-weight: bold;">0.00</td>
+                    <td style="font-weight: bold;">Pcs</td>
+                    <td>-</td>
+                    <td id="totalAmount" style="font-weight: bold;">0.00</td>
+                    <td class="no-print">-</td>
+                </tr>
+            `;
+            calculatePolyMeasurement(); // Initial calculation
         } else if(piType === 'elastic') {
             inputContainer.innerHTML = `
                 ${baseInputs}
@@ -393,7 +537,7 @@
                 <div class="form-group"><label for="poNo">PO No.</label><input type="text" id="poNo" placeholder="PO No..."></div>
                 <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..."></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
-                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.0001" id="weightPerUnit" placeholder="0.025"></div>
+                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Yds"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
             `;
@@ -420,7 +564,7 @@
                 <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..."></div>
                 <div class="form-group"><label for="bleach">Bleach/Non Bleach</label><select id="bleach"><option value="Non Bleach">Non Bleach</option><option value="Bleach">Bleach</option></select></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
-                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.0001" id="weightPerUnit" placeholder="0.025"></div>
+                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Cone"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
             `;
@@ -433,31 +577,6 @@
                     <td id="totalQty" style="font-weight: bold;">0</td>
                     <td style="font-weight: bold;">Cone</td>
                     <td id="totalKg" style="font-weight: bold;">0.00</td>
-                    <td>-</td>
-                    <td id="totalAmount" style="font-weight: bold;">0.00</td>
-                    <td class="no-print">-</td>
-                </tr>
-            `;
-        } else {
-            inputContainer.innerHTML = `
-                ${baseInputs}
-                <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" placeholder="Description..."></div>
-                <div class="form-group"><label for="measurement">Measurement</label><input type="text" id="measurement" placeholder="Measurement..."></div>
-                <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
-                <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
-                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.0001" id="weightPerUnit" placeholder="0.025"></div>
-                <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
-                <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
-            `;
-            tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
-            `;
-            tableFooter.innerHTML = `
-                <tr class="total-row">
-                    <td colspan="5" style="text-align: right; font-weight: bold;">Total =</td>
-                    <td id="totalQty" style="font-weight: bold;">0</td>
-                    <td id="totalKg" style="font-weight: bold;">0.00</td>
-                    <td style="font-weight: bold;">Pcs</td>
                     <td>-</td>
                     <td id="totalAmount" style="font-weight: bold;">0.00</td>
                     <td class="no-print">-</td>
@@ -528,7 +647,17 @@
             itemData.qtyKg = parseFloat((itemData.qty * weightPerUnit).toFixed(4));
             itemData.amount = parseFloat((itemData.qty * itemData.price).toFixed(4));
 
-            if(piType === 'elastic') {
+            if(piType === 'poly') {
+                itemData.polyL = document.getElementById('polyL').value;
+                itemData.polyW = document.getElementById('polyW').value;
+                itemData.polyG = document.getElementById('polyG').value;
+                itemData.polyF = document.getElementById('polyF').value;
+                itemData.polyT = document.getElementById('polyT').value;
+                itemData.polyUnit = document.getElementById('polyUnit').value;
+                itemData.polyPrint = document.getElementById('polyPrint').value;
+                itemData.polyAdhesive = document.getElementById('polyAdhesive').value;
+                itemData.style = document.getElementById('style').value;
+            } else if(piType === 'elastic') {
                 itemData.styNo = document.getElementById('styNo').value;
                 itemData.poNo = document.getElementById('poNo').value;
                 itemData.color = document.getElementById('color').value;
@@ -536,8 +665,6 @@
                 itemData.style = document.getElementById('style').value;
                 itemData.color = document.getElementById('color').value;
                 itemData.bleach = document.getElementById('bleach').value;
-            } else {
-                itemData.style = document.getElementById('style').value;
             }
 
             if (!itemData.desc || itemData.qty <= 0 || itemData.price <= 0) {
@@ -585,7 +712,17 @@
         } else {
             document.getElementById('desc').value = item.desc || '';
             document.getElementById('measurement').value = item.measurement || '';
-            if(item.piType === 'elastic') {
+            if(item.piType === 'poly') {
+                document.getElementById('polyL').value = item.polyL || 30;
+                document.getElementById('polyW').value = item.polyW || 10;
+                document.getElementById('polyG').value = item.polyG || 5;
+                document.getElementById('polyF').value = item.polyF || 0;
+                document.getElementById('polyT').value = item.polyT || 0.01;
+                document.getElementById('polyUnit').value = item.polyUnit || 'inch';
+                document.getElementById('polyPrint').value = item.polyPrint || 'No';
+                document.getElementById('polyAdhesive').value = item.polyAdhesive || 'No';
+                document.getElementById('style').value = item.style || '';
+            } else if(item.piType === 'elastic') {
                 document.getElementById('styNo').value = item.styNo || '';
                 document.getElementById('poNo').value = item.poNo || '';
                 document.getElementById('color').value = item.color || '';
@@ -1181,7 +1318,6 @@
 
         const template = `
             <div id="printTemplate" style="font-family: Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.2;">
-                <!-- Updated Header: Logo size reduced, positioned close to 'S' and text block completely centered -->
                 <div style="border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; position: relative; min-height: 50px; display: flex; align-items: center; justify-content: center;">
                     <img src="${companyLogoUrl}" style="height: 42px; width: auto; position: absolute; left: 50px; top: 50%; transform: translateY(-75%); display: block;" alt="Logo" />
                     <div style="text-align: center;">
