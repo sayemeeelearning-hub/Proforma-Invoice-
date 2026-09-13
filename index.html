@@ -57,10 +57,20 @@
             color: white;
             padding: 8px 12px;
             border-radius: 5px;
-            margin-top: 15px;
+            margin-top: 20px;
             margin-bottom: 15px;
             font-size: 15px;
             font-weight: bold;
+        }
+        .item-table-title {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 10px;
         }
         .form-grid {
             display: grid;
@@ -161,7 +171,8 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 5px;
-            table-layout: fixed; /* কলামের সাইজ স্বাধীনভাবে নিয়ন্ত্রণের জন্য অত্যন্ত জরুরি */
+            margin-bottom: 15px;
+            table-layout: fixed;
         }
         th, td {
             border: 1px solid #000;
@@ -227,7 +238,7 @@
     <div class="header-container">
         <h2>Proforma Invoice (PI) Generator</h2>
         <div class="pi-type-container no-print">
-            <label for="piType">PI Item:</label>
+            <label for="piType">PI Item Select:</label>
             <select id="piType" onchange="handlePiTypeChange()">
                 <option value="elastic">1. Elastic/Twill tape/Drawstring</option>
                 <option value="poly" selected>2. Poly</option>
@@ -285,7 +296,6 @@
             <label for="rowHeightInput">Row Padding:</label>
             <input type="number" id="rowHeightInput" value="8" min="2" max="25" style="width: 55px; padding: 4px; text-align: center;" oninput="updateTableStyles()">
         </div>
-        <!-- কম্বাইন্ড কলাম সাইজ কন্ট্রোল -->
         <div class="pi-type-container" style="background: #e2f0d9; border: 1px solid #c8e1b7;">
             <label for="combinedSizeInput">Combined Size:</label>
             <input type="number" id="combinedSizeInput" value="100" min="20" max="300" step="5" style="width: 65px; padding: 4px; text-align: center;" oninput="changeAllColumns(this.value)" title="সব কলাম একসাথে ছোট-বড় করুন">
@@ -294,19 +304,109 @@
         <div class="pi-type-container" style="background: #e8f4fd; border: 1px solid #bbe1fa;">
             <label for="targetColSelect">Target Col Width:</label>
             <select id="targetColSelect" style="padding: 4px;" onchange="loadColumnWidthToInput()">
-                <!-- ডাইনামিক্যালি অপশন লোড হবে -->
             </select>
             <input type="number" id="colWidthInput" value="90" min="20" max="500" style="width: 65px; padding: 4px; text-align: center;" oninput="saveColumnWidth()">px
         </div>
     </div>
 
-    <table id="dataTable">
-        <thead>
-            <tr id="tableHeaderRow"></tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-        <tfoot id="tableFooter"></tfoot>
-    </table>
+    <!-- প্রতিটি PI Item এর জন্য আলাদা টেবিল সেকশন -->
+    <div id="tablesContainer">
+        <!-- 1. Elastic Table -->
+        <div id="sec-elastic" style="display: none;">
+            <div class="item-table-title">1. Elastic / Twill tape / Drawstring Table</div>
+            <table id="table-elastic">
+                <thead>
+                    <tr>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-elastic"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="6" style="text-align: right; font-weight: bold;">Total =</td>
+                        <td id="totalQty-elastic" style="font-weight: bold;">0</td>
+                        <td style="font-weight: bold;">Yds</td>
+                        <td id="totalKg-elastic" style="font-weight: bold;">0.00</td>
+                        <td>-</td>
+                        <td id="totalAmount-elastic" style="font-weight: bold;">0.00</td>
+                        <td class="no-print">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- 2. Poly Table -->
+        <div id="sec-poly" style="display: none;">
+            <div class="item-table-title">2. Poly Bag Table</div>
+            <table id="table-poly">
+                <thead>
+                    <tr>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-poly"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="5" style="text-align: right; font-weight: bold;">Total =</td>
+                        <td id="totalQty-poly" style="font-weight: bold;">0</td>
+                        <td id="totalKg-poly" style="font-weight: bold;">0.00</td>
+                        <td style="font-weight: bold;">Pcs</td>
+                        <td>-</td>
+                        <td id="totalAmount-poly" style="font-weight: bold;">0.00</td>
+                        <td class="no-print">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- 3. Label Table -->
+        <div id="sec-label" style="display: none;">
+            <div class="item-table-title">3. Label Table</div>
+            <table id="table-label">
+                <thead>
+                    <tr>
+                        <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY in (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-label"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="7" style="text-align: right; font-weight: bold;">Total =</td>
+                        <td id="totalQty-label" style="font-weight: bold;">0</td>
+                        <td>-</td>
+                        <td id="totalKg-label" style="font-weight: bold;">0.00</td>
+                        <td>-</td>
+                        <td id="totalAmount-label" style="font-weight: bold;">0.00</td>
+                        <td class="no-print">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- 4. Thread Table -->
+        <div id="sec-thread" style="display: none;">
+            <div class="item-table-title">4. Swing Thread Table</div>
+            <table id="table-thread">
+                <thead>
+                    <tr>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-thread"></tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="7" style="text-align: right; font-weight: bold;">Total =</td>
+                        <td id="totalQty-thread" style="font-weight: bold;">0</td>
+                        <td style="font-weight: bold;">Cone</td>
+                        <td id="totalKg-thread" style="font-weight: bold;">0.00</td>
+                        <td>-</td>
+                        <td id="totalAmount-thread" style="font-weight: bold;">0.00</td>
+                        <td class="no-print">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -391,7 +491,7 @@
         }
 
         let cssRules = `
-            #dataTable th, #dataTable td {
+            table th, table td {
                 padding: ${rowHeight}px !important;
             }
         `;
@@ -399,9 +499,8 @@
         let colIndex = 1;
         for (let colName in colWidths) {
             let widthVal = colWidths[colName];
-            // min-width এবং max-width উভয়ই সেট করা হয়েছে যাতে ছোট বা বড় দুটোই পারফেক্টলি কাজ করে
             cssRules += `
-                #dataTable th:nth-child(${colIndex}), #dataTable td:nth-child(${colIndex}) {
+                #table-${piType} th:nth-child(${colIndex}), #table-${piType} td:nth-child(${colIndex}) {
                     min-width: ${widthVal}px !important;
                     width: ${widthVal}px !important;
                     max-width: ${widthVal}px !important;
@@ -526,8 +625,6 @@
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
         const inputContainer = document.getElementById('dynamicInputContainer');
-        const tableHeaderRow = document.getElementById('tableHeaderRow');
-        const tableFooter = document.getElementById('tableFooter');
         
         let baseInputs = `
             <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${slCounter}" min="1"></div>
@@ -546,22 +643,6 @@
                 <div class="form-group"><label for="unitDropdown">9. Unit (Yds/Dzn)</label><select id="unitDropdown"><option value="Pcs">Pcs</option><option value="Yds">Yds</option><option value="Dzn">Dzn</option></select></div>
                 <div class="form-group"><label for="weightPerUnit">10. Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.0000"></div>
                 <div class="form-group"><label for="unitPrice">11. Unit Price (USD)</label><input type="number" step="0.0001" id="unitPrice" placeholder="0.0000"></div>
-            `;
-
-            tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY in (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
-            `;
-
-            tableFooter.innerHTML = `
-                <tr class="total-row">
-                    <td colspan="7" style="text-align: right; font-weight: bold;">Total =</td>
-                    <td id="totalQty" style="font-weight: bold;">0</td>
-                    <td>-</td>
-                    <td id="totalKg" style="font-weight: bold;">0.00</td>
-                    <td>-</td>
-                    <td id="totalAmount" style="font-weight: bold;">0.00</td>
-                    <td class="no-print">-</td>
-                </tr>
             `;
         } else if(piType === 'poly') {
             inputContainer.innerHTML = `
@@ -606,20 +687,6 @@
                     </div>
                 </div>
             `;
-            tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
-            `;
-            tableFooter.innerHTML = `
-                <tr class="total-row">
-                    <td colspan="5" style="text-align: right; font-weight: bold;">Total =</td>
-                    <td id="totalQty" style="font-weight: bold;">0</td>
-                    <td id="totalKg" style="font-weight: bold;">0.00</td>
-                    <td style="font-weight: bold;">Pcs</td>
-                    <td>-</td>
-                    <td id="totalAmount" style="font-weight: bold;">0.00</td>
-                    <td class="no-print">-</td>
-                </tr>
-            `;
             calculatePolyMeasurement(); 
         } else if(piType === 'elastic') {
             inputContainer.innerHTML = `
@@ -634,20 +701,6 @@
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Yds"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
             `;
-            tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
-            `;
-            tableFooter.innerHTML = `
-                <tr class="total-row">
-                    <td colspan="6" style="text-align: right; font-weight: bold;">Total =</td>
-                    <td id="totalQty" style="font-weight: bold;">0</td>
-                    <td style="font-weight: bold;">Yds</td>
-                    <td id="totalKg" style="font-weight: bold;">0.00</td>
-                    <td>-</td>
-                    <td id="totalAmount" style="font-weight: bold;">0.00</td>
-                    <td class="no-print">-</td>
-                </tr>
-            `;
         } else if(piType === 'thread') {
             inputContainer.innerHTML = `
                 ${baseInputs}
@@ -660,20 +713,6 @@
                 <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Cone"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
-            `;
-            tableHeaderRow.innerHTML = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
-            `;
-            tableFooter.innerHTML = `
-                <tr class="total-row">
-                    <td colspan="7" style="text-align: right; font-weight: bold;">Total =</td>
-                    <td id="totalQty" style="font-weight: bold;">0</td>
-                    <td style="font-weight: bold;">Cone</td>
-                    <td id="totalKg" style="font-weight: bold;">0.00</td>
-                    <td>-</td>
-                    <td id="totalAmount" style="font-weight: bold;">0.00</td>
-                    <td class="no-print">-</td>
-                </tr>
             `;
         }
         
@@ -781,6 +820,7 @@
 
         saveDataToStorage();
         updateTable();
+        clearInputs();
     }
 
     function editItem(index) {
@@ -859,104 +899,118 @@
     }
 
     function updateTable() {
-        const piType = document.getElementById('piType').value;
-        const tbody = document.getElementById('tableBody');
-        if(!tbody) return;
-        tbody.innerHTML = '';
+        const types = ['elastic', 'poly', 'label', 'thread'];
+        const currentSelectedType = document.getElementById('piType').value;
+        
+        types.forEach(type => {
+            const tbody = document.getElementById(`tbody-${type}`);
+            const sec = document.getElementById(`sec-${type}`);
+            if(!tbody || !sec) return;
 
-        let totalQty = 0;
-        let totalKg = 0;
-        let totalAmount = 0;
+            tbody.innerHTML = '';
+            
+            const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === type);
 
-        items.forEach((item, index) => {
-            totalQty += item.qty;
-            totalKg += (item.qtyKg || 0);
-            totalAmount += (item.amount || 0);
-
-            let row = '';
-            if(piType === 'label') {
-                row = `<tr>
-                    <td style="text-align:center;">${item.slNo}</td>
-                    <td>${item.hsCode || ''}</td>
-                    <td>${item.item || 'Printed Care Label'}</td>
-                    <td class="wrap-cell">${item.descriptionGoods || ''}</td>
-                    <td class="wrap-cell">${item.projectNo || ''}</td>
-                    <td class="wrap-cell">${item.articleNo || ''}</td>
-                    <td class="wrap-cell">${item.color || ''}</td>
-                    <td>${item.qty}</td>
-                    <td>${item.unitDropdown || 'Pcs'}</td>
-                    <td>${(item.qtyKg || 0).toFixed(2)}</td>
-                    <td>$${(item.unitPrice || 0).toFixed(4)}</td>
-                    <td>$${(item.amount || 0).toFixed(2)}</td>
-                    <td style="white-space: nowrap; text-align:center;" class="no-print">
-                        <button class="btn-edit" onclick="editItem(${index})">✏️</button>
-                        <button class="action-btn" onclick="deleteItem(${index})">X</button>
-                    </td>
-                </tr>`;
-            } else if(piType === 'elastic') {
-                row = `<tr>
-                    <td>${item.slNo}</td>
-                    <td>${item.hsCode || ''}</td>
-                    <td>${item.desc}</td>
-                    <td>${item.measurement || ''}</td>
-                    <td>Sty: ${item.styNo || ''},<br>PO: ${item.poNo || ''}</td>
-                    <td>${item.color || ''}</td>
-                    <td>${item.qty}</td>
-                    <td>${item.unit}</td>
-                    <td>${(item.qtyKg || 0).toFixed(2)}</td>
-                    <td>$${item.price.toFixed(4)}</td>
-                    <td>$${item.amount.toFixed(2)}</td>
-                    <td style="white-space: nowrap;" class="no-print">
-                        <button class="btn-edit" onclick="editItem(${index})">✏️ Edit</button>
-                        <button class="action-btn" onclick="deleteItem(${index})">X</button>
-                    </td>
-                </tr>`;
-            } else if(piType === 'thread') {
-                row = `<tr>
-                    <td>${item.slNo}</td>
-                    <td>${item.hsCode || ''}</td>
-                    <td>${item.desc}</td>
-                    <td>${item.measurement || ''}</td>
-                    <td>${item.style || ''}</td>
-                    <td>${item.color || ''}</td>
-                    <td>${item.bleach || ''}</td>
-                    <td>${item.qty}</td>
-                    <td>${item.unit}</td>
-                    <td>${(item.qtyKg || 0).toFixed(2)}</td>
-                    <td>${item.price.toFixed(4)}</td>
-                    <td>${item.amount.toFixed(2)}</td>
-                    <td style="white-space: nowrap;" class="no-print">
-                        <button class="btn-edit" onclick="editItem(${index})">✏️ Edit</button>
-                        <button class="action-btn" onclick="deleteItem(${index})">X</button>
-                    </td>
-                </tr>`;
+            if (type === currentSelectedType) {
+                sec.style.display = 'block';
             } else {
-                row = `<tr>
-                    <td>${item.slNo}</td>
-                    <td>${item.hsCode || ''}</td>
-                    <td>${item.desc}</td>
-                    <td>${item.measurement || ''}</td>
-                    <td>${item.style || ''}</td>
-                    <td>${item.qty}</td>
-                    <td>${(item.qtyKg || 0).toFixed(2)}</td>
-                    <td>${item.unit}</td>
-                    <td>${item.price.toFixed(4)}</td>
-                    <td>${item.amount.toFixed(2)}</td>
-                    <td style="white-space: nowrap;" class="no-print">
-                        <button class="btn-edit" onclick="editItem(${index})">✏️ Edit</button>
-                        <button class="action-btn" onclick="deleteItem(${index})">X</button>
-                    </td>
-                </tr>`;
+                sec.style.display = 'none';
             }
-            tbody.innerHTML += row;
-        });
 
-        const tQty = document.getElementById('totalQty');
-        const tKg = document.getElementById('totalKg');
-        const tAmt = document.getElementById('totalAmount');
-        if(tQty) tQty.innerText = totalQty;
-        if(tKg) tKg.innerText = totalKg.toFixed(2);
-        if(tAmt) tAmt.innerText = totalAmount.toFixed(2);
+            let totalQty = 0;
+            let totalKg = 0;
+            let totalAmount = 0;
+
+            filteredItems.forEach((item) => {
+                totalQty += item.qty;
+                totalKg += (item.qtyKg || 0);
+                totalAmount += (item.amount || 0);
+
+                let row = '';
+                if(type === 'label') {
+                    row = `<tr>
+                        <td style="text-align:center;">${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.item || 'Printed Care Label'}</td>
+                        <td class="wrap-cell">${item.descriptionGoods || ''}</td>
+                        <td class="wrap-cell">${item.projectNo || ''}</td>
+                        <td class="wrap-cell">${item.articleNo || ''}</td>
+                        <td class="wrap-cell">${item.color || ''}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.unitDropdown || 'Pcs'}</td>
+                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td>$${(item.unitPrice || 0).toFixed(4)}</td>
+                        <td>$${(item.amount || 0).toFixed(2)}</td>
+                        <td style="white-space: nowrap; text-align:center;" class="no-print">
+                            <button class="btn-edit" onclick="editItem(${item.originalIndex})">✏️</button>
+                            <button class="action-btn" onclick="deleteItem(${item.originalIndex})">X</button>
+                        </td>
+                    </tr>`;
+                } else if(type === 'elastic') {
+                    row = `<tr>
+                        <td>${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.desc}</td>
+                        <td>${item.measurement || ''}</td>
+                        <td>Sty: ${item.styNo || ''},<br>PO: ${item.poNo || ''}</td>
+                        <td>${item.color || ''}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.unit}</td>
+                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td>$${item.price.toFixed(4)}</td>
+                        <td>$${item.amount.toFixed(2)}</td>
+                        <td style="white-space: nowrap;" class="no-print">
+                            <button class="btn-edit" onclick="editItem(${item.originalIndex})">✏️ Edit</button>
+                            <button class="action-btn" onclick="deleteItem(${item.originalIndex})">X</button>
+                        </td>
+                    </tr>`;
+                } else if(type === 'thread') {
+                    row = `<tr>
+                        <td>${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.desc}</td>
+                        <td>${item.measurement || ''}</td>
+                        <td>${item.style || ''}</td>
+                        <td>${item.color || ''}</td>
+                        <td>${item.bleach || ''}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.unit}</td>
+                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td>${item.price.toFixed(4)}</td>
+                        <td>${item.amount.toFixed(2)}</td>
+                        <td style="white-space: nowrap;" class="no-print">
+                            <button class="btn-edit" onclick="editItem(${item.originalIndex})">✏️ Edit</button>
+                            <button class="action-btn" onclick="deleteItem(${item.originalIndex})">X</button>
+                        </td>
+                    </tr>`;
+                } else {
+                    row = `<tr>
+                        <td>${item.slNo}</td>
+                        <td>${item.hsCode || ''}</td>
+                        <td>${item.desc}</td>
+                        <td>${item.measurement || ''}</td>
+                        <td>${item.style || ''}</td>
+                        <td>${item.qty}</td>
+                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
+                        <td>${item.unit}</td>
+                        <td>${item.price.toFixed(4)}</td>
+                        <td>${item.amount.toFixed(2)}</td>
+                        <td style="white-space: nowrap;" class="no-print">
+                            <button class="btn-edit" onclick="editItem(${item.originalIndex})">✏️ Edit</button>
+                            <button class="action-btn" onclick="deleteItem(${item.originalIndex})">X</button>
+                        </td>
+                    </tr>`;
+                }
+                tbody.innerHTML += row;
+            });
+
+            const tQty = document.getElementById(`totalQty-${type}`);
+            const tKg = document.getElementById(`totalKg-${type}`);
+            const tAmt = document.getElementById(`totalAmount-${type}`);
+            if(tQty) tQty.innerText = totalQty;
+            if(tKg) tKg.innerText = totalKg.toFixed(2);
+            if(tAmt) tAmt.innerText = totalAmount.toFixed(2);
+        });
     }
 
     function clearInputs() {
@@ -1029,8 +1083,11 @@
     }
 
     function exportToExcel() {
-        if (items.length === 0) {
-            alert('ডাউনলোড করার জন্য কোনো ডাটা নেই! প্রথমে ডাটা যোগ করুন।');
+        const piType = document.getElementById('piType').value;
+        const selectedItems = items.filter(item => item.piType === piType);
+
+        if (selectedItems.length === 0) {
+            alert('সিলেক্ট করা PI Item-এ ডাউনলোড করার জন্য কোনো ডাটা নেই!');
             return;
         }
 
@@ -1039,8 +1096,88 @@
             return;
         }
 
+        // ==========================================
+        // ১. কনফিগারেশন ভ্যালুসমূহ
+        // ==========================================
+        const EXCEL_CONFIG = {
+            rowHeights: {
+                header: 30,    // হেডার রো-এর হাইট
+                data: 22,      // ডাটা সারির হাইট
+                footer: 25     // ফুটারের হাইট
+            },
+            widthMultiplier: 1.0 
+        };
+
+        // ==========================================
+        // ২. কাস্টম কলাম উইডথ লজিক
+        // ==========================================
+        let customColWidths = [];
+
+        switch (piType) {
+            case 'label':
+                customColWidths = [
+                    { wch: 6 },   // SL No.
+                    { wch: 12 },  // H.S CODE
+                    { wch: 15 },  // Item
+                    { wch: 25 },  // Description of Goods
+                    { wch: 15 },  // Project No.
+                    { wch: 16 },  // Article No.
+                    { wch: 14 },  // Color
+                    { wch: 12 },  // QTY
+                    { wch: 10 },  // Unit
+                    { wch: 14 },  // QTY in (KG)
+                    { wch: 16 },  // Unit Price (USD)
+                    { wch: 16 }   // Amount (USD)
+                ];
+                break;
+            case 'elastic':
+                customColWidths = [
+                    { wch: 6 },   // SL No.
+                    { wch: 12 },  // H.S CODE
+                    { wch: 22 },  // Description of Goods
+                    { wch: 18 },  // Measurement
+                    { wch: 18 },  // PO/Style NO.
+                    { wch: 14 },  // Color
+                    { wch: 12 },  // QTY
+                    { wch: 10 },  // Unit
+                    { wch: 14 },  // QTY (KG)
+                    { wch: 16 },  // Unit Price (USD)
+                    { wch: 16 }   // Amount (USD)
+                ];
+                break;
+            case 'thread':
+                customColWidths = [
+                    { wch: 6 },   // SL No.
+                    { wch: 12 },  // H.S CODE
+                    { wch: 22 },  // Description of Goods
+                    { wch: 18 },  // Measurement
+                    { wch: 18 },  // Style/ PO No.
+                    { wch: 14 },  // Color
+                    { wch: 16 },  // Bleach/ Non Bleach
+                    { wch: 12 },  // QTY
+                    { wch: 10 },  // Unit
+                    { wch: 14 },  // QTY (KG)
+                    { wch: 16 },  // Unit Price (USD)
+                    { wch: 16 }   // Amount (USD)
+                ];
+                break;
+            default: // Poly Bag
+                customColWidths = [
+                    { wch: 6 },   // SL No.
+                    { wch: 12 },  // H.S CODE
+                    { wch: 25 },  // Description of Goods
+                    { wch: 20 },  // Measurement
+                    { wch: 18 },  // Style/PO No.
+                    { wch: 12 },  // QTY (Pcs)
+                    { wch: 14 },  // QTY (KG)
+                    { wch: 10 },  // Unit
+                    { wch: 16 },  // Unit Price (USD)
+                    { wch: 16 }   // Amount (USD)
+                ];
+                break;
+        }
+
         const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 22;
-        const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
         const buyerName = document.getElementById('buyerName').value;
@@ -1048,9 +1185,7 @@
         const buyerRef = document.getElementById('buyerRef').value;
         const attn = document.getElementById('attn').value;
 
-        let totalQty = 0;
-        let totalKg = 0;
-        let totalAmount = 0;
+        let totalQty = 0, totalKg = 0, totalAmount = 0;
 
         const thinBlackBorder = {
             top: { style: 'thin', color: { rgb: '000000' } },
@@ -1065,76 +1200,77 @@
             right: { style: 'thin', color: { rgb: '000000' } }
         };
 
-        const alignLeft = { vertical: 'center', horizontal: 'left', wrapText: true };
-        const alignCenter = { vertical: 'center', horizontal: 'center' };
-        const alignRight = { vertical: 'center', horizontal: 'right' };
+        const alignLeft = { vertical: 'center', horizontal: 'left', wrapText: false };
+        const alignCenter = { vertical: 'center', horizontal: 'center', wrapText: false };
+        const alignRight = { vertical: 'center', horizontal: 'right', wrapText: false };
+
+        const createOverflowRow = (text, isBold = false, isUnderline = false) => {
+            return [{ v: text, s: { font: { bold: isBold, underline: isUnderline }, alignment: alignLeft } }];
+        };
 
         let headerCols = [];
-        if(piType === 'label') {
+        if (piType === 'label') {
             headerCols = ["SL No.", "H.S CODE", "Item", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "QTY in (KG)", "Unit Price (USD)", "Amount (USD)"];
-        } else if(piType === 'elastic') {
-            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "QTY IN (Kg)", "Unit Price (USD)", "Amount (USD)"];
-        } else if(piType === 'thread') {
-            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "QTY IN (KG)", "Unit Price (USD)", "Amount (USD)"];
+        } else if (piType === 'elastic') {
+            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "QTY (KG)", "Unit Price (USD)", "Amount (USD)"];
+        } else if (piType === 'thread') {
+            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "QTY (KG)", "Unit Price (USD)", "Amount (USD)"];
         } else {
             headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "QTY (KG)", "Unit", "Unit Price (USD)", "Amount (USD)"];
         }
 
+        const lastColIndex = headerCols.length - 1;
+
         let rawData = [
-            [
-                { v: "LOGO", s: { font: { bold: true, sz: 12 }, alignment: alignCenter } },
-                { v: "STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize }, alignment: alignCenter } }, "", "", "", "", "", "", "", ""
-            ],
-            [
-                "",
-                { v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { size: 9 }, alignment: alignCenter } }, "", "", "", "", "", "", "", ""
-            ],
-            [
-                "",
-                { v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, size: 9 }, alignment: alignCenter, border: bottomThickBorder } }, "", "", "", "", "", "", "", ""
-            ],
+            [{ v: "STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize }, alignment: alignCenter } }],
+            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { size: 9 }, alignment: alignCenter } }],
+            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, size: 9 }, alignment: alignCenter, border: bottomThickBorder } }],
             [],
-            [
-                { v: `PI No: ${piNo}`, s: { font: { bold: true }, alignment: alignLeft } },
-                "", "", "",
-                { v: "PROFORMA INVOICE", s: { font: { bold: true, underline: true, size: 12 }, alignment: alignCenter } },
-                "", "", "", "",
-                { v: `Date: ${piDate}`, s: { font: { bold: true }, alignment: alignRight } }
-            ],
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: `PI No: ${piNo}`, s: { font: { bold: true }, alignment: alignLeft } };
+                if (i === 3) return { v: "PROFORMA INVOICE", s: { font: { bold: true, underline: true, size: 12 }, alignment: alignCenter } };
+                if (i === lastColIndex) return { v: `Date: ${piDate}`, s: { font: { bold: true }, alignment: alignRight } };
+                return undefined;
+            }),
             [],
-            [
-                { v: "Name & Address of Buyer:", s: { font: { bold: true, underline: true } } }, "", "", "", "",
-                { v: "Name & Address of Seller:", s: { font: { bold: true, underline: true } } }
-            ],
-            [
-                { v: buyerName, s: { font: { bold: true } } }, "", "", "", "",
-                { v: "STERLING ACCESSORIES LTD.", s: { font: { bold: true } } }
-            ],
-            [
-                { v: buyerAddress, s: { font: { size: 10 }, alignment: alignLeft } }, "", "", "", "",
-                { v: "Holding-375, East Bagbari,", s: { font: { size: 10 } } }
-            ],
-            [
-                "", "", "", "", "",
-                { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { size: 10 } } }
-            ],
-            [
-                { v: `BUYER REF : ${buyerRef}`, s: { font: { bold: true } } }, "", "", "", "",
-                { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 } } }
-            ],
-            [
-                { v: `Atten: ${attn}`, s: { font: { bold: true } } }
-            ],
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: "Name & Address of Buyer:", s: { font: { bold: true, underline: true }, alignment: alignLeft } };
+                if (i === lastColIndex) return { v: "Name & Address of Seller:", s: { font: { bold: true, underline: true }, alignment: alignRight } };
+                return undefined;
+            }),
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: buyerName, s: { font: { bold: true }, alignment: alignLeft } };
+                if (i === lastColIndex) return { v: "STERLING ACCESSORIES LTD.", s: { font: { bold: true }, alignment: alignRight } };
+                return undefined;
+            }),
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: buyerAddress, s: { font: { size: 10 }, alignment: alignLeft } };
+                if (i === lastColIndex) return { v: "Holding-375, East Bagbari,", s: { font: { size: 10 }, alignment: alignRight } };
+                return undefined;
+            }),
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === lastColIndex) return { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { size: 10 }, alignment: alignRight } };
+                return undefined;
+            }),
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: `BUYER REF : ${buyerRef}`, s: { font: { bold: true }, alignment: alignLeft } };
+                if (i === lastColIndex) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
+                return undefined;
+            }),
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: `Atten: ${attn}`, s: { font: { bold: true }, alignment: alignLeft } };
+                return undefined;
+            }),
             [],
             headerCols.map(text => ({ v: text, s: { font: { bold: true }, fill: { fgColor: { rgb: "F2F2F2" } }, border: thinBlackBorder, alignment: alignCenter } }))
         ];
 
-        items.forEach(item => {
+        selectedItems.forEach(item => {
             totalQty += item.qty;
             totalKg += (item.qtyKg || 0);
             totalAmount += (item.amount || 0);
 
-            if(piType === 'label') {
+            if (piType === 'label') {
                 rawData.push([
                     { v: item.slNo, s: { border: thinBlackBorder, alignment: alignCenter } },
                     { v: item.hsCode || "", s: { border: thinBlackBorder, alignment: alignLeft } },
@@ -1149,7 +1285,7 @@
                     { v: item.unitPrice || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
                 ]);
-            } else if(piType === 'elastic') {
+            } else if (piType === 'elastic') {
                 rawData.push([
                     { v: item.slNo, s: { border: thinBlackBorder, alignment: alignCenter } },
                     { v: item.hsCode || "", s: { border: thinBlackBorder, alignment: alignLeft } },
@@ -1163,7 +1299,7 @@
                     { v: item.price || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
                 ]);
-            } else if(piType === 'thread') {
+            } else if (piType === 'thread') {
                 rawData.push([
                     { v: item.slNo, s: { border: thinBlackBorder, alignment: alignCenter } },
                     { v: item.hsCode || "", s: { border: thinBlackBorder, alignment: alignLeft } },
@@ -1178,7 +1314,7 @@
                     { v: item.price || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
                 ]);
-            } else {
+            } else { // Poly Bag
                 rawData.push([
                     { v: item.slNo, s: { border: thinBlackBorder, alignment: alignCenter } },
                     { v: item.hsCode || "", s: { border: thinBlackBorder, alignment: alignLeft } },
@@ -1196,91 +1332,98 @@
 
         let totalColspan = (piType === 'label') ? 7 : (piType === 'elastic' ? 6 : (piType === 'thread' ? 7 : 5));
         let totalRowArr = [];
-        for(let i=0; i<totalColspan; i++) {
+        for (let i = 0; i < totalColspan; i++) {
             totalRowArr.push(i === 0 ? { v: "Total =", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } } : { v: "", s: { border: thinBlackBorder } });
         }
         totalRowArr.push({ v: totalQty, t: 'n', z: '#,##0', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-        
-        if(piType === 'label') {
-            totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: totalKg, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-            totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: totalAmount, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-        } else if(piType === 'elastic') {
-            totalRowArr.push({ v: "Yds", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: totalKg, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-            totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: totalAmount, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-        } else if(piType === 'thread') {
-            totalRowArr.push({ v: "Cone", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: totalKg, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-            totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: totalAmount, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-        } else {
-            totalRowArr.push({ v: totalKg, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-            totalRowArr.push({ v: "Pcs", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-            totalRowArr.push({ v: totalAmount, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
-        }
+        totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
+        totalRowArr.push({ v: totalKg, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
+        totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
+        totalRowArr.push({ v: totalAmount, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
         rawData.push(totalRowArr);
 
         rawData.push([]);
-        const amountInWords = numToWords(totalAmount);
-        rawData.push([{ v: `Total Valor In word: (${amountInWords})`, s: { font: { bold: true } } }]); 
+        rawData.push(createOverflowRow(`Total Valor In word: (${numToWords(totalAmount)})`, true));
         rawData.push([]);
 
-        rawData.push([{ v: "TERMS & CONDITIONS:", s: { font: { bold: true, underline: true } } }]);
-        rawData.push([{ v: "1.PAYMENT TERMS : A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." }]);
-        rawData.push([{ v: " : B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS." }]);
-        rawData.push([{ v: " : C) No LC will be Entertained which value less than US $ 2,000.00" }]);
-        rawData.push([{ v: " : D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00" }]);
-        rawData.push([{ v: "2.Delivery Lead Time: A) Goods will be ready for delivery within 14 working days after received of LC & UD both for customs UP issue." }]);
-        rawData.push([{ v: " : B) Bhutan Execution (BB), may all the latest shipment date of LC or Bank Contract for it is to be given 2 working days at BTB LC." }]);
-        rawData.push([{ v: " : C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant." }]);
-        rawData.push([{ v: " : D) 1) Partial shipment: Allowed. 2) Transshipment : Not Allowed." }]);
-        rawData.push([{ v: " : E) Accessories for 100% Export Oriented Readymade Garments Industry." }]);
-        rawData.push([{ v: "3.Delivery/Inco Term : CPT." }]);
-        rawData.push([{ v: "4.Country of origin : Bangladesh." }]);
-        rawData.push([{ v: "5.Presentation Period : 30 days from the latest Shipment date in the LC." }]);
-        rawData.push([{ v: "6.Shipment Date : Should be 60 days minimum from the LC opening Date." }]);
-        rawData.push([{ v: "7.Expiry date of LC : LC Expiry date Should be 30 days from the latest Shipment date in the LC." }]);
-        rawData.push([{ v: "8.Validity : 30 days from the date of P/I issuance." }]);
-        rawData.push([{ v: "9.Advising Bank : DHAKA BANK LTD. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka-1212. SWIFT A/C No. 215130" }]);
-        rawData.push([{ v: "10.Bank Charge : All Bank Charges except beneficiary's bank are on Opener's Account." }]);
-        rawData.push([{ v: "11.Overdue Interest : Payment will be made within the date of Maturity. If failed, overdue interest to be paid at 16%." }]);
-        rawData.push([{ v: "12.Deduction : Deduction clause for any discrepancies is not acceptable." }]);
-        rawData.push([{ v: "13.Claim/ Complain : Claim/Complain regarding Quantity/Quality must be informed within 3 days after receiving goods. Re-new is template after this period. Non-Return will be over not to more then the PI Qty. Costs Strategy increase of BBX excess GMT unit. Will be resolution at starting until item is change." }]);
-        rawData.push([{ v: "M.D.This Proforma Invoice deemed to be an integral part of LC." }]);
+        rawData.push(createOverflowRow("TERMS & CONDITIONS:", true, true));
+        rawData.push(createOverflowRow("1.PAYMENT TERMS : A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery."));
+        rawData.push(createOverflowRow(" : B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS."));
+        rawData.push(createOverflowRow(" : C) No LC will be Entertained which value less than US $ 2,000.00"));
+        rawData.push(createOverflowRow(" : D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00"));
+        rawData.push(createOverflowRow("2.Delivery Lead Time: A) Goods will be ready for delivery within 14 working days after received of LC & UD both for customs UP issue."));
+        rawData.push(createOverflowRow(" : B) Bhutan Execution (BB), may all the latest shipment date of LC or Bank Contract for it is to be given 2 working days at BTB LC."));
+        rawData.push(createOverflowRow(" : C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant."));
+        rawData.push(createOverflowRow(" : D) 1) Partial shipment: Allowed. 2) Transshipment : Not Allowed."));
+        rawData.push(createOverflowRow(" : E) Accessories for 100% Export Oriented Readymade Garments Industry."));
+        rawData.push(createOverflowRow("3.Delivery/Inco Term : CPT."));
+        rawData.push(createOverflowRow("4.Country of origin : Bangladesh."));
+        rawData.push(createOverflowRow("5.Presentation Period : 30 days from the latest Shipment date in the LC."));
+        rawData.push(createOverflowRow("6.Shipment Date : Should be 60 days minimum from the LC opening Date."));
+        rawData.push(createOverflowRow("7.Expiry date of LC : LC Expiry date Should be 30 days from the latest Shipment date in the LC."));
+        rawData.push(createOverflowRow("8.Validity : 30 days from the date of P/I issuance."));
+        rawData.push(createOverflowRow("9.Advising Bank : DHAKA BANK LTD. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka-1212. SWIFT A/C No. 215130"));
+        rawData.push(createOverflowRow("10.Bank Charge : All Bank Charges except beneficiary's bank are on Opener's Account."));
+        rawData.push(createOverflowRow("11.Overdue Interest : Payment will be made within the date of Maturity. If failed, overdue interest to be paid at 16%."));
+        rawData.push(createOverflowRow("12.Deduction : Deduction clause for any discrepancies is not acceptable."));
+        rawData.push(createOverflowRow("13.Claim/ Complain : Claim/Complain regarding Quantity/Quality must be informed within 3 days after receiving goods. Re-new is template after this period. Non-Return will be"));
+        rawData.push(createOverflowRow(" over not to more then the PI Qty. Costs Strategy increase of BBX excess GMT unit. Will be resolution at starting until item is change."));
+        rawData.push(createOverflowRow("M.D.This Proforma Invoice deemed to be an integral part of LC."));
 
         rawData.push([]);
         rawData.push([]);
-        rawData.push([
-            { v: "For Sterling Accessories Ltd.", s: { font: { bold: true } } }, "", "", "", "",
-            { v: "Buyer Approval", s: { font: { bold: true } } }
-        ]);
+        
+        let footerRow1 = Array.from({ length: lastColIndex + 1 });
+        footerRow1[0] = { v: "For Sterling Accessories Ltd.", s: { font: { bold: true }, alignment: alignLeft } };
+        footerRow1[lastColIndex] = { v: "Buyer Approval", s: { font: { bold: true }, alignment: alignRight } };
+        rawData.push(footerRow1);
+
         rawData.push([]);
         rawData.push([]);
-        rawData.push([
-            { v: "________________________\nAuthorised Signature", s: { font: { bold: true } } }, "", "", "", "",
-            { v: "________________________\nSignature of Buyer", s: { font: { bold: true } } }
-        ]);
+
+        let footerRow2 = Array.from({ length: lastColIndex + 1 });
+        footerRow2[0] = { v: "________________________\nAuthorised Signature", s: { font: { bold: true }, alignment: alignLeft } };
+        footerRow2[lastColIndex] = { v: "________________________\nSignature of Buyer", s: { font: { bold: true }, alignment: alignRight } };
+        rawData.push(footerRow2);
 
         const worksheet = XLSX.utils.aoa_to_sheet(rawData);
 
-        let currentColsWidths = piColumnWidths[piType] || {};
-        let colsConfig = [];
-        for(let colName in currentColsWidths) {
-            let pxVal = currentColsWidths[colName];
-            colsConfig.push({ wch: Math.max(10, Math.round(pxVal / 7)) });
+        // ==========================================
+        // ৩. কলাম উইডথ প্রয়োগকরণ
+        // ==========================================
+        worksheet['!cols'] = customColWidths.map(col => ({
+            wch: Math.round(col.wch * EXCEL_CONFIG.widthMultiplier)
+        }));
+
+        // ==========================================
+        // ৪. ডাইনামিক রো হাইট প্রয়োগকরণ
+        // ==========================================
+        let rowHeightsList = [];
+
+        // হেডার তথ্য সারির ডিফল্ট হাইট
+        for (let i = 0; i < 13; i++) {
+            rowHeightsList.push({ hpt: 18 });
         }
-        worksheet['!cols'] = colsConfig;
+
+        // হেডার সারির হাইট
+        rowHeightsList.push({ hpt: EXCEL_CONFIG.rowHeights.header });
+
+        // ডাটা সারির ডায়নামিক হাইট প্রয়োগ
+        selectedItems.forEach(() => {
+            rowHeightsList.push({ hpt: EXCEL_CONFIG.rowHeights.data });
+        });
+
+        // ফুটার সারি (Total Row)
+        rowHeightsList.push({ hpt: EXCEL_CONFIG.rowHeights.footer });
+
+        // এক্সেল ওয়ার্কশিটে Row Height সেট করে দেওয়া
+        worksheet['!rows'] = rowHeightsList;
 
         worksheet['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, 
-            { s: { r: 0, c: 1 }, e: { r: 0, c: 9 } },  
-            { s: { r: 1, c: 1 }, e: { r: 1, c: 9 } },  
-            { s: { r: 2, c: 1 }, e: { r: 2, c: 9 } },  
-            { s: { r: 4, c: 4 }, e: { r: 4, c: 6 } }
+            { s: { r: 0, c: 0 }, e: { r: 0, c: lastColIndex } }, 
+            { s: { r: 1, c: 0 }, e: { r: 1, c: lastColIndex } }, 
+            { s: { r: 2, c: 0 }, e: { r: 2, c: lastColIndex } }, 
+            { s: { r: 4, c: 3 }, e: { r: 4, c: lastColIndex - 1 } } 
         ];
 
         const workbook = XLSX.utils.book_new();
@@ -1289,13 +1432,15 @@
     }
 
     function printPDF() {
-        if (items.length === 0) {
-            alert('প্রিন্ট করার জন্য কোনো ডাটা নেই! প্রথমে ডাটা যোগ করুন।');
+        const piType = document.getElementById('piType').value;
+        const selectedItems = items.filter(item => item.piType === piType);
+
+        if (selectedItems.length === 0) {
+            alert('সিলেক্ট করা PI Item-এ প্রিন্ট করার জন্য কোনো ডাটা নেই!');
             return;
         }
 
         const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 22;
-        const piType = document.getElementById('piType').value;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
         const buyerName = document.getElementById('buyerName').value;
@@ -1308,7 +1453,7 @@
         let totalAmount = 0;
 
         let rowsHtml = '';
-        items.forEach(item => {
+        selectedItems.forEach(item => {
             totalQty += item.qty;
             totalKg += (item.qtyKg || 0);
             totalAmount += (item.amount || 0);
