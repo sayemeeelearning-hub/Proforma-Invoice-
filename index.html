@@ -569,59 +569,68 @@
             updateTableStyles();
         }
     }
+function calculatePolyMeasurement() {
+    // ইনপুট ফিল্ড থেকে মান নেওয়া
+    const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
+    const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
+    const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
+    const gussetInput = parseFloat(document.getElementById('polyG')?.value) || 0;
+    const thickness = parseFloat(document.getElementById('polyT')?.value) || 0;
+    const qtyInput = parseFloat(document.getElementById('quantity')?.value || document.getElementById('qty')?.value) || 0;
+    
+    const unit = document.getElementById('polyUnit')?.value || 'inch';
+    const isPrint = (document.getElementById('polyPrint')?.value || 'No').toLowerCase();
+    
+    // Measurement String Generator
+    let flapStr = flapInput > 0 ? `+F-${flapInput}` : ``;
+    let result = "";
 
-    function calculatePolyMeasurement() {
-        const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
-        const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
-        const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
-        const gussetInput = parseFloat(document.getElementById('polyG')?.value) || 0;
-        const thickness = parseFloat(document.getElementById('polyT')?.value) || 0;
-        const qtyInput = parseFloat(document.getElementById('qty')?.value) || 0;
-        const unit = document.getElementById('polyUnit')?.value || 'inch';
-        const isPrint = (document.getElementById('polyPrint')?.value || 'No').toLowerCase();
-        
-        let flapStr = flapInput > 0 ? `+F-${flapInput}` : ``;
-        let result = "";
-
-        if (unit === 'inch') {
-            let gussetStr = gussetInput > 0 ? `(${gussetInput}"+${gussetInput})` : ``;
-            result = `L-${lengthInput}${flapStr}"XW-${widthInput}"${gussetStr}XT-${thickness}`;
-        } else {
-            let gussetStr = gussetInput > 0 ? `(${gussetInput}+${gussetInput}) CM ` : ` CM `;
-            result = `L-${lengthInput}${flapStr}XW-${widthInput}${gussetStr}XT-${thickness}`;
-        }
-
-        const measInput = document.getElementById('measurement');
-        if (measInput) {
-            measInput.value = result;
-        }
-
-        let L = unit === 'inch' ? lengthInput * 2.54 : lengthInput;
-        let F = unit === 'inch' ? flapInput * 2.54 : flapInput;
-        let W = unit === 'inch' ? widthInput * 2.54 : widthInput;
-        let G = unit === 'inch' ? gussetInput * 2.54 : gussetInput;
-
-        let lengthPart = L + F;             
-        let widthPart = W + (G * 2);        
-        let thicknessPart = thickness / 20;  
-
-        let calculatedWeight = 0;
-
-        if (isPrint === 'yes') {
-            let printFactor = (0.92 * 2 * 1.07) / 1000;
-            let qtyAddon = (qtyInput / 1000) * 0.000088;
-            calculatedWeight = (lengthPart * widthPart * thicknessPart * printFactor) + qtyAddon;
-        } else {
-            let noPrintFactor = (0.92 * 2 * 1.05) / 1000;
-            calculatedWeight = (lengthPart * widthPart * thicknessPart * noPrintFactor);
-        }
-
-        const weightInput = document.getElementById('weightPerUnit');
-        if (weightInput) {
-            weightInput.value = calculatedWeight.toFixed(12);
-        }
+    if (unit === 'inch') {
+        let gussetStr = gussetInput > 0 ? `(${gussetInput}"+${gussetInput})` : ``;
+        result = `L-${lengthInput}${flapStr}"XW-${widthInput}"${gussetStr}XT-${thickness}`;
+    } else {
+        let gussetStr = gussetInput > 0 ? `(${gussetInput}+${gussetInput}) CM ` : ` CM `;
+        result = `L-${lengthInput}${flapStr}XW-${widthInput}${gussetStr}XT-${thickness}`;
     }
 
+    const measInput = document.getElementById('measurement');
+    if (measInput) {
+        measInput.value = result;
+    }
+
+    // Unit inch হলে cm-এ রূপান্তর
+    const isInch = (unit === 'inch' || unit === 'Inch' || unit === 'INCH');
+    
+    let L = isInch ? lengthInput * 2.54 : lengthInput;
+    let F = isInch ? flapInput * 2.54 : flapInput;
+    let W = isInch ? widthInput * 2.54 : widthInput;
+    let G = isInch ? gussetInput * 2.54 : gussetInput;
+
+    // Total Width = Width + Gusset
+    let totalWidth = W + G * 2;
+
+    let calculatedWeight = 0;
+
+    if (isPrint === 'yes') {
+        // Print: Yes (Factor 1.07)
+        let numerator = 2 * 1000 * (L + F) * totalWidth * (thickness / 20) * 0.92 * 1.07;
+        calculatedWeight = numerator / 1000000;
+
+        // প্রতি ১০০০ পরিমাণের জন্য 0.000088 অতিরিক্ত যোগ হবে
+        let qtyAddon = (qtyInput / 1000) * 0.000088;
+        calculatedWeight += qtyAddon;
+    } else {
+        // Print: No (Factor 1.05)
+        let numerator = 2 * 1000 * (L + F) * totalWidth * (thickness / 20) * 0.92 * 1.05;
+        calculatedWeight = numerator / 1000000;
+    }
+
+    // Weight Output সেট করা
+    const weightInput = document.getElementById('weightPerUnit');
+    if (weightInput) {
+        weightInput.value = calculatedWeight.toFixed(7);
+    }
+}
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
         const inputContainer = document.getElementById('dynamicInputContainer');
@@ -1133,8 +1142,8 @@
             case 'elastic':
                 customColWidths = [
                     { wch: 6 },   // SL No.
-                    { wch: 12 },  // H.S CODE
-                    { wch: 22 },  // Description of Goods
+                    { wch: 4},  // H.S CODE
+                    { wch: 4 },  // Description of Goods
                     { wch: 18 },  // Measurement
                     { wch: 18 },  // PO/Style NO.
                     { wch: 14 },  // Color
