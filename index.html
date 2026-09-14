@@ -230,6 +230,7 @@
                 print-color-adjust: exact;
             }
         }
+        
     </style>
 </head>
 <body>
@@ -237,12 +238,13 @@
 <div class="container">
     <div class="header-container">
         <h2>Proforma Invoice (PI) Generator</h2>
+          <h2>Developer By:ENGR.MINHAZ ALAM</h2>
         <div class="pi-type-container no-print">
             <label for="piType">PI Item Select:</label>
             <select id="piType" onchange="handlePiTypeChange()">
                 <option value="elastic">1. Elastic/Twill tape/Drawstring</option>
-                <option value="poly" selected>2. Poly</option>
-                <option value="label">3. Label</option>
+                <option value="poly">2. Poly</option>
+                <option value="label" selected>3. Label</option>
                 <option value="thread">4. Swing thread</option>
             </select>
         </div>
@@ -286,11 +288,11 @@
         <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ রিসেট (Reset All)</button>
     </div>
 
-    <!-- কলাম সাইজ কাস্টমাইজেশন বার -->
+    <!-- কলাম সাইজ ও ফন্ট কাস্টমাইজেশন বার -->
     <div class="customization-bar no-print">
         <div class="pi-type-container" style="background: #fff3cd; border: 1px solid #ffeeba;">
             <label for="headerFontSize">Header Font:</label>
-            <input type="number" id="headerFontSize" value="22" min="10" max="30" style="width: 55px; padding: 4px; text-align: center;">
+            <input type="number" id="headerFontSize" value="22" min="10" max="42" style="width: 55px; padding: 4px; text-align: center;">
         </div>
         <div class="pi-type-container" style="background: #e8f4fd; border: 1px solid #bbe1fa;">
             <label for="rowHeightInput">Row Padding:</label>
@@ -309,6 +311,19 @@
         </div>
     </div>
 
+    <div class="customization-bar no-print" style="background: #fdf2e9; border: 1px solid #f5cba7;">
+        <div class="pi-type-container" style="background: #fef5e7; border: 1px solid #f8c471;">
+            <label for="targetCellFontSelect">Cell Font Size (Col):</label>
+            <select id="targetCellFontSelect" style="padding: 4px;" onchange="loadCellFontToInput()">
+            </select>
+            <input type="number" id="cellFontInput" value="12" min="8" max="30" style="width: 55px; padding: 4px; text-align: center;" oninput="saveCellFont()">px
+        </div>
+        <div class="pi-type-container" style="background: #e8f8f5; border: 1px solid #a3e4d7;">
+            <label for="totalFontInput">Total/Sum Font Size:</label>
+            <input type="number" id="totalFontInput" value="12" min="8" max="30" style="width: 55px; padding: 4px; text-align: center;" oninput="saveTotalFont()">px
+        </div>
+    </div>
+
     <!-- প্রতিটি PI Item এর জন্য আলাদা টেবিল সেকশন -->
     <div id="tablesContainer">
         <!-- 1. Elastic Table -->
@@ -317,7 +332,7 @@
             <table id="table-elastic">
                 <thead>
                     <tr>
-                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-elastic"></tbody>
@@ -326,7 +341,6 @@
                         <td colspan="6" style="text-align: right; font-weight: bold;">Total =</td>
                         <td id="totalQty-elastic" style="font-weight: bold;">0</td>
                         <td style="font-weight: bold;">Yds</td>
-                        <td id="totalKg-elastic" style="font-weight: bold;">0.00</td>
                         <td>-</td>
                         <td id="totalAmount-elastic" style="font-weight: bold;">0.00</td>
                         <td class="no-print">-</td>
@@ -341,7 +355,7 @@
             <table id="table-poly">
                 <thead>
                     <tr>
-                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-poly"></tbody>
@@ -349,7 +363,6 @@
                     <tr class="total-row">
                         <td colspan="5" style="text-align: right; font-weight: bold;">Total =</td>
                         <td id="totalQty-poly" style="font-weight: bold;">0</td>
-                        <td id="totalKg-poly" style="font-weight: bold;">0.00</td>
                         <td style="font-weight: bold;">Pcs</td>
                         <td>-</td>
                         <td id="totalAmount-poly" style="font-weight: bold;">0.00</td>
@@ -365,16 +378,15 @@
             <table id="table-label">
                 <thead>
                     <tr>
-                        <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY in (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-label"></tbody>
                 <tfoot>
                     <tr class="total-row">
-                        <td colspan="7" style="text-align: right; font-weight: bold;">Total =</td>
+                        <td colspan="6" style="text-align: right; font-weight: bold;">Total =</td>
                         <td id="totalQty-label" style="font-weight: bold;">0</td>
                         <td>-</td>
-                        <td id="totalKg-label" style="font-weight: bold;">0.00</td>
                         <td>-</td>
                         <td id="totalAmount-label" style="font-weight: bold;">0.00</td>
                         <td class="no-print">-</td>
@@ -389,7 +401,7 @@
             <table id="table-thread">
                 <thead>
                     <tr>
-                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-thread"></tbody>
@@ -398,7 +410,6 @@
                         <td colspan="7" style="text-align: right; font-weight: bold;">Total =</td>
                         <td id="totalQty-thread" style="font-weight: bold;">0</td>
                         <td style="font-weight: bold;">Cone</td>
-                        <td id="totalKg-thread" style="font-weight: bold;">0.00</td>
                         <td>-</td>
                         <td id="totalAmount-thread" style="font-weight: bold;">0.00</td>
                         <td class="no-print">-</td>
@@ -418,10 +429,24 @@
     let editIndex = -1;
 
     let piColumnWidths = {
-        elastic: { "SL No.": 40, "H.S CODE": 90, "Description of Goods": 100, "Measurement": 100, "PO/Style NO.": 100, "Color": 90, "QTY": 90, "Unit": 90, "QTY (KG)": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
-        poly: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 150, "Style/PO No.": 100, "QTY (Pcs)": 90, "QTY (KG)": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
-        label: { "SL No.": 50, "H.S CODE": 90, "Item": 90, "Description of Goods": 180, "Project No.": 90, "Article No.": 90, "Color": 90, "QTY": 90, "Unit": 90, "QTY in (KG)": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
-        thread: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 100, "Style/ PO No.": 100, "Color": 90, "Bleach/ Non Bleach": 110, "QTY": 90, "Unit": 90, "QTY (KG)": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 }
+        elastic: { "SL No.": 40, "H.S CODE": 90, "Description of Goods": 100, "Measurement": 100, "PO/Style NO.": 100, "Color": 90, "QTY": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
+        poly: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 150, "Style/PO No.": 100, "QTY (Pcs)": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
+        label: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 220, "Project No.": 90, "Article No.": 90, "Color": 90, "QTY": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
+        thread: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 100, "Style/ PO No.": 100, "Color": 90, "Bleach/ Non Bleach": 110, "QTY": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 }
+    };
+
+    let piCellFonts = {
+        elastic: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Measurement": 12, "PO/Style NO.": 12, "Color": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
+        poly: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Measurement": 12, "Style/PO No.": 12, "QTY (Pcs)": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
+        label: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Project No.": 12, "Article No.": 12, "Color": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
+        thread: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Measurement": 12, "Style/ PO No.": 12, "Color": 12, "Bleach/ Non Bleach": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 }
+    };
+
+    let piTotalFonts = {
+        elastic: 12,
+        poly: 12,
+        label: 12,
+        thread: 12
     };
 
     const defaultColumnWidthsBase = JSON.parse(JSON.stringify(piColumnWidths));
@@ -430,12 +455,12 @@
         const savedItems = localStorage.getItem('pi_items_data');
         const savedHeader = localStorage.getItem('pi_header_data');
         const savedColWidths = localStorage.getItem('pi_col_widths_data');
+        const savedCellFonts = localStorage.getItem('pi_cell_fonts_data');
+        const savedTotalFonts = localStorage.getItem('pi_total_fonts_data');
 
-        if (savedColWidths) {
-            try {
-                piColumnWidths = JSON.parse(savedColWidths);
-            } catch(e) {}
-        }
+        if (savedColWidths) { try { piColumnWidths = JSON.parse(savedColWidths); } catch(e) {} }
+        if (savedCellFonts) { try { piCellFonts = JSON.parse(savedCellFonts); } catch(e) {} }
+        if (savedTotalFonts) { try { piTotalFonts = JSON.parse(savedTotalFonts); } catch(e) {} }
 
         if (savedItems) {
             try {
@@ -449,21 +474,15 @@
         if (savedHeader) {
             try {
                 const headerObj = JSON.parse(savedHeader);
-                if (headerObj.piType) {
-                    document.getElementById('piType').value = headerObj.piType;
-                }
+                if (headerObj.piType) { document.getElementById('piType').value = headerObj.piType; }
                 document.getElementById('piNo').value = headerObj.piNo || 'SACL/296/2026';
                 document.getElementById('piDate').value = headerObj.piDate || '08.08.2026';
                 document.getElementById('buyerName').value = headerObj.buyerName || 'BANDO DESIGN LTD.';
                 document.getElementById('buyerAddress').value = headerObj.buyerAddress || 'PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.';
                 document.getElementById('buyerRef').value = headerObj.buyerRef || "Buyer: GAP SPR'26.";
                 document.getElementById('attn').value = headerObj.attn || 'Mr. Rion';
-                if (headerObj.headerFontSize) {
-                    document.getElementById('headerFontSize').value = headerObj.headerFontSize;
-                }
-                if (headerObj.rowHeight) {
-                    document.getElementById('rowHeightInput').value = headerObj.rowHeight;
-                }
+                if (headerObj.headerFontSize) { document.getElementById('headerFontSize').value = headerObj.headerFontSize; }
+                if (headerObj.rowHeight) { document.getElementById('rowHeightInput').value = headerObj.rowHeight; }
             } catch (e) {}
         }
 
@@ -478,40 +497,61 @@
         document.getElementById('piType').addEventListener('change', saveHeaderToStorage);
     };
 
-    function updateTableStyles() {
-        const rowHeight = document.getElementById('rowHeightInput').value || 8;
-        const piType = document.getElementById('piType').value;
-        const colWidths = piColumnWidths[piType] || {};
-        
-        let styleTag = document.getElementById('dynamicTableStyle');
-        if (!styleTag) {
-            styleTag = document.createElement('style');
-            styleTag.id = 'dynamicTableStyle';
-            document.head.appendChild(styleTag);
-        }
+   function updateTableStyles() {
+    const rowHeight = document.getElementById('rowHeightInput').value || 8;
+    const piType = document.getElementById('piType').value;
+    const colWidths = piColumnWidths[piType] || {};
+    const cellFonts = piCellFonts[piType] || {};
+    const totalFontSize = piTotalFonts[piType] || 12;
+    
+    let styleTag = document.getElementById('dynamicTableStyle');
+    if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'dynamicTableStyle';
+        document.head.appendChild(styleTag);
+    }
 
-        let cssRules = `
-            table th, table td {
-                padding: ${rowHeight}px !important;
+    let cssRules = `
+        table th, table td {
+            padding: ${rowHeight}px !important;
+        }
+        #table-${piType} tfoot td {
+            font-size: ${totalFontSize}px !important;
+        }
+    `;
+
+    let colsList = [];
+    if (piType === 'label') {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    } else if (piType === 'elastic') {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    } else if (piType === 'thread') {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    } else {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    }
+
+    colsList.forEach((colName, index) => {
+        let colIndex = index + 1;
+        let widthVal = colWidths[colName] !== undefined ? colWidths[colName] : 90;
+        let fontVal = cellFonts[colName] !== undefined ? cellFonts[colName] : 12;
+
+        cssRules += `
+            #table-${piType} th:nth-child(${colIndex}), 
+            #table-${piType} td:nth-child(${colIndex}) {
+                min-width: ${widthVal}px !important;
+                width: ${widthVal}px !important;
+                max-width: ${widthVal}px !important;
+            }
+            #table-${piType} tbody td:nth-child(${colIndex}) {
+                font-size: ${fontVal}px !important;
             }
         `;
+    });
 
-        let colIndex = 1;
-        for (let colName in colWidths) {
-            let widthVal = colWidths[colName];
-            cssRules += `
-                #table-${piType} th:nth-child(${colIndex}), #table-${piType} td:nth-child(${colIndex}) {
-                    min-width: ${widthVal}px !important;
-                    width: ${widthVal}px !important;
-                    max-width: ${widthVal}px !important;
-                }
-            `;
-            colIndex++;
-        }
-
-        styleTag.innerHTML = cssRules;
-        saveHeaderToStorage();
-    }
+    styleTag.innerHTML = cssRules;
+    saveHeaderToStorage();
+}
 
     function changeAllColumns(scalePercentage) {
         let val = parseFloat(scalePercentage);
@@ -521,9 +561,7 @@
         const baseWidths = defaultColumnWidthsBase[piType] || {};
         const multiplier = val / 100;
 
-        if (!piColumnWidths[piType]) {
-            piColumnWidths[piType] = {};
-        }
+        if (!piColumnWidths[piType]) { piColumnWidths[piType] = {}; }
 
         for (let colName in baseWidths) {
             let calculatedWidth = Math.round(baseWidths[colName] * multiplier);
@@ -535,20 +573,46 @@
         updateTableStyles();
     }
 
-    function populateColumnSelect() {
-        const piType = document.getElementById('piType').value;
-        const colWidths = piColumnWidths[piType] || {};
-        const selectElem = document.getElementById('targetColSelect');
-        selectElem.innerHTML = '';
-
-        for (let colName in colWidths) {
-            let opt = document.createElement('option');
-            opt.value = colName;
-            opt.innerText = colName;
-            selectElem.appendChild(opt);
-        }
-        loadColumnWidthToInput();
+function populateColumnSelect() {
+    const piType = document.getElementById('piType').value;
+    
+    let colsList = [];
+    if (piType === 'label') {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    } else if (piType === 'elastic') {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    } else if (piType === 'thread') {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    } else {
+        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
     }
+
+    const selectElem = document.getElementById('targetColSelect');
+    selectElem.innerHTML = '';
+    colsList.forEach(colName => {
+        let opt = document.createElement('option');
+        opt.value = colName;
+        opt.innerText = colName;
+        selectElem.appendChild(opt);
+    });
+
+    const cellFontSelect = document.getElementById('targetCellFontSelect');
+    cellFontSelect.innerHTML = '';
+    colsList.forEach(colName => {
+        let opt = document.createElement('option');
+        opt.value = colName;
+        opt.innerText = colName;
+        cellFontSelect.appendChild(opt);
+    });
+
+    loadColumnWidthToInput();
+    loadCellFontToInput();
+
+    const totalFontInp = document.getElementById('totalFontInput');
+    if (piTotalFonts[piType] !== undefined) {
+        totalFontInp.value = piTotalFonts[piType];
+    }
+}
 
     function loadColumnWidthToInput() {
         const piType = document.getElementById('piType').value;
@@ -569,68 +633,58 @@
             updateTableStyles();
         }
     }
-function calculatePolyMeasurement() {
-    // ইনপুট ফিল্ড থেকে মান নেওয়া
-    const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
-    const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
-    const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
-    const gussetInput = parseFloat(document.getElementById('polyG')?.value) || 0;
-    const thickness = parseFloat(document.getElementById('polyT')?.value) || 0;
-    const qtyInput = parseFloat(document.getElementById('quantity')?.value || document.getElementById('qty')?.value) || 0;
-    
-    const unit = document.getElementById('polyUnit')?.value || 'inch';
-    const isPrint = (document.getElementById('polyPrint')?.value || 'No').toLowerCase();
-    
-    // Measurement String Generator
-    let flapStr = flapInput > 0 ? `+F-${flapInput}` : ``;
-    let result = "";
 
-    if (unit === 'inch') {
-        let gussetStr = gussetInput > 0 ? `(${gussetInput}"+${gussetInput})` : ``;
-        result = `L-${lengthInput}${flapStr}"XW-${widthInput}"${gussetStr}XT-${thickness}`;
-    } else {
-        let gussetStr = gussetInput > 0 ? `(${gussetInput}+${gussetInput}) CM ` : ` CM `;
-        result = `L-${lengthInput}${flapStr}XW-${widthInput}${gussetStr}XT-${thickness}`;
+    function loadCellFontToInput() {
+        const piType = document.getElementById('piType').value;
+        const colName = document.getElementById('targetCellFontSelect').value;
+        if (piCellFonts[piType] && piCellFonts[piType][colName] !== undefined) {
+            document.getElementById('cellFontInput').value = piCellFonts[piType][colName];
+        }
     }
 
-    const measInput = document.getElementById('measurement');
-    if (measInput) {
-        measInput.value = result;
+    function saveCellFont() {
+        const piType = document.getElementById('piType').value;
+        const colName = document.getElementById('targetCellFontSelect').value;
+        const fontVal = parseInt(document.getElementById('cellFontInput').value) || 12;
+
+        if (!piCellFonts[piType]) { piCellFonts[piType] = {}; }
+        piCellFonts[piType][colName] = fontVal;
+        localStorage.setItem('pi_cell_fonts_data', JSON.stringify(piCellFonts));
+        updateTableStyles();
     }
 
-    // Unit inch হলে cm-এ রূপান্তর
-    const isInch = (unit === 'inch' || unit === 'Inch' || unit === 'INCH');
-    
-    let L = isInch ? lengthInput * 2.54 : lengthInput;
-    let F = isInch ? flapInput * 2.54 : flapInput;
-    let W = isInch ? widthInput * 2.54 : widthInput;
-    let G = isInch ? gussetInput * 2.54 : gussetInput;
+    function saveTotalFont() {
+        const piType = document.getElementById('piType').value;
+        const fontVal = parseInt(document.getElementById('totalFontInput').value) || 12;
 
-    // Total Width = Width + Gusset
-    let totalWidth = W + G * 2;
-
-    let calculatedWeight = 0;
-
-    if (isPrint === 'yes') {
-        // Print: Yes (Factor 1.07)
-        let numerator = 2 * 1000 * (L + F) * totalWidth * (thickness / 20) * 0.92 * 1.07;
-        calculatedWeight = numerator / 1000000;
-
-        // প্রতি ১০০০ পরিমাণের জন্য 0.000088 অতিরিক্ত যোগ হবে
-        let qtyAddon = (qtyInput / 1000) * 0.000088;
-        calculatedWeight += qtyAddon;
-    } else {
-        // Print: No (Factor 1.05)
-        let numerator = 2 * 1000 * (L + F) * totalWidth * (thickness / 20) * 0.92 * 1.05;
-        calculatedWeight = numerator / 1000000;
+        piTotalFonts[piType] = fontVal;
+        localStorage.setItem('pi_total_fonts_data', JSON.stringify(piTotalFonts));
+        updateTableStyles();
     }
 
-    // Weight Output সেট করা
-    const weightInput = document.getElementById('weightPerUnit');
-    if (weightInput) {
-        weightInput.value = calculatedWeight.toFixed(7);
+    function calculatePolyMeasurement() {
+        const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
+        const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
+        const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
+        const gussetInput = parseFloat(document.getElementById('polyG')?.value) || 0;
+        const thickness = parseFloat(document.getElementById('polyT')?.value) || 0;
+        
+        const unit = document.getElementById('polyUnit')?.value || 'inch';
+        let flapStr = flapInput > 0 ? `+F-${flapInput}` : ``;
+        let result = "";
+
+        if (unit === 'inch') {
+            let gussetStr = gussetInput > 0 ? `(${gussetInput}"+${gussetInput})` : ``;
+            result = `L-${lengthInput}${flapStr}"XW-${widthInput}"${gussetStr}XT-${thickness}`;
+        } else {
+            let gussetStr = gussetInput > 0 ? `(${gussetInput}+${gussetInput}) CM ` : ` CM `;
+            result = `L-${lengthInput}${flapStr}XW-${widthInput}${gussetStr}XT-${thickness}`;
+        }
+
+        const measInput = document.getElementById('measurement');
+        if (measInput) { measInput.value = result; }
     }
-}
+
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
         const inputContainer = document.getElementById('dynamicInputContainer');
@@ -644,14 +698,13 @@ function calculatePolyMeasurement() {
             inputContainer.innerHTML = `
                 ${baseInputs}
                 <div class="form-group"><label for="item">3. Item</label><input type="text" id="item" value="Printed Care Label"></div>
-                <div class="form-group"><label for="descriptionGoods">4. Description of Goods</label><input type="text" id="descriptionGoods" value="Size: 25mm X 70mm max."></div>
+                <div class="form-group"><label for="descriptionGoods">4. Description of Goods (Size)</label><input type="text" id="descriptionGoods" value="25mm X 70mm max."></div>
                 <div class="form-group"><label for="projectNo">5. Project No.</label><textarea id="projectNo" rows="2" placeholder="Project No..."></textarea></div>
                 <div class="form-group"><label for="articleNo">6. Article No.</label><textarea id="articleNo" rows="2" placeholder="Article No..."></textarea></div>
                 <div class="form-group"><label for="color">7. Color</label><textarea id="color" rows="2" placeholder="Color..."></textarea></div>
                 <div class="form-group"><label for="qty">8. QTY (Yds/Pcs)</label><input type="number" id="qty" placeholder="0"></div>
                 <div class="form-group"><label for="unitDropdown">9. Unit (Yds/Dzn)</label><select id="unitDropdown"><option value="Pcs">Pcs</option><option value="Yds">Yds</option><option value="Dzn">Dzn</option></select></div>
-                <div class="form-group"><label for="weightPerUnit">10. Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.0000"></div>
-                <div class="form-group"><label for="unitPrice">11. Unit Price (USD)</label><input type="number" step="0.0001" id="unitPrice" placeholder="0.0000"></div>
+                <div class="form-group"><label for="unitPrice">10. Unit Price (USD)</label><input type="number" step="0.0001" id="unitPrice" placeholder="0.0000"></div>
             `;
         } else if(piType === 'poly') {
             inputContainer.innerHTML = `
@@ -660,7 +713,6 @@ function calculatePolyMeasurement() {
                 <div class="form-group"><label for="measurement">Measurement (Auto-generated)</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
                 <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="calculatePolyMeasurement()"></div>
-                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
                 
@@ -706,7 +758,6 @@ function calculatePolyMeasurement() {
                 <div class="form-group"><label for="poNo">PO No.</label><input type="text" id="poNo" placeholder="PO No..."></div>
                 <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..."></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
-                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Yds"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
             `;
@@ -719,7 +770,6 @@ function calculatePolyMeasurement() {
                 <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..."></div>
                 <div class="form-group"><label for="bleach">Bleach/Non Bleach</label><select id="bleach"><option value="Non Bleach">Non Bleach</option><option value="Bleach">Bleach</option></select></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
-                <div class="form-group"><label for="weightPerUnit">Weight/Unit (KG)</label><input type="number" step="0.000001" id="weightPerUnit" placeholder="0.025"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Cone"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
             `;
@@ -752,6 +802,14 @@ function calculatePolyMeasurement() {
         localStorage.setItem('pi_items_data', JSON.stringify(items));
     }
 
+    function formatLabelDescription(itemVal, descVal) {
+        let cleanDesc = descVal ? descVal.replace(/^Size:\s*/i, '') : '';
+        let parts = [];
+        if (cleanDesc) parts.push(`Size: ${cleanDesc}`);
+        if (itemVal) parts.push(`Item: ${itemVal}`);
+        return parts.join("\n");
+    }
+
     function addItem() {
         const piType = document.getElementById('piType').value;
         const slNo = parseInt(document.getElementById('slNo').value) || slCounter;
@@ -767,9 +825,6 @@ function calculatePolyMeasurement() {
             itemData.color = document.getElementById('color').value;
             itemData.qty = parseFloat(document.getElementById('qty').value) || 0;
             itemData.unitDropdown = document.getElementById('unitDropdown').value;
-            const weightPerUnit = parseFloat(document.getElementById('weightPerUnit').value) || 0;
-            itemData.weightPerUnit = weightPerUnit;
-            itemData.qtyKg = parseFloat((itemData.qty * weightPerUnit).toFixed(4));
             itemData.unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
             itemData.amount = parseFloat((itemData.qty * itemData.unitPrice).toFixed(4));
 
@@ -781,11 +836,8 @@ function calculatePolyMeasurement() {
             itemData.desc = document.getElementById('desc').value;
             itemData.measurement = document.getElementById('measurement').value;
             itemData.qty = parseFloat(document.getElementById('qty').value) || 0;
-            const weightPerUnit = parseFloat(document.getElementById('weightPerUnit').value) || 0;
-            itemData.weightPerUnit = weightPerUnit;
             itemData.unit = document.getElementById('unit').value;
             itemData.price = parseFloat(document.getElementById('price').value) || 0;
-            itemData.qtyKg = parseFloat((itemData.qty * weightPerUnit).toFixed(4));
             itemData.amount = parseFloat((itemData.qty * itemData.price).toFixed(4));
 
             if(piType === 'poly') {
@@ -843,13 +895,12 @@ function calculatePolyMeasurement() {
 
         if(item.piType === 'label') {
             document.getElementById('item').value = item.item || 'Printed Care Label';
-            document.getElementById('descriptionGoods').value = item.descriptionGoods || '';
+            document.getElementById('descriptionGoods').value = item.descriptionGoods ? item.descriptionGoods.replace(/^Size:\s*/i, '') : '';
             document.getElementById('projectNo').value = item.projectNo || '';
             document.getElementById('articleNo').value = item.articleNo || '';
             document.getElementById('color').value = item.color || '';
             document.getElementById('qty').value = item.qty || '';
             document.getElementById('unitDropdown').value = item.unitDropdown || 'Pcs';
-            document.getElementById('weightPerUnit').value = item.weightPerUnit || '';
             document.getElementById('unitPrice').value = item.unitPrice || '';
         } else {
             document.getElementById('desc').value = item.desc || '';
@@ -876,7 +927,6 @@ function calculatePolyMeasurement() {
                 document.getElementById('style').value = item.style || '';
             }
             document.getElementById('qty').value = item.qty || '';
-            document.getElementById('weightPerUnit').value = item.weightPerUnit || '';
             document.getElementById('unit').value = item.unit || '';
             document.getElementById('price').value = item.price || '';
         }
@@ -927,27 +977,24 @@ function calculatePolyMeasurement() {
             }
 
             let totalQty = 0;
-            let totalKg = 0;
             let totalAmount = 0;
 
             filteredItems.forEach((item) => {
                 totalQty += item.qty;
-                totalKg += (item.qtyKg || 0);
                 totalAmount += (item.amount || 0);
 
                 let row = '';
                 if(type === 'label') {
+                    const formattedDesc = formatLabelDescription(item.item, item.descriptionGoods);
                     row = `<tr>
                         <td style="text-align:center;">${item.slNo}</td>
                         <td>${item.hsCode || ''}</td>
-                        <td>${item.item || 'Printed Care Label'}</td>
-                        <td class="wrap-cell">${item.descriptionGoods || ''}</td>
+                        <td class="wrap-cell">${formattedDesc}</td>
                         <td class="wrap-cell">${item.projectNo || ''}</td>
                         <td class="wrap-cell">${item.articleNo || ''}</td>
                         <td class="wrap-cell">${item.color || ''}</td>
                         <td>${item.qty}</td>
                         <td>${item.unitDropdown || 'Pcs'}</td>
-                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
                         <td>$${(item.unitPrice || 0).toFixed(4)}</td>
                         <td>$${(item.amount || 0).toFixed(2)}</td>
                         <td style="white-space: nowrap; text-align:center;" class="no-print">
@@ -965,7 +1012,6 @@ function calculatePolyMeasurement() {
                         <td>${item.color || ''}</td>
                         <td>${item.qty}</td>
                         <td>${item.unit}</td>
-                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
                         <td>$${item.price.toFixed(4)}</td>
                         <td>$${item.amount.toFixed(2)}</td>
                         <td style="white-space: nowrap;" class="no-print">
@@ -984,7 +1030,6 @@ function calculatePolyMeasurement() {
                         <td>${item.bleach || ''}</td>
                         <td>${item.qty}</td>
                         <td>${item.unit}</td>
-                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
                         <td>${item.price.toFixed(4)}</td>
                         <td>${item.amount.toFixed(2)}</td>
                         <td style="white-space: nowrap;" class="no-print">
@@ -1000,7 +1045,6 @@ function calculatePolyMeasurement() {
                         <td>${item.measurement || ''}</td>
                         <td>${item.style || ''}</td>
                         <td>${item.qty}</td>
-                        <td>${(item.qtyKg || 0).toFixed(2)}</td>
                         <td>${item.unit}</td>
                         <td>${item.price.toFixed(4)}</td>
                         <td>${item.amount.toFixed(2)}</td>
@@ -1014,10 +1058,8 @@ function calculatePolyMeasurement() {
             });
 
             const tQty = document.getElementById(`totalQty-${type}`);
-            const tKg = document.getElementById(`totalKg-${type}`);
             const tAmt = document.getElementById(`totalAmount-${type}`);
             if(tQty) tQty.innerText = totalQty;
-            if(tKg) tKg.innerText = totalKg.toFixed(2);
             if(tAmt) tAmt.innerText = totalAmount.toFixed(2);
         });
     }
@@ -1032,13 +1074,12 @@ function calculatePolyMeasurement() {
 
         if(piType === 'label') {
             document.getElementById('item').value = 'Printed Care Label';
-            document.getElementById('descriptionGoods').value = 'Size: 25mm X 70mm max.';
+            document.getElementById('descriptionGoods').value = '25mm X 70mm max.';
             document.getElementById('projectNo').value = '';
             document.getElementById('articleNo').value = '';
             document.getElementById('color').value = '';
             document.getElementById('qty').value = '';
             document.getElementById('unitDropdown').value = 'Pcs';
-            document.getElementById('weightPerUnit').value = '';
             document.getElementById('unitPrice').value = '';
         } else {
             document.getElementById('desc').value = '';
@@ -1048,14 +1089,12 @@ function calculatePolyMeasurement() {
             const po = document.getElementById('poNo');
             const cl = document.getElementById('color');
             const qt = document.getElementById('qty');
-            const wpu = document.getElementById('weightPerUnit');
             const pr = document.getElementById('price');
             if(st) st.value = '';
             if(sty) sty.value = '';
             if(po) po.value = '';
             if(cl) cl.value = '';
             if(qt) qt.value = '';
-            if(wpu) wpu.value = '';
             if(pr) pr.value = '';
         }
     }
@@ -1105,21 +1144,15 @@ function calculatePolyMeasurement() {
             return;
         }
 
-        // ==========================================
-        // ১. কনফিগারেশন ভ্যালুসমূহ
-        // ==========================================
         const EXCEL_CONFIG = {
             rowHeights: {
-                header: 30,    // হেডার রো-এর হাইট
-                data: 22,      // ডাটা সারির হাইট
-                footer: 25     // ফুটারের হাইট
+                header: 30,
+                data: 22,
+                footer: 25
             },
             widthMultiplier: 1.0 
         };
 
-        // ==========================================
-        // ২. কাস্টম কলাম উইডথ লজিক
-        // ==========================================
         let customColWidths = [];
 
         switch (piType) {
@@ -1127,14 +1160,12 @@ function calculatePolyMeasurement() {
                 customColWidths = [
                     { wch: 6 },   // SL No.
                     { wch: 12 },  // H.S CODE
-                    { wch: 15 },  // Item
                     { wch: 25 },  // Description of Goods
                     { wch: 15 },  // Project No.
                     { wch: 16 },  // Article No.
                     { wch: 14 },  // Color
                     { wch: 12 },  // QTY
                     { wch: 10 },  // Unit
-                    { wch: 14 },  // QTY in (KG)
                     { wch: 16 },  // Unit Price (USD)
                     { wch: 16 }   // Amount (USD)
                 ];
@@ -1142,14 +1173,13 @@ function calculatePolyMeasurement() {
             case 'elastic':
                 customColWidths = [
                     { wch: 6 },   // SL No.
-                    { wch: 4},  // H.S CODE
-                    { wch: 4 },  // Description of Goods
+                    { wch: 12 },  // H.S CODE
+                    { wch: 22 },  // Description of Goods
                     { wch: 18 },  // Measurement
                     { wch: 18 },  // PO/Style NO.
                     { wch: 14 },  // Color
                     { wch: 12 },  // QTY
                     { wch: 10 },  // Unit
-                    { wch: 14 },  // QTY (KG)
                     { wch: 16 },  // Unit Price (USD)
                     { wch: 16 }   // Amount (USD)
                 ];
@@ -1165,7 +1195,6 @@ function calculatePolyMeasurement() {
                     { wch: 16 },  // Bleach/ Non Bleach
                     { wch: 12 },  // QTY
                     { wch: 10 },  // Unit
-                    { wch: 14 },  // QTY (KG)
                     { wch: 16 },  // Unit Price (USD)
                     { wch: 16 }   // Amount (USD)
                 ];
@@ -1178,7 +1207,6 @@ function calculatePolyMeasurement() {
                     { wch: 20 },  // Measurement
                     { wch: 18 },  // Style/PO No.
                     { wch: 12 },  // QTY (Pcs)
-                    { wch: 14 },  // QTY (KG)
                     { wch: 10 },  // Unit
                     { wch: 16 },  // Unit Price (USD)
                     { wch: 16 }   // Amount (USD)
@@ -1194,7 +1222,7 @@ function calculatePolyMeasurement() {
         const buyerRef = document.getElementById('buyerRef').value;
         const attn = document.getElementById('attn').value;
 
-        let totalQty = 0, totalKg = 0, totalAmount = 0;
+        let totalQty = 0, totalAmount = 0;
 
         const thinBlackBorder = {
             top: { style: 'thin', color: { rgb: '000000' } },
@@ -1219,21 +1247,21 @@ function calculatePolyMeasurement() {
 
         let headerCols = [];
         if (piType === 'label') {
-            headerCols = ["SL No.", "H.S CODE", "Item", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "QTY in (KG)", "Unit Price (USD)", "Amount (USD)"];
+            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
         } else if (piType === 'elastic') {
-            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "QTY (KG)", "Unit Price (USD)", "Amount (USD)"];
+            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
         } else if (piType === 'thread') {
-            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "QTY (KG)", "Unit Price (USD)", "Amount (USD)"];
+            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
         } else {
-            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "QTY (KG)", "Unit", "Unit Price (USD)", "Amount (USD)"];
+            headerCols = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
         }
 
         const lastColIndex = headerCols.length - 1;
 
         let rawData = [
             [{ v: "STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize }, alignment: alignCenter } }],
-            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { size: 9 }, alignment: alignCenter } }],
-            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, size: 9 }, alignment: alignCenter, border: bottomThickBorder } }],
+            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { size: 11 }, alignment: alignCenter } }],
+            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, size: 11 }, alignment: alignCenter, border: bottomThickBorder } }],
             [],
             Array.from({ length: lastColIndex + 1 }, (_, i) => {
                 if (i === 0) return { v: `PI No: ${piNo}`, s: { font: { bold: true }, alignment: alignLeft } };
@@ -1276,21 +1304,19 @@ function calculatePolyMeasurement() {
 
         selectedItems.forEach(item => {
             totalQty += item.qty;
-            totalKg += (item.qtyKg || 0);
             totalAmount += (item.amount || 0);
 
             if (piType === 'label') {
+                const formattedDesc = formatLabelDescription(item.item, item.descriptionGoods);
                 rawData.push([
                     { v: item.slNo, s: { border: thinBlackBorder, alignment: alignCenter } },
                     { v: item.hsCode || "", s: { border: thinBlackBorder, alignment: alignLeft } },
-                    { v: item.item || "", s: { border: thinBlackBorder, alignment: alignLeft } },
-                    { v: item.descriptionGoods || "", s: { border: thinBlackBorder, alignment: alignLeft } },
+                    { v: formattedDesc || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.projectNo || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.articleNo || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.color || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.qty, t: 'n', z: '#,##0', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.unitDropdown || 'Pcs', s: { border: thinBlackBorder, alignment: alignCenter } },
-                    { v: item.qtyKg || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.unitPrice || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
                 ]);
@@ -1304,7 +1330,6 @@ function calculatePolyMeasurement() {
                     { v: item.color || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.qty, t: 'n', z: '#,##0', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.unit || 'Yds', s: { border: thinBlackBorder, alignment: alignCenter } },
-                    { v: item.qtyKg || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.price || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
                 ]);
@@ -1319,7 +1344,6 @@ function calculatePolyMeasurement() {
                     { v: item.bleach || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.qty, t: 'n', z: '#,##0', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.unit || 'Cone', s: { border: thinBlackBorder, alignment: alignCenter } },
-                    { v: item.qtyKg || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.price || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
                 ]);
@@ -1331,7 +1355,6 @@ function calculatePolyMeasurement() {
                     { v: item.measurement || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.style || "", s: { border: thinBlackBorder, alignment: alignLeft } },
                     { v: item.qty, t: 'n', z: '#,##0', s: { border: thinBlackBorder, alignment: alignRight } },
-                    { v: item.qtyKg || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.unit || 'Pcs', s: { border: thinBlackBorder, alignment: alignCenter } },
                     { v: item.price || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
@@ -1339,14 +1362,13 @@ function calculatePolyMeasurement() {
             }
         });
 
-        let totalColspan = (piType === 'label') ? 7 : (piType === 'elastic' ? 6 : (piType === 'thread' ? 7 : 5));
+        let totalColspan = (piType === 'label') ? 6 : (piType === 'elastic' ? 6 : (piType === 'thread' ? 7 : 5));
         let totalRowArr = [];
         for (let i = 0; i < totalColspan; i++) {
             totalRowArr.push(i === 0 ? { v: "Total =", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } } : { v: "", s: { border: thinBlackBorder } });
         }
         totalRowArr.push({ v: totalQty, t: 'n', z: '#,##0', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
         totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
-        totalRowArr.push({ v: totalKg, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
         totalRowArr.push({ v: "-", s: { font: { bold: true }, border: thinBlackBorder, alignment: alignCenter } });
         totalRowArr.push({ v: totalAmount, t: 'n', z: '#,##0.00', s: { font: { bold: true }, border: thinBlackBorder, alignment: alignRight } });
         rawData.push(totalRowArr);
@@ -1397,35 +1419,24 @@ function calculatePolyMeasurement() {
 
         const worksheet = XLSX.utils.aoa_to_sheet(rawData);
 
-        // ==========================================
-        // ৩. কলাম উইডথ প্রয়োগকরণ
-        // ==========================================
         worksheet['!cols'] = customColWidths.map(col => ({
             wch: Math.round(col.wch * EXCEL_CONFIG.widthMultiplier)
         }));
 
-        // ==========================================
-        // ৪. ডাইনামিক রো হাইট প্রয়োগকরণ
-        // ==========================================
         let rowHeightsList = [];
 
-        // হেডার তথ্য সারির ডিফল্ট হাইট
         for (let i = 0; i < 13; i++) {
             rowHeightsList.push({ hpt: 18 });
         }
 
-        // হেডার সারির হাইট
         rowHeightsList.push({ hpt: EXCEL_CONFIG.rowHeights.header });
 
-        // ডাটা সারির ডায়নামিক হাইট প্রয়োগ
         selectedItems.forEach(() => {
             rowHeightsList.push({ hpt: EXCEL_CONFIG.rowHeights.data });
         });
 
-        // ফুটার সারি (Total Row)
         rowHeightsList.push({ hpt: EXCEL_CONFIG.rowHeights.footer });
 
-        // এক্সেল ওয়ার্কশিটে Row Height সেট করে দেওয়া
         worksheet['!rows'] = rowHeightsList;
 
         worksheet['!merges'] = [
@@ -1450,6 +1461,7 @@ function calculatePolyMeasurement() {
         }
 
         const customFontSize = parseInt(document.getElementById('headerFontSize').value) || 22;
+        const rowHeight = document.getElementById('rowHeightInput').value || 8;
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
         const buyerName = document.getElementById('buyerName').value;
@@ -1457,29 +1469,71 @@ function calculatePolyMeasurement() {
         const buyerRef = document.getElementById('buyerRef').value;
         const attn = document.getElementById('attn').value;
 
-        let totalQty = 0;
-        let totalKg = 0;
-        let totalAmount = 0;
+        const colWidths = piColumnWidths[piType] || {};
+        const cellFonts = piCellFonts[piType] || {};
+        const totalFontSize = piTotalFonts[piType] || 12;
+
+        let totalQty = 0, totalAmount = 0;
+
+        let inlineStyles = `
+            #printTemplate table th, #printTemplate table td {
+                padding: ${rowHeight}px !important;
+                border: 1px solid #000 !important;
+                vertical-align: middle !important;
+                overflow: hidden !important;
+                word-wrap: break-word !important;
+            }
+            #printTemplate .print-total-row {
+                font-size: ${totalFontSize}px !important;
+                font-weight: bold !important;
+            }
+        `;
+
+        let colNamesArr = [];
+        if(piType === 'label') {
+            colNamesArr = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else if(piType === 'elastic') {
+            colNamesArr = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else if(piType === 'thread') {
+            colNamesArr = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else {
+            colNamesArr = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        }
+
+        colNamesArr.forEach((colName, index) => {
+            let widthVal = colWidths[colName] || 90;
+            let fontVal = cellFonts[colName] || 12;
+            let colIdx = index + 1;
+            inlineStyles += `
+                #printTemplate .dynamic-table th:nth-child(${colIdx}), 
+                #printTemplate .dynamic-table td:nth-child(${colIdx}) {
+                    width: ${widthVal}px !important;
+                    min-width: ${widthVal}px !important;
+                    max-width: ${widthVal}px !important;
+                }
+                #printTemplate .dynamic-table tbody td:nth-child(${colIdx}) {
+                    font-size: ${fontVal}px !important;
+                }
+            `;
+        });
 
         let rowsHtml = '';
         selectedItems.forEach(item => {
             totalQty += item.qty;
-            totalKg += (item.qtyKg || 0);
             totalAmount += (item.amount || 0);
 
             if(piType === 'label') {
+                const formattedDesc = formatLabelDescription(item.item, item.descriptionGoods);
                 rowsHtml += `
                     <tr>
                         <td style="text-align:center;">${item.slNo}</td>
                         <td>${item.hsCode || ''}</td>
-                        <td>${item.item || ''}</td>
-                        <td>${item.descriptionGoods || ''}</td>
-                        <td>${item.projectNo || ''}</td>
-                        <td>${item.articleNo || ''}</td>
-                        <td>${item.color || ''}</td>
+                        <td class="wrap-cell">${formattedDesc}</td>
+                        <td class="wrap-cell">${item.projectNo || ''}</td>
+                        <td class="wrap-cell">${item.articleNo || ''}</td>
+                        <td class="wrap-cell">${item.color || ''}</td>
                         <td style="text-align:right;">${item.qty}</td>
                         <td style="text-align:center;">${item.unitDropdown || 'Pcs'}</td>
-                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
                         <td style="text-align:right;">${(item.unitPrice || 0).toFixed(4)}</td>
                         <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
                     </tr>
@@ -1489,13 +1543,12 @@ function calculatePolyMeasurement() {
                     <tr>
                         <td style="text-align:center;">${item.slNo}</td>
                         <td>${item.hsCode || ''}</td>
-                        <td>${item.desc || ''}</td>
-                        <td>${item.measurement || ''}</td>
-                        <td>Sty: ${item.styNo || ''}, PO: ${item.poNo || ''}</td>
-                        <td>${item.color || ''}</td>
+                        <td class="wrap-cell">${item.desc || ''}</td>
+                        <td class="wrap-cell">${item.measurement || ''}</td>
+                        <td class="wrap-cell">Sty: ${item.styNo || ''}, PO: ${item.poNo || ''}</td>
+                        <td class="wrap-cell">${item.color || ''}</td>
                         <td style="text-align:right;">${item.qty}</td>
                         <td style="text-align:center;">${item.unit || 'Yds'}</td>
-                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
                         <td style="text-align:right;">${(item.price || 0).toFixed(4)}</td>
                         <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
                     </tr>
@@ -1505,14 +1558,13 @@ function calculatePolyMeasurement() {
                     <tr>
                         <td style="text-align:center;">${item.slNo}</td>
                         <td>${item.hsCode || ''}</td>
-                        <td>${item.desc || ''}</td>
-                        <td>${item.measurement || ''}</td>
-                        <td>${item.style || ''}</td>
-                        <td>${item.color || ''}</td>
-                        <td>${item.bleach || ''}</td>
+                        <td class="wrap-cell">${item.desc || ''}</td>
+                        <td class="wrap-cell">${item.measurement || ''}</td>
+                        <td class="wrap-cell">${item.style || ''}</td>
+                        <td class="wrap-cell">${item.color || ''}</td>
+                        <td class="wrap-cell">${item.bleach || ''}</td>
                         <td style="text-align:right;">${item.qty}</td>
                         <td style="text-align:center;">${item.unit || 'Cone'}</td>
-                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
                         <td style="text-align:right;">${(item.price || 0).toFixed(4)}</td>
                         <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
                     </tr>
@@ -1522,11 +1574,10 @@ function calculatePolyMeasurement() {
                     <tr>
                         <td style="text-align:center;">${item.slNo}</td>
                         <td>${item.hsCode || ''}</td>
-                        <td>${item.desc || ''}</td>
-                        <td>${item.measurement || ''}</td>
-                        <td>${item.style || ''}</td>
+                        <td class="wrap-cell">${item.desc || ''}</td>
+                        <td class="wrap-cell">${item.measurement || ''}</td>
+                        <td class="wrap-cell">${item.style || ''}</td>
                         <td style="text-align:right;">${item.qty}</td>
-                        <td style="text-align:right;">${(item.qtyKg || 0).toFixed(2)}</td>
                         <td style="text-align:center;">${item.unit || 'Pcs'}</td>
                         <td style="text-align:right;">${(item.price || 0).toFixed(4)}</td>
                         <td style="text-align:right;">${(item.amount || 0).toFixed(2)}</td>
@@ -1540,61 +1591,62 @@ function calculatePolyMeasurement() {
         let unitTextLabel = 'Pcs';
 
         if(piType === 'label') {
-            totalColspanVal = 7;
+            totalColspanVal = 6;
             unitTextLabel = '-';
-            tableHeaderHtml = `
-                <th>SL No.</th><th>H.S CODE</th><th>Item</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
-            `;
+            tableHeaderHtml = `<th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th>`;
         } else if(piType === 'elastic') {
             totalColspanVal = 6;
             unitTextLabel = 'Yds';
-            tableHeaderHtml = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
-            `;
+            tableHeaderHtml = `<th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>PO/Style NO.</th><th>Color</th><th>QTY</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th>`;
         } else if(piType === 'thread') {
             totalColspanVal = 7;
             unitTextLabel = 'Cone';
-            tableHeaderHtml = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>QTY (KG)</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
-            `;
+            tableHeaderHtml = `<th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/ PO No.</th><th>Color</th><th>Bleach/ Non Bleach</th><th>QTY</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th>`;
         } else {
             totalColspanVal = 5;
             unitTextLabel = 'Pcs';
-            tableHeaderHtml = `
-                <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>QTY (KG)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th>
-            `;
+            tableHeaderHtml = `<th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Measurement</th><th>Style/PO No.</th><th>QTY (Pcs)</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th>`;
         }
 
         const amountInWords = numToWords(totalAmount);
 
+        // ১ ও ২ নম্বর অপশন এবং S-এর কাছাকাছি লোগো সেট করা প্রিন্ট টেমপ্লেট
         const template = `
-            <div id="printTemplate" style="font-family: Arial, sans-serif; font-size: 11px; color: #000; line-height: 1.2;">
-                <div style="border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; position: relative; min-height: 50px; display: flex; align-items: center; justify-content: center;">
-                    <img src="${companyLogoUrl}" style="height: 42px; width: auto; position: absolute; left: 50px; top: 50%; transform: translateY(-75%); display: block;" alt="Logo" />
-                    <div style="text-align: center;">
-                        <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px;">STERLING ACCESSORIES LIMITED.</h2>
-                        <div style="font-size: 9.5px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
-                        <div style="font-size: 9.5px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+            <div id="printTemplate" style="font-family: Arial, sans-serif; font-size: 16px; color: #000; line-height: 1.2; width: 100%;">
+                <style>${inlineStyles}</style>
+                
+                <!-- ১. Flexbox Layout Container: লোগোকে 'S' অক্ষরের ঠিক কাছাকাছি স্থাপন করা হয়েছে -->
+                <div style="display: flex; justify-content: center; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; width: 100%;">
+                    <!-- লোগো কন্টেইনার (S এর ঠিক বামে বসানোর জন্য flex inline সেটিং) -->
+                    <div style="display: flex; align-items: flex-start; justify-content: center; gap: 8px;">
+                        <img src="${companyLogoUrl}" style="height: 38px; width: auto; display: block; margin-top: 2px;" alt="Logo" />
+                        <div style="text-align: center;">
+                            <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px;">STERLING ACCESSORIES LIMITED.</h2>
+                            <div style="font-size: ${Math.round(customFontSize * 0.45)}px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
+                            <div style="font-size: ${Math.round(customFontSize * 0.45)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                        </div>
                     </div>
                 </div>
 
-                <table style="width: 100%; border: none; margin-bottom: 12px; font-size: 12px; font-weight: bold;">
+                <!-- ২. ১০০% উইডথের আলাদা টেবিলে ইনভয়েস তথ্য -->
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; font-weight: bold; border: none !important;">
                     <tr>
-                        <td style="width: 33%; border: none; padding: 0; text-align: left;">PI No: ${piNo}</td>
-                        <td style="width: 34%; border: none; padding: 0; text-align: center;"><u style="font-size: 13px;">PROFORMA INVOICE</u></td>
-                        <td style="width: 33%; border: none; padding: 0; text-align: right;">Date: ${piDate}</td>
+                        <td style="width: 33%; border: none !important; padding: 0; text-align: left;">PI No: ${piNo}</td>
+                        <td style="width: 34%; border: none !important; padding: 0; text-align: center;"><u style="font-size: 12px;">PROFORMA INVOICE</u></td>
+                        <td style="width: 33%; border: none !important; padding: 0; text-align: right;">Date: ${piDate}</td>
                     </tr>
                 </table>
 
-                <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse; font-size: 11px; border: none;">
+                <!-- ২. ১০০% উইডথের আলাদা টেবিলে বায়ার ও সেলারের তথ্য -->
+                <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse; font-size: 10px; border: none !important;">
                     <tr>
-                        <td style="width: 50%; vertical-align: top; border: none; padding: 0; text-align: left;">
+                        <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: left;">
                             <u><b>Name & Address of Buyer:</b></u><br>
                             <b>${buyerName}</b><br><div style="white-space: pre-line;">${buyerAddress}</div><br>
                             <b>BUYER REF : ${buyerRef}</b><br>
                             <b>Atten: ${attn}</b>
                         </td>
-                        <td style="width: 50%; vertical-align: top; border: none; padding: 0; text-align: right;">
+                        <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: right;">
                             <u><b>Name & Address of Seller:</b></u><br>
                             <b>STERLING ACCESSORIES LTD.</b><br>
                             Holding-375, East Bagbari,<br>
@@ -1604,7 +1656,8 @@ function calculatePolyMeasurement() {
                     </tr>
                 </table>
 
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px;" border="1">
+                <!-- প্রডাক্ট ডাটার মূল টেবিল -->
+                <table class="dynamic-table" style="width: 100%; border-collapse: collapse; margin-bottom: 8px; table-layout: fixed;" border="1">
                     <thead>
                         <tr style="background-color: #f2f2f2; text-align: center; font-weight: bold;">
                             ${tableHeaderHtml}
@@ -1612,22 +1665,21 @@ function calculatePolyMeasurement() {
                     </thead>
                     <tbody>
                         ${rowsHtml}
-                        <tr style="font-weight: bold;">
+                        <tr class="print-total-row">
                             <td colspan="${totalColspanVal}" style="text-align: right;">Total =</td>
                             <td style="text-align: right;">${totalQty}</td>
                             <td style="text-align: center;">${unitTextLabel}</td>
-                            <td style="text-align: right;">${totalKg.toFixed(2)}</td>
                             <td></td>
                             <td style="text-align: right;">${totalAmount.toFixed(2)}</td>
                         </tr>
                     </tbody>
                 </table>
 
-                <div style="font-weight: bold; margin-bottom: 12px; font-size: 11px;">
+                <div style="font-weight: bold; margin-bottom: 8px; font-size: 12px;">
                     Total Value In word: (${amountInWords})
                 </div>
 
-                <div style="font-size: 11px; line-height: 1.35; margin-bottom: 20px;">
+                <div style="font-size: 11px; line-height: 1.25; margin-bottom: 12px;">
                     <u><b>TERMS & CONDITIONS:</b></u><br>
                     <b>1.PAYMENT TERMS :</b><br>
                     A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery.<br>
@@ -1645,23 +1697,27 @@ function calculatePolyMeasurement() {
                     <b>10.Bank Charge:</b> All Bank Charges except beneficiary's bank are on Opener's Account.<br>
                     <b>11.Overdue Interest:</b> Payment will be made within the date of Maturity. If failed, overdue interest to be paid at 16%.<br>
                     <b>12.Deduction:</b> Deduction clause for any discrepancies is not acceptable.<br>
-                    <b>13.Claim/ Complain:</b> Claim regarding Quantity/Quality must be informed within 3 days after receiving goods. Tolerance is 5/6%.
+                    <b>13.Claim/ Complain:</b> Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods.No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change.
                 </div>
 
-                <table style="width: 100%; border: none; margin-top: 20px;">
+                <table style="width: 100%; border-collapse: collapse; border: none !important; margin-top: 10px;">
                     <tr>
-                        <td style="width: 50%; border: none; padding: 0; vertical-align: bottom;">
-                            <b>For Sterling Accessories Ltd.</b><br>
-                            <div style="margin: 8px 0;">
-                                <img src="${stampImageUrl}" style="height: 65px; width: auto; display: inline-block;" alt="Seal & Signature" />
+                        <td style="width: 50%; border: none !important; padding: 10px; vertical-align: top; text-align: left;">
+                            <b style="font-size: 11px;">For Sterling Accessories Ltd.</b><br>
+                            <div style="margin: 10px 0;">
+                                <img src="${stampImageUrl}" style="height: 100px; width: auto; display: inline-block;" alt="Seal & Signature" />
                             </div>
-                            <div style="display: block;">
-                                ________________________<br> Authorised Signature
+                            <div style="margin-top: 20px; font-weight: bold;">
+                                ________________________<br> 
+                                Authorised Signature
                             </div>
                         </td>
-                        <td style="width: 50%; text-align: right; border: none; padding: 0; vertical-align: bottom;">
-                            <b>Buyer Approval</b><br><br><br><br><br><br>
-                            ________________________<br> Signature of Buyer
+                        <td style="width: 50%; border: none !important; padding: 10px; vertical-align: top; text-align: right;">
+                            <b style="font-size: 11px;">Buyer Approval</b><br><br><br><br><br>
+                            <div style="margin-top: 20px; font-weight: bold;">
+                                ________________________<br> 
+                                Signature of Buyer
+                            </div>
                         </td>
                     </tr>
                 </table>
