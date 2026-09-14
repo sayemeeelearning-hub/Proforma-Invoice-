@@ -230,7 +230,6 @@
                 print-color-adjust: exact;
             }
         }
-        
     </style>
 </head>
 <body>
@@ -238,7 +237,7 @@
 <div class="container">
     <div class="header-container">
         <h2>Proforma Invoice (PI) Generator</h2>
-          <h2>Developer By:ENGR.MINHAZ ALAM</h2>
+        <h2>Developer By: ENGR. MINHAZ ALAM</h2>
         <div class="pi-type-container no-print">
             <label for="piType">PI Item Select:</label>
             <select id="piType" onchange="handlePiTypeChange()">
@@ -285,6 +284,9 @@
         <button type="button" class="btn-add" onclick="addItem()">+ ডাটা যোগ করুন (Add Row)</button>
         <button type="button" class="btn-export" onclick="exportToExcel()">📥 এক্সেল ডাউনলোড (Export to Excel)</button>
         <button type="button" class="btn-print" onclick="printPDF()">🖨️ PDF / প্রিন্ট (Save/Print PDF)</button>
+        <button type="button" class="btn-export" style="background-color: #16a085;" onclick="downloadJSON()">💾 JSON ডাউনলোড (Save Current Tab)</button>
+        <button type="button" class="btn-export" style="background-color: #d35400;" onclick="document.getElementById('jsonFileInput').click()">📂 JSON আপলোড (Load Current Tab)</button>
+        <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
         <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ রিসেট (Reset All)</button>
     </div>
 
@@ -425,8 +427,21 @@
     const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
 
     let items = [];
-    let slCounter = 1;
+    let slCounters = { elastic: 1, poly: 1, label: 1, thread: 1 };
     let editIndex = -1;
+
+    // Undo / Redo হিস্ট্রি ম্যানেজমেন্ট ভেরিয়েবল
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 50;
+
+    function saveStateForUndo() {
+        undoStack.push(JSON.stringify(items));
+        if (undoStack.length > MAX_HISTORY) {
+            undoStack.shift();
+        }
+        redoStack = []; // নতুন কোনো অ্যাকশন নিলে রিডো স্ট্যাক ক্লিয়ার হয়ে যাবে
+    }
 
     let piColumnWidths = {
         elastic: { "SL No.": 40, "H.S CODE": 90, "Description of Goods": 100, "Measurement": 100, "PO/Style NO.": 100, "Color": 90, "QTY": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
@@ -465,9 +480,13 @@
         if (savedItems) {
             try {
                 items = JSON.parse(savedItems);
-                if (items.length > 0) {
-                    slCounter = items[items.length - 1].slNo + 1;
-                }
+                ['elastic', 'poly', 'label', 'thread'].forEach(type => {
+                    const typeItems = items.filter(i => i.piType === type);
+                    if (typeItems.length > 0) {
+                        const maxSl = Math.max(...typeItems.map(i => i.slNo || 0));
+                        slCounters[type] = maxSl + 1;
+                    }
+                });
             } catch (e) { items = []; }
         }
 
@@ -495,63 +514,219 @@
             if(el) el.addEventListener('input', saveHeaderToStorage);
         });
         document.getElementById('piType').addEventListener('change', saveHeaderToStorage);
+
+        // গ্লোবাল কিবোর্ড শর্টকাট (Ctrl + Z এবং Ctrl + Y হ্যান্ডেল করার জন্য)
+        window.addEventListener('keydown', function(e) {
+            // যদি ইউজার ইনপুট ফিল্ড বা টেক্সটএিয়ার ভেতরে টাইপ করার সময় Ctrl+Z প্রেস করে, তবে ব্রাউজারের ডিফল্ট টেক্সট আনডু কাজ করবে
+            // আর যদি টেবিল রো ডিলিট বা রিসেট অল করার পর টেবিল স্টেট আনডু করতে চায়:
+            if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
+                // ইনপুট বা টেক্সটএিয়ার বাইরে ফোকাস থাকলে আমাদের কাস্টম টেবিল স্টেট আনডু করবে
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    triggerUndo();
+                }
+            } else if (e.ctrlKey && (e.key === 'y' || e.key === 'Y')) {
+                if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    triggerRedo();
+                }
+            }
+        });
     };
 
-   function updateTableStyles() {
-    const rowHeight = document.getElementById('rowHeightInput').value || 8;
-    const piType = document.getElementById('piType').value;
-    const colWidths = piColumnWidths[piType] || {};
-    const cellFonts = piCellFonts[piType] || {};
-    const totalFontSize = piTotalFonts[piType] || 12;
-    
-    let styleTag = document.getElementById('dynamicTableStyle');
-    if (!styleTag) {
-        styleTag = document.createElement('style');
-        styleTag.id = 'dynamicTableStyle';
-        document.head.appendChild(styleTag);
+    function triggerUndo() {
+        if (undoStack.length > 0) {
+            redoStack.push(JSON.stringify(items));
+            items = JSON.parse(undoStack.pop());
+            
+            // রিক্যালকুলেট স্ল কাউন্টার
+            ['elastic', 'poly', 'label', 'thread'].forEach(type => {
+                const typeItems = items.filter(i => i.piType === type);
+                if (typeItems.length > 0) {
+                    const maxSl = Math.max(...typeItems.map(i => i.slNo || 0));
+                    slCounters[type] = maxSl + 1;
+                } else {
+                    slCounters[type] = 1;
+                }
+            });
+
+            saveDataToStorage();
+            updateTable();
+            const currentType = document.getElementById('piType').value;
+            const slInput = document.getElementById('slNo');
+            if(slInput) slInput.value = slCounters[currentType];
+        }
     }
 
-    let cssRules = `
-        table th, table td {
-            padding: ${rowHeight}px !important;
-        }
-        #table-${piType} tfoot td {
-            font-size: ${totalFontSize}px !important;
-        }
-    `;
+    function triggerRedo() {
+        if (redoStack.length > 0) {
+            undoStack.push(JSON.stringify(items));
+            items = JSON.parse(redoStack.pop());
 
-    let colsList = [];
-    if (piType === 'label') {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
-    } else if (piType === 'elastic') {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
-    } else if (piType === 'thread') {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
-    } else {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
+            ['elastic', 'poly', 'label', 'thread'].forEach(type => {
+                const typeItems = items.filter(i => i.piType === type);
+                if (typeItems.length > 0) {
+                    const maxSl = Math.max(...typeItems.map(i => i.slNo || 0));
+                    slCounters[type] = maxSl + 1;
+                } else {
+                    slCounters[type] = 1;
+                }
+            });
+
+            saveDataToStorage();
+            updateTable();
+            const currentType = document.getElementById('piType').value;
+            const slInput = document.getElementById('slNo');
+            if(slInput) slInput.value = slCounters[currentType];
+        }
     }
 
-    colsList.forEach((colName, index) => {
-        let colIndex = index + 1;
-        let widthVal = colWidths[colName] !== undefined ? colWidths[colName] : 90;
-        let fontVal = cellFonts[colName] !== undefined ? cellFonts[colName] : 12;
+    function downloadJSON() {
+        const currentType = document.getElementById('piType').value;
+        const currentItems = items.filter(item => item.piType === currentType);
 
-        cssRules += `
-            #table-${piType} th:nth-child(${colIndex}), 
-            #table-${piType} td:nth-child(${colIndex}) {
-                min-width: ${widthVal}px !important;
-                width: ${widthVal}px !important;
-                max-width: ${widthVal}px !important;
+        const backupData = {
+            piType: currentType,
+            items: currentItems,
+            header: JSON.parse(localStorage.getItem('pi_header_data') || '{}'),
+            colWidths: piColumnWidths[currentType],
+            cellFonts: piCellFonts[currentType],
+            totalFont: piTotalFonts[currentType]
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 4));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        
+        const piNoVal = document.getElementById('piNo').value.replace(/\//g, '_') || 'backup';
+        downloadAnchor.setAttribute("download", `PI_${currentType.toUpperCase()}_${piNoVal}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function uploadJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = JSON.parse(e.target.result);
+                const currentType = document.getElementById('piType').value;
+
+                if (content.piType && content.piType !== currentType) {
+                    document.getElementById('piType').value = content.piType;
+                    handlePiTypeChange();
+                }
+
+                const targetType = content.piType || currentType;
+
+                if (content.items) {
+                    saveStateForUndo(); // আপলোডের আগেও স্টেট সেভ করে রাখা হলো
+                    items = items.filter(item => item.piType !== targetType);
+                    items = items.concat(content.items);
+                    localStorage.setItem('pi_items_data', JSON.stringify(items));
+                    
+                    const typeItems = items.filter(i => i.piType === targetType);
+                    if (typeItems.length > 0) {
+                        slCounters[targetType] = Math.max(...typeItems.map(i => i.slNo || 0)) + 1;
+                    }
+                }
+
+                if (content.header) {
+                    localStorage.setItem('pi_header_data', JSON.stringify(content.header));
+                    const headerObj = content.header;
+                    if (headerObj.piNo) document.getElementById('piNo').value = headerObj.piNo;
+                    if (headerObj.piDate) document.getElementById('piDate').value = headerObj.piDate;
+                    if (headerObj.buyerName) document.getElementById('buyerName').value = headerObj.buyerName;
+                    if (headerObj.buyerAddress) document.getElementById('buyerAddress').value = headerObj.buyerAddress;
+                    if (headerObj.buyerRef) document.getElementById('buyerRef').value = headerObj.buyerRef;
+                    if (headerObj.attn) document.getElementById('attn').value = headerObj.attn;
+                    if (headerObj.headerFontSize) document.getElementById('headerFontSize').value = headerObj.headerFontSize;
+                    if (headerObj.rowHeight) document.getElementById('rowHeightInput').value = headerObj.rowHeight;
+                }
+
+                if (content.colWidths) {
+                    piColumnWidths[targetType] = content.colWidths;
+                    localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+                }
+                if (content.cellFonts) {
+                    piCellFonts[targetType] = content.cellFonts;
+                    localStorage.setItem('pi_cell_fonts_data', JSON.stringify(piCellFonts));
+                }
+                if (content.totalFont) {
+                    piTotalFonts[targetType] = content.totalFont;
+                    localStorage.setItem('pi_total_fonts_data', JSON.stringify(piTotalFonts));
+                }
+
+                handlePiTypeChange();
+                updateTableStyles();
+                updateTable();
+                alert(`সফলভাবে "${targetType.toUpperCase()}" টেবিলের ডাটা JSON ফাইল থেকে লোড করা হয়েছে!`);
+            } catch (err) {
+                alert('দুঃখিত, ফাইলটি সঠিক JSON ফরম্যাটে নেই বা রিড করতে সমস্যা হয়েছে!');
             }
-            #table-${piType} tbody td:nth-child(${colIndex}) {
-                font-size: ${fontVal}px !important;
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function updateTableStyles() {
+        const rowHeight = document.getElementById('rowHeightInput').value || 8;
+        const piType = document.getElementById('piType').value;
+        const colWidths = piColumnWidths[piType] || {};
+        const cellFonts = piCellFonts[piType] || {};
+        const totalFontSize = piTotalFonts[piType] || 12;
+        
+        let styleTag = document.getElementById('dynamicTableStyle');
+        if (!styleTag) {
+            styleTag = document.createElement('style');
+            styleTag.id = 'dynamicTableStyle';
+            document.head.appendChild(styleTag);
+        }
+
+        let cssRules = `
+            table th, table td {
+                padding: ${rowHeight}px !important;
+            }
+            #table-${piType} tfoot td {
+                font-size: ${totalFontSize}px !important;
             }
         `;
-    });
 
-    styleTag.innerHTML = cssRules;
-    saveHeaderToStorage();
-}
+        let colsList = [];
+        if (piType === 'label') {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else if (piType === 'elastic') {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else if (piType === 'thread') {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        }
+
+        colsList.forEach((colName, index) => {
+            let colIndex = index + 1;
+            let widthVal = colWidths[colName] !== undefined ? colWidths[colName] : 90;
+            let fontVal = cellFonts[colName] !== undefined ? cellFonts[colName] : 12;
+
+            cssRules += `
+                #table-${piType} th:nth-child(${colIndex}), 
+                #table-${piType} td:nth-child(${colIndex}) {
+                    min-width: ${widthVal}px !important;
+                    width: ${widthVal}px !important;
+                    max-width: ${widthVal}px !important;
+                }
+                #table-${piType} tbody td:nth-child(${colIndex}) {
+                    font-size: ${fontVal}px !important;
+                }
+            `;
+        });
+
+        styleTag.innerHTML = cssRules;
+        saveHeaderToStorage();
+    }
 
     function changeAllColumns(scalePercentage) {
         let val = parseFloat(scalePercentage);
@@ -573,46 +748,46 @@
         updateTableStyles();
     }
 
-function populateColumnSelect() {
-    const piType = document.getElementById('piType').value;
-    
-    let colsList = [];
-    if (piType === 'label') {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
-    } else if (piType === 'elastic') {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
-    } else if (piType === 'thread') {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
-    } else {
-        colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
+    function populateColumnSelect() {
+        const piType = document.getElementById('piType').value;
+        
+        let colsList = [];
+        if (piType === 'label') {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else if (piType === 'elastic') {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else if (piType === 'thread') {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/ PO No.", "Color", "Bleach/ Non Bleach", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        } else {
+            colsList = ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "Style/PO No.", "QTY (Pcs)", "Unit", "Unit Price (USD)", "Amount (USD)"];
+        }
+
+        const selectElem = document.getElementById('targetColSelect');
+        selectElem.innerHTML = '';
+        colsList.forEach(colName => {
+            let opt = document.createElement('option');
+            opt.value = colName;
+            opt.innerText = colName;
+            selectElem.appendChild(opt);
+        });
+
+        const cellFontSelect = document.getElementById('targetCellFontSelect');
+        cellFontSelect.innerHTML = '';
+        colsList.forEach(colName => {
+            let opt = document.createElement('option');
+            opt.value = colName;
+            opt.innerText = colName;
+            cellFontSelect.appendChild(opt);
+        });
+
+        loadColumnWidthToInput();
+        loadCellFontToInput();
+
+        const totalFontInp = document.getElementById('totalFontInput');
+        if (piTotalFonts[piType] !== undefined) {
+            totalFontInp.value = piTotalFonts[piType];
+        }
     }
-
-    const selectElem = document.getElementById('targetColSelect');
-    selectElem.innerHTML = '';
-    colsList.forEach(colName => {
-        let opt = document.createElement('option');
-        opt.value = colName;
-        opt.innerText = colName;
-        selectElem.appendChild(opt);
-    });
-
-    const cellFontSelect = document.getElementById('targetCellFontSelect');
-    cellFontSelect.innerHTML = '';
-    colsList.forEach(colName => {
-        let opt = document.createElement('option');
-        opt.value = colName;
-        opt.innerText = colName;
-        cellFontSelect.appendChild(opt);
-    });
-
-    loadColumnWidthToInput();
-    loadCellFontToInput();
-
-    const totalFontInp = document.getElementById('totalFontInput');
-    if (piTotalFonts[piType] !== undefined) {
-        totalFontInp.value = piTotalFonts[piType];
-    }
-}
 
     function loadColumnWidthToInput() {
         const piType = document.getElementById('piType').value;
@@ -688,9 +863,10 @@ function populateColumnSelect() {
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
         const inputContainer = document.getElementById('dynamicInputContainer');
+        const currentCounter = slCounters[piType] || 1;
         
         let baseInputs = `
-            <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${slCounter}" min="1"></div>
+            <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${currentCounter}" min="1"></div>
             <div class="form-group"><label for="hsCode">2. H.S CODE</label><input type="text" id="hsCode" placeholder="e.g. 3923.21.00"></div>
         `;
 
@@ -780,7 +956,7 @@ function populateColumnSelect() {
         updateTableStyles();
         updateTable();
         const slInput = document.getElementById('slNo');
-        if(slInput) slInput.value = slCounter;
+        if(slInput) slInput.value = slCounters[piType];
     }
 
     function saveHeaderToStorage() {
@@ -812,7 +988,7 @@ function populateColumnSelect() {
 
     function addItem() {
         const piType = document.getElementById('piType').value;
-        const slNo = parseInt(document.getElementById('slNo').value) || slCounter;
+        const slNo = parseInt(document.getElementById('slNo').value) || slCounters[piType];
         const hsCode = document.getElementById('hsCode').value;
 
         let itemData = { piType, slNo, hsCode };
@@ -866,11 +1042,13 @@ function populateColumnSelect() {
             }
         }
 
+        saveStateForUndo(); // নতুন আইটেম যোগ বা আপডেট করার আগে স্টেট সেভ করা হলো
+
         if (editIndex === -1) {
             items.push(itemData);
-            slCounter = slNo + 1;
+            slCounters[piType] = slNo + 1;
             const nextSl = document.getElementById('slNo');
-            if(nextSl) nextSl.value = slCounter;
+            if(nextSl) nextSl.value = slCounters[piType];
         } else {
             items[editIndex] = itemData;
             editIndex = -1;
@@ -938,17 +1116,20 @@ function populateColumnSelect() {
     }
 
     function deleteItem(index) {
+        saveStateForUndo(); // রো ডিলিট করার আগে বর্তমান অবস্থা আনডু-এর জন্য সেভ করা হলো
         items.splice(index, 1);
         saveDataToStorage();
         updateTable();
     }
 
     function resetAllData() {
-        if (confirm('আপনি কি নিশ্চিত যে সব ডাটা মুছে ফেলতে চান?')) {
-            items = [];
-            slCounter = 1;
+        const piType = document.getElementById('piType').value;
+        if (confirm(`আপনি কি নিশ্চিত যে বর্তমান "${piType.toUpperCase()}" টেবিলের সব ডাটা মুছে ফেলতে চান?`)) {
+            saveStateForUndo(); // রিসেট করার আগে পুরো স্টেট সেভ করা হলো যাতে Ctrl + Z দিয়ে আবার ফিরিয়ে আনা যায়
+            items = items.filter(item => item.piType !== piType);
+            slCounters[piType] = 1;
             editIndex = -1;
-            localStorage.removeItem('pi_items_data');
+            saveDataToStorage();
             updateTable();
             clearInputs();
             const addBtn = document.querySelector('.btn-add');
@@ -1070,7 +1251,7 @@ function populateColumnSelect() {
         const sl = document.getElementById('slNo');
 
         if(hs) hs.value = '';
-        if(sl) sl.value = slCounter;
+        if(sl) sl.value = slCounters[piType];
 
         if(piType === 'label') {
             document.getElementById('item').value = 'Printed Care Label';
@@ -1218,9 +1399,11 @@ function populateColumnSelect() {
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
         const buyerName = document.getElementById('buyerName').value;
-        const buyerAddress = document.getElementById('buyerAddress').value;
+        const buyerAddressInput = document.getElementById('buyerAddress').value;
         const buyerRef = document.getElementById('buyerRef').value;
         const attn = document.getElementById('attn').value;
+
+        const buyerAddressLines = buyerAddressInput ? buyerAddressInput.split('\n') : [""];
 
         let totalQty = 0, totalAmount = 0;
 
@@ -1279,19 +1462,35 @@ function populateColumnSelect() {
                 if (i === 0) return { v: buyerName, s: { font: { bold: true }, alignment: alignLeft } };
                 if (i === lastColIndex) return { v: "STERLING ACCESSORIES LTD.", s: { font: { bold: true }, alignment: alignRight } };
                 return undefined;
-            }),
-            Array.from({ length: lastColIndex + 1 }, (_, i) => {
-                if (i === 0) return { v: buyerAddress, s: { font: { size: 10 }, alignment: alignLeft } };
-                if (i === lastColIndex) return { v: "Holding-375, East Bagbari,", s: { font: { size: 10 }, alignment: alignRight } };
+            })
+        ];
+
+        buyerAddressLines.forEach((lineText, idx) => {
+            let addressRow = Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: lineText, s: { font: { size: 10 }, alignment: alignLeft } };
+                if (i === lastColIndex && idx === 0) return { v: "Holding-375, East Bagbari,", s: { font: { size: 10 }, alignment: alignRight } };
+                if (i === lastColIndex && idx === 1) return { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { size: 10 }, alignment: alignRight } };
+                if (i === lastColIndex && idx === 2) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
                 return undefined;
-            }),
-            Array.from({ length: lastColIndex + 1 }, (_, i) => {
-                if (i === lastColIndex) return { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { size: 10 }, alignment: alignRight } };
-                return undefined;
-            }),
+            });
+            rawData.push(addressRow);
+        });
+
+        if (buyerAddressLines.length < 3) {
+            for (let i = buyerAddressLines.length; i < 3; i++) {
+                let extraSellerRow = Array.from({ length: lastColIndex + 1 }, (_, colIdx) => {
+                    if (colIdx === lastColIndex && i === 1) return { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { size: 10 }, alignment: alignRight } };
+                    if (colIdx === lastColIndex && i === 2) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
+                    return undefined;
+                });
+                rawData.push(extraSellerRow);
+            }
+        }
+
+        rawData.push(
             Array.from({ length: lastColIndex + 1 }, (_, i) => {
                 if (i === 0) return { v: `BUYER REF : ${buyerRef}`, s: { font: { bold: true }, alignment: alignLeft } };
-                if (i === lastColIndex) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
+                if (i === lastColIndex && buyerAddressLines.length < 4) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
                 return undefined;
             }),
             Array.from({ length: lastColIndex + 1 }, (_, i) => {
@@ -1300,7 +1499,7 @@ function populateColumnSelect() {
             }),
             [],
             headerCols.map(text => ({ v: text, s: { font: { bold: true }, fill: { fgColor: { rgb: "F2F2F2" } }, border: thinBlackBorder, alignment: alignCenter } }))
-        ];
+        );
 
         selectedItems.forEach(item => {
             totalQty += item.qty;
@@ -1347,7 +1546,7 @@ function populateColumnSelect() {
                     { v: item.price || 0, t: 'n', z: '0.0000', s: { border: thinBlackBorder, alignment: alignRight } },
                     { v: item.amount || 0, t: 'n', z: '#,##0.00', s: { border: thinBlackBorder, alignment: alignRight } }
                 ]);
-            } else { // Poly Bag
+            } else { 
                 rawData.push([
                     { v: item.slNo, s: { border: thinBlackBorder, alignment: alignCenter } },
                     { v: item.hsCode || "", s: { border: thinBlackBorder, alignment: alignLeft } },
@@ -1378,15 +1577,15 @@ function populateColumnSelect() {
         rawData.push([]);
 
         rawData.push(createOverflowRow("TERMS & CONDITIONS:", true, true));
-        rawData.push(createOverflowRow("1.PAYMENT TERMS : A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery."));
-        rawData.push(createOverflowRow(" : B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS."));
-        rawData.push(createOverflowRow(" : C) No LC will be Entertained which value less than US $ 2,000.00"));
-        rawData.push(createOverflowRow(" : D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00"));
+        rawData.push(createOverflowRow("1.PAYMENT TERMS A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery."));
+        rawData.push(createOverflowRow(" B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS."));
+        rawData.push(createOverflowRow(" C) No LC will be Entertained which value less than US $ 2,000.00"));
+        rawData.push(createOverflowRow(" D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00"));
         rawData.push(createOverflowRow("2.Delivery Lead Time: A) Goods will be ready for delivery within 14 working days after received of LC & UD both for customs UP issue."));
-        rawData.push(createOverflowRow(" : B) Bhutan Execution (BB), may all the latest shipment date of LC or Bank Contract for it is to be given 2 working days at BTB LC."));
-        rawData.push(createOverflowRow(" : C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant."));
-        rawData.push(createOverflowRow(" : D) 1) Partial shipment: Allowed. 2) Transshipment : Not Allowed."));
-        rawData.push(createOverflowRow(" : E) Accessories for 100% Export Oriented Readymade Garments Industry."));
+        rawData.push(createOverflowRow(" B) Bhutan Execution (BB), may all the latest shipment date of LC or Bank Contract for it is to be given 2 working days at BTB LC."));
+        rawData.push(createOverflowRow(" C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant."));
+        rawData.push(createOverflowRow(" D) 1) Partial shipment: Allowed. 2) Transshipment : Not Allowed."));
+        rawData.push(createOverflowRow(" E) Accessories for 100% Export Oriented Readymade Garments Industry."));
         rawData.push(createOverflowRow("3.Delivery/Inco Term : CPT."));
         rawData.push(createOverflowRow("4.Country of origin : Bangladesh."));
         rawData.push(createOverflowRow("5.Presentation Period : 30 days from the latest Shipment date in the LC."));
@@ -1397,8 +1596,8 @@ function populateColumnSelect() {
         rawData.push(createOverflowRow("10.Bank Charge : All Bank Charges except beneficiary's bank are on Opener's Account."));
         rawData.push(createOverflowRow("11.Overdue Interest : Payment will be made within the date of Maturity. If failed, overdue interest to be paid at 16%."));
         rawData.push(createOverflowRow("12.Deduction : Deduction clause for any discrepancies is not acceptable."));
-        rawData.push(createOverflowRow("13.Claim/ Complain : Claim/Complain regarding Quantity/Quality must be informed within 3 days after receiving goods. Re-new is template after this period. Non-Return will be"));
-        rawData.push(createOverflowRow(" over not to more then the PI Qty. Costs Strategy increase of BBX excess GMT unit. Will be resolution at starting until item is change."));
+        rawData.push(createOverflowRow("13.Claim/ Complain : Claim/Complain regarding Quantity/Quality must be informed within 3 days after receiving goods. Re-new is template after this period."));
+        rawData.push(createOverflowRow("  Non-Return will beover not to more then the PI Qty. Costs Strategy increase of BBX excess GMT unit. Will be resolution at starting until item is change."));
         rawData.push(createOverflowRow("M.D.This Proforma Invoice deemed to be an integral part of LC."));
 
         rawData.push([]);
@@ -1610,25 +1809,21 @@ function populateColumnSelect() {
 
         const amountInWords = numToWords(totalAmount);
 
-        // ১ ও ২ নম্বর অপশন এবং S-এর কাছাকাছি লোগো সেট করা প্রিন্ট টেমপ্লেট
         const template = `
             <div id="printTemplate" style="font-family: Arial, sans-serif; font-size: 16px; color: #000; line-height: 1.2; width: 100%;">
                 <style>${inlineStyles}</style>
                 
-                <!-- ১. Flexbox Layout Container: লোগোকে 'S' অক্ষরের ঠিক কাছাকাছি স্থাপন করা হয়েছে -->
                 <div style="display: flex; justify-content: center; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; width: 100%;">
-                    <!-- লোগো কন্টেইনার (S এর ঠিক বামে বসানোর জন্য flex inline সেটিং) -->
                     <div style="display: flex; align-items: flex-start; justify-content: center; gap: 8px;">
                         <img src="${companyLogoUrl}" style="height: 38px; width: auto; display: block; margin-top: 2px;" alt="Logo" />
                         <div style="text-align: center;">
-                            <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px;">STERLING ACCESSORIES LIMITED.</h2>
+                            <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px; font-family: 'Broadway', sans-serif;">STERLING ACCESSORIES LIMITED.</h2>
                             <div style="font-size: ${Math.round(customFontSize * 0.45)}px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
                             <div style="font-size: ${Math.round(customFontSize * 0.45)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ২. ১০০% উইডথের আলাদা টেবিলে ইনভয়েস তথ্য -->
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; font-weight: bold; border: none !important;">
                     <tr>
                         <td style="width: 33%; border: none !important; padding: 0; text-align: left;">PI No: ${piNo}</td>
@@ -1637,7 +1832,6 @@ function populateColumnSelect() {
                     </tr>
                 </table>
 
-                <!-- ২. ১০০% উইডথের আলাদা টেবিলে বায়ার ও সেলারের তথ্য -->
                 <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse; font-size: 10px; border: none !important;">
                     <tr>
                         <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: left;">
@@ -1656,7 +1850,6 @@ function populateColumnSelect() {
                     </tr>
                 </table>
 
-                <!-- প্রডাক্ট ডাটার মূল টেবিল -->
                 <table class="dynamic-table" style="width: 100%; border-collapse: collapse; margin-bottom: 8px; table-layout: fixed;" border="1">
                     <thead>
                         <tr style="background-color: #f2f2f2; text-align: center; font-weight: bold;">
