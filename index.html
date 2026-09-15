@@ -251,6 +251,7 @@
         </div>
     </div>
 
+    <!-- Invoice & Buyer Info -->
     <div class="section-title">Invoice & Buyer Info</div>
     <div class="form-grid">
         <div class="form-group">
@@ -263,15 +264,24 @@
         </div>
         <div class="form-group">
             <label for="buyerName">Name of Buyer</label>
-            <input type="text" id="buyerName" value="BANDO DESIGN LTD.">
+            <input type="text" id="buyerName" list="buyerList" placeholder="Select or type Buyer Name..." 
+                   onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                   onchange="onBuyerChange()" oninput="onBuyerChange()" value="BANDO DESIGN LTD.">
+            <datalist id="buyerList"></datalist>
         </div>
         <div class="form-group">
             <label for="buyerRef">BUYER REF</label>
-            <input type="text" id="buyerRef" value="Buyer: GAP SPR'26.">
+            <input type="text" id="buyerRef" list="buyerRefList" placeholder="Select or type Buyer Ref..." 
+                   onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                   onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="GAP SPR'26.">
+            <datalist id="buyerRefList"></datalist>
         </div>
         <div class="form-group">
             <label for="attn">Attn</label>
-            <input type="text" id="attn" value="Mr. Rion">
+            <input type="text" id="attn" list="attnList" placeholder="Select or type Merchant..." 
+                   onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                   onchange="onAttnChange()" oninput="onAttnChange()" value="Mr. Rion">
+            <datalist id="attnList"></datalist>
         </div>
         <div class="form-group full-width">
             <label for="buyerAddress">Address of Buyer</label>
@@ -309,8 +319,7 @@
         </div>
         <div class="pi-type-container" style="background: #e8f4fd; border: 1px solid #bbe1fa;">
             <label for="targetColSelect">Target Col Width:</label>
-            <select id="targetColSelect" style="padding: 4px;" onchange="loadColumnWidthToInput()">
-            </select>
+            <select id="targetColSelect" style="padding: 4px;" onchange="loadColumnWidthToInput()"></select>
             <input type="number" id="colWidthInput" value="90" min="20" max="500" style="width: 65px; padding: 4px; text-align: center;" oninput="saveColumnWidth()">px
         </div>
     </div>
@@ -318,8 +327,7 @@
     <div class="customization-bar no-print" style="background: #fdf2e9; border: 1px solid #f5cba7;">
         <div class="pi-type-container" style="background: #fef5e7; border: 1px solid #f8c471;">
             <label for="targetCellFontSelect">Cell Font Size (Col):</label>
-            <select id="targetCellFontSelect" style="padding: 4px;" onchange="loadCellFontToInput()">
-            </select>
+            <select id="targetCellFontSelect" style="padding: 4px;" onchange="loadCellFontToInput()"></select>
             <input type="number" id="cellFontInput" value="12" min="8" max="30" style="width: 55px; padding: 4px; text-align: center;" oninput="saveCellFont()">px
         </div>
         <div class="pi-type-container" style="background: #e8f8f5; border: 1px solid #a3e4d7;">
@@ -471,6 +479,252 @@
 </div>
 
 <script>
+    // ------------------- Datalist Auto-Expand Logic on Focus/Click -------------------
+    let tempInputValueStore = {};
+
+    function handleInputFocus(inputElement) {
+        tempInputValueStore[inputElement.id] = inputElement.value;
+        inputElement.value = '';
+    }
+
+    function handleInputBlur(inputElement) {
+        if (inputElement.value.trim() === '' && tempInputValueStore[inputElement.id] !== undefined) {
+            inputElement.value = tempInputValueStore[inputElement.id];
+        }
+    }
+
+    // ------------------- 20 Buyer References Database -------------------
+    const buyerRefDatabase = [
+        "GAP SPR",
+        "Buyer: H&M AUTUMN'26.",
+        "Buyer: ZARA WINTER'26.",
+        "Buyer: PULL&BEAR 2026.",
+        "Buyer: TARGET CORP.",
+        "Buyer: WALMART STORES.",
+        "Buyer: C&A EUROPE.",
+        "Buyer: NEXT RETAIL.",
+        "Buyer: MANGO FASHION.",
+        "Buyer: UNIQLO JAPAN.",
+        "Buyer: LEVI STRAUSS.",
+        "Buyer: RESERVED LPP.",
+        "Buyer: GUESS INC.",
+        "Buyer: TOMMY HILFIGER.",
+        "Buyer: AMERICAN EAGLE.",
+        "Buyer: CALVIN KLEIN.",
+        "Buyer: MARKS & SPENCER.",
+        "Buyer: KIK TEXTILIEN.",
+        "Buyer: BESTSELLER GROUP.",
+        "Buyer: PRIMARK STORES."
+    ];
+
+    function initBuyerRefDatalist() {
+        const refListElem = document.getElementById('buyerRefList');
+        if(!refListElem) return;
+        refListElem.innerHTML = '';
+        buyerRefDatabase.forEach(ref => {
+            const opt = document.createElement('option');
+            opt.value = ref;
+            refListElem.appendChild(opt);
+        });
+    }
+
+    // ------------------- 30 Companies & 20 Merchants Database -------------------
+    const buyerDatabase = [
+        {
+            name: "BANDO DESIGN LTD.",
+            address: "PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.",
+            merchants: ["Mr. Rion", "Mr. Tanvir", "Ms. Sadia", "Mr. Faisal", "Mr. Sakib", "Mr. Imran", "Ms. Nusrat", "Mr. Ariful", "Mr. Fahim", "Mr. Tareq", "Ms. Mim", "Mr. Nahid", "Mr. Alamin", "Mr. Naim", "Ms. Ritu", "Mr. Kawsar", "Mr. Shuvo", "Ms. Asha", "Mr. Hasan", "Mr. Jewel"]
+        },
+        {
+            name: "HA-MEEM GROUP LTD.",
+            address: "387, TEJGAON INDUSTRIAL AREA, DHAKA-1208, BANGLADESH.",
+            merchants: ["Mr. Rahim", "Mr. Karim", "Ms. Farhana", "Mr. Shuvo", "Mr. Sabbir", "Ms. Tania", "Mr. Bijoy", "Mr. Rakib", "Mr. Nayeem", "Ms. Sharmin", "Mr. Jubayer", "Mr. Habib", "Ms. Sumi", "Mr. Asif", "Mr. Rayhan", "Mr. Munna", "Ms. Jesmin", "Mr. Zihad", "Mr. Sajid", "Mr. Manik"]
+        },
+        {
+            name: "PACIFIC JEANS LTD.",
+            address: "PLOT 14-19, CEPZ, CHATTOGRAM, BANGLADESH.",
+            merchants: ["Mr. Arif", "Mr. Mahmud", "Ms. Sabrina", "Mr. Rashed", "Mr. Tamim", "Ms. Nabila", "Mr. Sazzad", "Mr. Parvez", "Ms. Rubina", "Mr. Tuhin", "Mr. Monir", "Mr. Zahid", "Ms. Afsana", "Mr. Bipul", "Mr. Shamim", "Ms. Papia", "Mr. Biplob", "Mr. Sumon", "Ms. Lipi", "Mr. Rasel"]
+        },
+        {
+            name: "DBL GROUP LTD.",
+            address: "BGMEA COMPLEX, 23/1 PANTHAPATH, DHAKA 1215.",
+            merchants: ["Mr. Joy", "Mr. Akash", "Ms. Bristy", "Mr. Sohel", "Mr. Saiful", "Ms. Poly", "Mr. Liton", "Mr. Ripon", "Ms. Sathi", "Mr. Babul", "Mr. Kamal", "Ms. Mukta", "Mr. Nasir", "Mr. Belal", "Ms. Dola", "Mr. Hira", "Mr. Mithun", "Ms. Happy", "Mr. Shahin", "Mr. Rony"]
+        },
+        {
+            name: "ANANTA GROUP LTD.",
+            address: "HOUSE 20, ROAD 11, BLOCK L, BANANI, DHAKA.",
+            merchants: ["Mr. Hasan", "Mr. Salam", "Ms. Riya", "Mr. Jamil", "Mr. Kibriya", "Ms. Rupa", "Mr. Amin", "Mr. Selim", "Ms. Jhuma", "Mr. Mizan", "Mr. Latif", "Ms. Shikha", "Mr. Siraj", "Mr. Gafur", "Ms. Shilpi", "Mr. Azam", "Mr. Babar", "Ms. Maya", "Mr. Delowar", "Mr. Jahangir"]
+        },
+        {
+            name: "ENVOY GROUP LTD.",
+            address: "ENVOY TOWER, 47 ATISH DEEPANKAR ROAD, DHAKA.",
+            merchants: ["Mr. Saiful", "Mr. Kamrul", "Ms. Shanta", "Mr. Alvi", "Mr. Abrar", "Ms. Zarin", "Mr. Emon", "Mr. Hridoy", "Ms. Lamia", "Mr. Siam", "Mr. Ovi", "Ms. Pori", "Mr. Kafi", "Mr. Rafi", "Ms. Shova", "Mr. Tushar", "Mr. Noman", "Ms. Tani", "Mr. Badhon", "Mr. Mahir"]
+        },
+        {
+            name: "ELEGANT GROUP LTD.",
+            address: "PLOT-11, ROAD-12, SECTOR-01, UTTARA, DHAKA.",
+            merchants: ["Mr. Arman", "Mr. Nayeem", "Ms. Popy", "Mr. Shohag", "Mr. Babu", "Ms. Runa", "Mr. Rubel", "Mr. Rana", "Ms. Sima", "Mr. Sujon", "Mr. Biplob", "Ms. Keya", "Mr. Faruk", "Mr. Azad", "Ms. Rekha", "Mr. Harun", "Mr. Jalal", "Ms. Champa", "Mr. Khabir", "Mr. Motin"]
+        },
+        {
+            name: "SHARMIN GROUP LTD.",
+            address: "NORSHINGHPUR, ASHULIA, SAVAR, DHAKA.",
+            merchants: ["Mr. Tareq", "Mr. Nabil", "Ms. Sonya", "Mr. Rabbi", "Mr. Jahid", "Ms. Lucky", "Mr. Helal", "Mr. Jabbar", "Ms. Mala", "Mr. Kuddus", "Mr. Kader", "Ms. Khadija", "Mr. Sattar", "Mr. Majid", "Ms. Sufia", "Mr. Salam", "Mr. Mannan", "Ms. Ayesha", "Mr. Manik", "Mr. Robi"]
+        },
+        {
+            name: "PALMAL GROUP LTD.",
+            address: "9/B, ROAD NO-126, GULSHAN-1, DHAKA-1212.",
+            merchants: ["Mr. Sohel", "Mr. Shakil", "Ms. Akhi", "Mr. Russell", "Mr. Dipu", "Ms. Lopa", "Mr. Mithu", "Mr. Pappu", "Ms. Joly", "Mr. Titu", "Mr. Polash", "Ms. Mitu", "Mr. Shimul", "Mr. Badol", "Ms. Taniya", "Mr. Sagor", "Mr. Akash", "Ms. Nipa", "Mr. Kajol", "Mr. Manik"]
+        },
+        {
+            name: "STANDARD GROUP LTD.",
+            address: "139 KHAN TOWER, SECTOR-07, UTTARA, DHAKA.",
+            merchants: ["Mr. Rashed", "Mr. Imran", "Ms. Farida", "Mr. Sazzad", "Mr. Habib", "Ms. Hazera", "Mr. Ziad", "Mr. Zobayer", "Ms. Fatema", "Mr. Siraj", "Mr. Robiul", "Ms. Kulsum", "Mr. Rokan", "Mr. Shafi", "Ms. Rahima", "Mr. Aziz", "Mr. Zahir", "Ms. Sakina", "Mr. Younus", "Mr. Sobhan"]
+        },
+        {
+            name: "VIYELLATEX GROUP LTD.",
+            address: "297 KHAPRIEL ROAD, GAZIPUR, BANGLADESH.",
+            merchants: ["Mr. Faisal", "Mr. Tanvir", "Ms. Lubna", "Mr. Ariful", "Mr. Feroz", "Ms. Bithi", "Mr. Gias", "Mr. Naser", "Ms. Kohinoor", "Mr. Rafiq", "Mr. Shafiq", "Ms. Salma", "Mr. Tariq", "Mr. Wadud", "Ms. Nargis", "Mr. Faruq", "Mr. Anis", "Ms. Parvin", "Mr. Jashim", "Mr. Litu"]
+        },
+        {
+            name: "SQUARE FASHIONS LTD.",
+            address: "MASIMPUR, BKSP, SAVAR, DHAKA.",
+            merchants: ["Mr. Naim", "Mr. Bijoy", "Ms. Mitu", "Mr. Kawsar", "Mr. Hanif", "Ms. Hamida", "Mr. Idrak", "Mr. Iqbal", "Ms. Ismat", "Mr. Jamshed", "Mr. Jahangir", "Ms. Jamila", "Mr. Kalam", "Mr. Khaleq", "Ms. Kamrun", "Mr. Masud", "Mr. Mostafa", "Ms. Morsheda", "Mr. Nizam", "Mr. Nurul"]
+        },
+        {
+            name: "EPYLLION GROUP LTD.",
+            address: "227/A TEJGAON I/A, DHAKA-1208.",
+            merchants: ["Mr. Sakib", "Mr. Tamim", "Ms. Nova", "Mr. Mahmud", "Mr. Opu", "Ms. Tisha", "Mr. Parvez", "Mr. Quddus", "Ms. Quamrun", "Mr. Rahmat", "Mr. Rashid", "Ms. Rokeya", "Mr. Sabur", "Mr. Sadiq", "Ms. Sajeda", "Mr. Solaiman", "Mr. Sultan", "Ms. Suraiya", "Mr. Taher", "Mr. Usman"]
+        },
+        {
+            name: "SMART GROUP LTD.",
+            address: "820/A SHAH KABIR MAZAR ROAD, UTTARA, DHAKA.",
+            merchants: ["Mr. Fahim", "Mr. Rayhan", "Ms. Taniya", "Mr. Asif", "Mr. Babul", "Ms. Bilkis", "Mr. Chandan", "Mr. Dilip", "Ms. Dilruba", "Mr. Ekram", "Mr. Elahi", "Ms. Esrat", "Mr. Firoz", "Mr. Gafur", "Ms. Gulshan", "Mr. Harun", "Mr. Hasnat", "Ms. Husna", "Mr. Ibrahim", "Mr. Idris"]
+        },
+        {
+            name: "SPARROW GROUP LTD.",
+            address: "BARRAGE ROAD, BHALUKA, MYMENSINGH.",
+            merchants: ["Mr. Jewel", "Mr. Munna", "Ms. Jesmin", "Mr. Badhon", "Mr. Julfikar", "Ms. Zarina", "Mr. Kabir", "Mr. Kafil", "Ms. Kazi", "Mr. Lalon", "Mr. Latif", "Ms. Leena", "Mr. Mahbub", "Mr. Manzoor", "Ms. Marufa", "Mr. Monjur", "Mr. Mosharraf", "Ms. Munira", "Mr. Muzahid", "Mr. Nader"]
+        },
+        {
+            name: "AL-MUSLIM GROUP LTD.",
+            address: "ULMAIL, SAVAR, DHAKA-1340.",
+            merchants: ["Mr. Monir", "Mr. Zahid", "Ms. Afsana", "Mr. Tuhin", "Mr. Naeem", "Ms. Nasima", "Mr. Obaid", "Mr. Omar", "Ms. Parul", "Mr. Qasim", "Mr. Qayyum", "Ms. Rabeya", "Mr. Rafiqul", "Mr. Rezaul", "Ms. Rehana", "Mr. Saidur", "Mr. Saifuddin", "Ms. Saida", "Mr. Shahab", "Mr. Shahjahan"]
+        },
+        {
+            name: "APEX HOLDINGS LTD.",
+            address: "SHANTA WESTERN TOWER, TEJGAON, DHAKA.",
+            merchants: ["Mr. Ripon", "Mr. Liton", "Ms. Sathi", "Mr. Babul", "Mr. Shamim", "Ms. Shefali", "Mr. Shohel", "Mr. Sirajul", "Ms. Sokina", "Mr. Subrata", "Mr. Sundar", "Ms. Sunita", "Mr. Swapan", "Mr. Syed", "Ms. Syeda", "Mr. Tofazzal", "Mr. Towhid", "Ms. Umme", "Mr. Yunus", "Mr. Zakir"]
+        },
+        {
+            name: "TEAM GROUP LTD.",
+            address: "PLOT 04, ROAD 09, SECTOR 01, UTTARA, DHAKA.",
+            merchants: ["Mr. Sujon", "Mr. Biplob", "Ms. Keya", "Mr. Faruk", "Mr. Abdus", "Ms. Aleya", "Mr. Anowar", "Mr. Atiq", "Ms. Aziza", "Mr. Bashar", "Mr. Bazlur", "Ms. Begum", "Mr. Borhan", "Mr. Dabir", "Ms. Delwara", "Mr. Ebrahim", "Mr. Emran", "Ms. Enayet", "Mr. Fazlu", "Mr. Ghazi"]
+        },
+        {
+            name: "BEXIMCO APPARELS LTD.",
+            address: "17 DHANMONDI R/A, ROAD NO 2, DHAKA-1205.",
+            merchants: ["Mr. Shimul", "Mr. Badol", "Ms. Taniya", "Mr. Sagor", "Mr. Hafiz", "Ms. Jahanara", "Mr. Jalil", "Mr. Jamal", "Ms. Joley", "Mr. Khorshed", "Mr. Lufor", "Ms. Mahmuda", "Mr. Mokbul", "Mr. Momen", "Ms. Momotaz", "Mr. Mostaq", "Mr. Motaleb", "Ms. Nargis", "Mr. Nazim", "Mr. Obaidul"]
+        },
+        {
+            name: "MAJEED FABRICS LTD.",
+            address: "KACHPUR, NARAYANGANJ, BANGLADESH.",
+            merchants: ["Mr. Rokan", "Mr. Shafi", "Ms. Rahima", "Mr. Aziz", "Mr. Osman", "Ms. Rahila", "Mr. Rashad", "Mr. Razzak", "Ms. Reshma", "Mr. Sadik", "Mr. Shafalee", "Ms. Shahnaz", "Mr. Shakawat", "Mr. Shorab", "Ms. Sufiya", "Mr. Tajul", "Mr. Talukdar", "Ms. Taslima", "Mr. Wahid", "Mr. Yakub"]
+        },
+        {
+            name: "MASCO GROUP LTD.",
+            address: "HOUSE-14, ROAD-1, SECTOR-9, UTTARA, DHAKA.",
+            merchants: ["Mr. Tariq", "Mr. Wadud", "Ms. Nargis", "Mr. Faruq", "Mr. Zafar", "Ms. Zahida", "Mr. Zia", "Mr. Zohir", "Ms. Zohra", "Mr. Abdul", "Mr. Abul", "Ms. Amber", "Mr. Bashir", "Mr. Din", "Ms. Fahmida", "Mr. Haroon", "Mr. Humayun", "Ms. Julekha", "Mr. Khayer", "Mr. Masum"]
+        },
+        {
+            name: "NIPA GROUP LTD.",
+            address: "B-143, ROAD-22, NEW DOHS, MOHAKHALI, DHAKA.",
+            merchants: ["Mr. Kalam", "Mr. Khaleq", "Ms. Kamrun", "Mr. Masud", "Mr. Miftah", "Ms. Naima", "Mr. Nazrul", "Mr. Nipun", "Ms. Nurjahan", "Mr. Opu", "Mr. Pappu", "Ms. Rahat", "Mr. Robi", "Mr. Sadek", "Ms. Samira", "Mr. Sarwar", "Mr. Sazzat", "Ms. Selina", "Mr. Shahin", "Mr. Shakil"]
+        },
+        {
+            name: "BITPI GROUP LTD.",
+            address: "PLOT 82, DEPZ, SAVAR, DHAKA.",
+            merchants: ["Mr. Solaiman", "Mr. Sultan", "Ms. Suraiya", "Mr. Taher", "Mr. Shimul", "Ms. Shirin", "Mr. Shohag", "Mr. Sumon", "Ms. Sumona", "Mr. Tipu", "Mr. Touhid", "Ms. Trisha", "Mr. Utpal", "Mr. Victor", "Ms. Viola", "Mr. Wajed", "Mr. Wasim", "Ms. Yasmine", "Mr. Zaman", "Mr. Zulfiqar"]
+        },
+        {
+            name: "THERMAX GROUP LTD.",
+            address: "SECTOR-3, UTTARA MODEL TOWN, DHAKA.",
+            merchants: ["Mr. Harun", "Mr. Hasnat", "Ms. Husna", "Mr. Ibrahim", "Mr. Abir", "Ms. Afroza", "Mr. Ahsan", "Mr. Akram", "Ms. Alpona", "Mr. Amir", "Mr. Asad", "Ms. Asma", "Mr. Awal", "Mr. Baki", "Ms. Basanti", "Mr. Bhuiyan", "Mr. Bishwajit", "Ms. Chameli", "Mr. Chanchal", "Mr. Chittagong"]
+        },
+        {
+            name: "LANKA APPARELS LTD.",
+            address: "KEODHALA, MADANPUR, NARAYANGANJ.",
+            merchants: ["Mr. Monjur", "Mr. Mosharraf", "Ms. Munira", "Mr. Muzahid", "Mr. Daniel", "Ms. Dolly", "Mr. Dulal", "Mr. Firoz", "Ms. Gita", "Mr. Habibullah", "Mr. Hafizur", "Ms. Hasina", "Mr. Helaluddin", "Mr. Inam", "Ms. Jahan", "Mr. Joynal", "Mr. Kamaluddin", "Ms. Kaniz", "Mr. Lutfar", "Mr. Mahfuz"]
+        },
+        {
+            name: "URBAN KNITWEAR LTD.",
+            address: "GORAI, MIRZAPUR, TANGAL.",
+            merchants: ["Mr. Saidur", "Mr. Saifuddin", "Ms. Saida", "Mr. Shahab", "Mr. Maksud", "Ms. Marium", "Mr. Mazhar", "Mr. Mehedi", "Ms. Mithila", "Mr. Moazzem", "Mr. Mokles", "Ms. Monowara", "Mr. Mortuza", "Mr. Muklesur", "Ms. Nargish", "Mr. Navid", "Mr. Nazmul", "Ms. Nilufar", "Mr. Nur", "Mr. Nuruddin"]
+        },
+        {
+            name: "KDS ACCESSORIES LTD.",
+            address: "255 NASIRABAD I/A, CHATTOGRAM.",
+            merchants: ["Mr. Subrata", "Mr. Sundar", "Ms. Sunita", "Mr. Swapan", "Mr. Parvez", "Ms. Pinky", "Mr. Qamrul", "Mr. Quader", "Ms. Radhia", "Mr. Rafique", "Mr. Raisul", "Ms. Rashida", "Mr. Ratan", "Mr. Riaz", "Ms. Rokshana", "Mr. Saiful", "Mr. Sajjad", "Ms. Salina", "Mr. Shahadat", "Mr. Sharif"]
+        },
+        {
+            name: "DEKKO GROUP LTD.",
+            address: "DEKKO TOWER, 11 PROFESSOR’S LANE, DHAKA.",
+            merchants: ["Mr. Fazlu", "Mr. Ghazi", "Ms. Delwara", "Mr. Emran", "Mr. Shohel", "Ms. Surma", "Mr. Taimur", "Mr. Tariqul", "Ms. Tasnim", "Mr. Toufiq", "Mr. Uzzal", "Ms. Victoria", "Mr. Wahidul", "Mr. Yahya", "Ms. Yasmin", "Mr. Zahurul", "Mr. Ziaur", "Ms. Zubaida", "Mr. Zunayed", "Mr. Zobaer"]
+        },
+        {
+            name: "DESH GARMENTS LTD.",
+            address: "KALURGHAT I/A, CHATTOGRAM.",
+            merchants: ["Mr. Mostaq", "Mr. Motaleb", "Ms. Nargis", "Mr. Nazim", "Mr. Abed", "Ms. Anwara", "Mr. Asghar", "Mr. Bahauddin", "Ms. Bilqis", "Mr. Delwar", "Mr. Fakhrul", "Ms. Feroza", "Mr. Gulam", "Mr. Hazi", "Ms. Ismat", "Mr. Jafar", "Mr. Kabirul", "Ms. Latifa", "Mr. Mainul", "Mr. Nurul"]
+        },
+        {
+            name: "REGENCY GARMENTS LTD.",
+            address: "PLOT 23-29, DEPZ, SAVAR, DHAKA.",
+            merchants: ["Mr. Tajul", "Mr. Talukdar", "Ms. Taslima", "Mr. Wahid", "Mr. Robi", "Ms. Runa", "Mr. Sabit", "Mr. Sadiqur", "Ms. Sahana", "Mr. Saif", "Mr. Sajal", "Ms. Samia", "Mr. Sayeed", "Mr. Sezan", "Ms. Sharmin", "Mr. Showkat", "Mr. Sirajum", "Ms. Sonia", "Mr. Sourav", "Mr. Tanzo"]
+        }
+    ];
+
+    // Populating Buyer Datalist on Script Init
+    function initBuyerDatalist() {
+        const buyerListElem = document.getElementById('buyerList');
+        if(!buyerListElem) return;
+        buyerListElem.innerHTML = '';
+        buyerDatabase.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.name;
+            buyerListElem.appendChild(opt);
+        });
+    }
+
+    function onBuyerChange() {
+        const buyerInputVal = document.getElementById('buyerName').value.trim();
+        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+        const attnListElem = document.getElementById('attnList');
+        attnListElem.innerHTML = '';
+
+        if (foundBuyer) {
+            foundBuyer.merchants.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                attnListElem.appendChild(opt);
+            });
+        }
+        saveHeaderToStorage();
+    }
+
+    function onAttnChange() {
+        const buyerInputVal = document.getElementById('buyerName').value.trim();
+        const attnInputVal = document.getElementById('attn').value.trim();
+
+        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+
+        if (foundBuyer) {
+            if (foundBuyer.merchants.some(m => m.toLowerCase() === attnInputVal.toLowerCase())) {
+                document.getElementById('buyerAddress').value = foundBuyer.address;
+            }
+        }
+        saveHeaderToStorage();
+    }
+
+    // Existing Logic & Initializations
     const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
     const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
 
@@ -509,17 +763,15 @@
     };
 
     let piTotalFonts = {
-        elastic: 12,
-        poly: 12,
-        label: 12,
-        thread: 12,
-        combinedA: 12,
-        combinedB: 12
+        elastic: 12, poly: 12, label: 12, thread: 12, combinedA: 12, combinedB: 12
     };
 
     const defaultColumnWidthsBase = JSON.parse(JSON.stringify(piColumnWidths));
 
     window.onload = function() {
+        initBuyerDatalist();
+        initBuyerRefDatalist();
+
         const savedItems = localStorage.getItem('pi_items_data');
         const savedHeader = localStorage.getItem('pi_header_data');
         const savedColWidths = localStorage.getItem('pi_col_widths_data');
@@ -558,6 +810,7 @@
             } catch (e) {}
         }
 
+        onBuyerChange();
         handlePiTypeChange(); 
         updateTableStyles();
         updateTable();
@@ -708,6 +961,7 @@
                     localStorage.setItem('pi_total_fonts_data', JSON.stringify(piTotalFonts));
                 }
 
+                onBuyerChange();
                 handlePiTypeChange();
                 updateTableStyles();
                 updateTable();
@@ -1665,7 +1919,7 @@
                 if (i === 0) return { v: lineText, s: { font: { size: 10 }, alignment: alignLeft } };
                 if (i === lastColIndex && idx === 0) return { v: "Holding-375, East Bagbari,", s: { font: { size: 10 }, alignment: alignRight } };
                 if (i === lastColIndex && idx === 1) return { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { size: 10 }, alignment: alignRight } };
-                if (i === lastColIndex && idx === 2) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
+                if (i === lastColIndex && idx === 2) return { v: "BIN Number: 005634023-1201.", s: { font: { size: 10 }, alignment: alignRight } };
                 return undefined;
             });
             rawData.push(addressRow);
@@ -1675,7 +1929,7 @@
             for (let i = buyerAddressLines.length; i < 3; i++) {
                 let extraSellerRow = Array.from({ length: lastColIndex + 1 }, (_, colIdx) => {
                     if (colIdx === lastColIndex && i === 1) return { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { size: 10 }, alignment: alignRight } };
-                    if (colIdx === lastColIndex && i === 2) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
+                    if (colIdx === lastColIndex && i === 2) return { v: "BIN Number: 005634023-1201.", s: { font: { size: 10 }, alignment: alignRight } };
                     return undefined;
                 });
                 rawData.push(extraSellerRow);
@@ -1685,7 +1939,7 @@
         rawData.push(
             Array.from({ length: lastColIndex + 1 }, (_, i) => {
                 if (i === 0) return { v: `BUYER REF : ${buyerRef}`, s: { font: { bold: true }, alignment: alignLeft } };
-                if (i === lastColIndex && buyerAddressLines.length < 4) return { v: "BIN Number: 005634023-0103.", s: { font: { size: 10 }, alignment: alignRight } };
+                if (i === lastColIndex && buyerAddressLines.length < 4) return { v: "BIN Number: 005634023-1201.", s: { font: { size: 10 }, alignment: alignRight } };
                 return undefined;
             }),
             Array.from({ length: lastColIndex + 1 }, (_, i) => {
@@ -2014,34 +2268,41 @@
                         <div style="text-align: center;">
                             <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px; font-family: 'Broadway', sans-serif;">STERLING ACCESSORIES LIMITED.</h2>
                             <div style="font-size: ${Math.round(customFontSize * 0.45)}px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
-                            <div style="font-size: ${Math.round(customFontSize * 0.45)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                            <div style="font-size: ${Math.round(customFontSize * 0.40)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
                         </div>
                     </div>
                 </div>
 
                 <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; font-weight: bold; border: none !important;">
                     <tr>
-                        <td style="width: 33%; border: none !important; padding: 0; text-align: left;">PI No: ${piNo}</td>
-                        <td style="width: 34%; border: none !important; padding: 0; text-align: center;"><u style="font-size: 12px;">PROFORMA INVOICE</u></td>
-                        <td style="width: 33%; border: none !important; padding: 0; text-align: right;">Date: ${piDate}</td>
-                    </tr>
+    <td style="width: 33%; border: none !important; padding: 0; text-align: left; font-size: 14px; font-weight: bold; color: #000000; vertical-align: middle;">PI No: ${piNo}
+    </td>
+    <td style="width: 34%; border: none !important; padding: 0; text-align: center; vertical-align: middle;">
+    <u style="font-size: 16px; font-weight: bold; color: #000000;">PROFORMA INVOICE</u>
+    </td>
+    <td style="width: 33%; border: none !important; padding: 0; text-align: right; font-size: 14px; font-weight: bold; color: #000000; vertical-align: middle;">Date: ${piDate}
+    </td>
+</tr>
                 </table>
 
                 <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse; font-size: 10px; border: none !important;">
                     <tr>
-                        <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: left;">
-                            <u><b>Name & Address of Buyer:</b></u><br>
-                            <b>${buyerName}</b><br><div style="white-space: pre-line;">${buyerAddress}</div><br>
-                            <b>BUYER REF : ${buyerRef}</b><br>
-                            <b>Atten: ${attn}</b>
-                        </td>
-                        <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: right;">
-                            <u><b>Name & Address of Seller:</b></u><br>
-                            <b>STERLING ACCESSORIES LTD.</b><br>
-                            Holding-375, East Bagbari,<br>
-                            Kashimpur, Gazipur, Bangladesh.<br>
-                            BIN Number: 005634023-0103.
-                        </td>
+ <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: left; font-size: 14px;">
+    <u><b>NAME & ADDRESS OF BUYER:</b></u><br>
+    <b style="font-size: 16px; font-weight: bold;">${buyerName}</b><br>
+    <div style="white-space: pre-line; font-size: 13px;">${buyerAddress}</div><br>
+    <b style="font-size: 14px;">BUYER REF : ${buyerRef}</b><br>
+    <b style="font-size: 14px;">Atten: ${attn}</b>
+</td>
+                       <td style="width: 18%; vertical-align: top; border: none !important; padding: 0; text-align: left; font-size: 14px; line-height: 1.5; color: #000000;">
+    <u style="font-size: 14px;"><b>NAME & ADDRESS OF SELLER:</b></u><br>
+    <b style="font-size: 16px; font-weight: bold; display: inline-block; margin-top: 2px;">STERLING ACCESSORIES LTD.</b><br>
+    <span style="font-size: 13px; display: inline-block;">
+        Holding-375, East Bagbari,<br>
+        Kashimpur, Gazipur, Bangladesh.<br>
+        <b>BIN Number:</b> 005634023-0103
+    </span>
+</td>
                     </tr>
                 </table>
 
