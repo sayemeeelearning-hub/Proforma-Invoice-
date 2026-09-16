@@ -1,3 +1,8 @@
+<!-- 
+================================================================================
+১. হেডার ও বেসিক অপশন (Header & Main Options)
+================================================================================
+-->
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -214,6 +219,34 @@
             cursor: pointer;
             margin-right: 5px;
         }
+         /* --- 🆕 সেল ড্র্যাগ মার্জার সিস্টেম CSS --- */
+        td.cell-selected {
+            background-color: #b3d4fc !important;
+            outline: 2px dashed #2980b9;
+        }
+        .cell-merge-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #ebf5fb;
+            border: 1px solid #aed6f1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .btn-merge {
+            background-color: #27ae60;
+            color: white;
+            padding: 6px 14px;
+            font-size: 12px;
+        }
+        .btn-unmerge {
+            background-color: #e67e22;
+            color: white;
+            padding: 6px 14px;
+            font-size: 12px;
+        }
+
 
         #printTemplate { display: none; }
 
@@ -230,11 +263,61 @@
                 print-color-adjust: exact;
             }
         }
+/* ১. PI-এর সকল টেবিলের প্রতিটি সেল ডিফল্টভাবে সেন্টারে থাকবে (Header, Body, Footer সহ) */
+#table-label th, #table-label td,
+#table-elastic th, #table-elastic td,
+#table-poly th, #table-poly td,
+#table-thread th, #table-thread td,
+#table-combinedA th, #table-combinedA td,
+#table-combinedB th, #table-combinedB td {
+    text-align: center !important;
+    vertical-align: middle;
+}
+
+/* ২. QTY (Pcs), QTY (Dzn) এবং Amount (USD) কলামগুলো নির্দিষ্টভাবে ডানপাশে (Right Align) থাকবে */
+
+/* Label Table: 7, 8, 10 */
+#table-label tr > :is(th, td):nth-child(7),
+#table-label tr > :is(th, td):nth-child(8),
+#table-label tr > :is(th, td):nth-child(10) {
+    text-align: right !important;
+}
+
+/* Elastic Table: 7, 10 */
+#table-elastic tr > :is(th, td):nth-child(7),
+#table-elastic tr > :is(th, td):nth-child(10) {
+    text-align: right !important;
+}
+
+/* Poly Table: 6, 9 */
+#table-poly tr > :is(th, td):nth-child(6),
+#table-poly tr > :is(th, td):nth-child(9) {
+    text-align: right !important;
+}
+
+/* Thread Table: 8, 11 */
+#table-thread tr > :is(th, td):nth-child(8),
+#table-thread tr > :is(th, td):nth-child(11) {
+    text-align: right !important;
+}
+
+/* Combined-A Table: 9, 12 */
+#table-combinedA tr > :is(th, td):nth-child(9),
+#table-combinedA tr > :is(th, td):nth-child(12) {
+    text-align: right !important;
+}
+
+/* Combined-B Table: 8, 11 */
+#table-combinedB tr > :is(th, td):nth-child(8),
+#table-combinedB tr > :is(th, td):nth-child(11) {
+    text-align: right !important;
+}
     </style>
 </head>
 <body>
-
-<div class="container">
+      
+        <!-- PI Item Select (হেডাড় নাম এবং পিআই আইটেম নির্বাচন) -->
+        <div class="container">
     <div class="header-container">
         <h2>Proforma Invoice (PI) Generator</h2>
         <h2>Developer By: ENGR. MINHAZ ALAM</h2>
@@ -250,8 +333,13 @@
             </select>
         </div>
     </div>
+    
 
-    <!-- Invoice & Buyer Info -->
+    <!-- 
+    ================================================================================
+    ২. ইনভয়েস ও বায়ায়ারের তথ্য (Invoice & Buyer Info Options)
+    ================================================================================
+    -->
     <div class="section-title">Invoice & Buyer Info</div>
     <div class="form-grid">
         <div class="form-group">
@@ -289,21 +377,44 @@
         </div>
     </div>
 
+    <!-- 
+    ================================================================================
+    ৩. প্রোডাক্ট ডাইনামিক ফিল্ডসমূহ (Product Input Options)
+    ================================================================================
+    -->
     <div class="section-title">Product Details</div>
+    <!-- (আইটেম ভেদে ভিন্ন ভিন্ন ইনপুট ফিল্ড জাভাস্ক্রিপ্ট দ্বারা গতিশীলভাবে তৈরি হবে) -->
     <div class="form-grid" id="dynamicInputContainer"></div>
 
+    <!-- 
+    ================================================================================
+    ৪. অ্যাকশন বাটনসমূহ (Action Buttons)
+    ================================================================================
+    -->
     <div class="btn-container no-print">
+        <!-- +Add Row (+ডাটা যোগ করুন) -->
         <button type="button" class="btn-add" onclick="addItem()">+Add Row</button>
+        <!-- 📥Export to Excel (এক্সেল এক্সপোর্ট) -->
         <button type="button" class="btn-export" onclick="exportToExcel()">📥Export to Excel</button>
+        <!-- 🖨️Save/Print PDF (পিডিএফ সেভ/প্রিন্ট) -->
         <button type="button" class="btn-print" onclick="printPDF()">🖨️Save/Print PDF</button>
+        <!-- 💾Save Current Tab (বর্তমান ট্যাব সেভ করুন) -->
         <button type="button" class="btn-export" style="background-color: #16a085;" onclick="downloadJSON()">💾Save Current Tab</button>
+        <!-- 📂UpLoad Current Tab (আপলোড করুন) -->
         <button type="button" class="btn-export" style="background-color: #d35400;" onclick="document.getElementById('jsonFileInput').click()">📂UpLoad Current Tab</button>
         <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
+        <!-- 🗑️Reset All (সব মুছে ফেলুন) -->
         <button type="button" class="btn-reset" onclick="resetAllData()">🗑️Reset All</button>
     </div>
 
-    <!-- কলাম সাইজ ও ফন্ট কাস্টমাইজেশন বার -->
+    <!-- 
+    ================================================================================
+    ৫. কাস্টমাইজেশন বার অপশনসমূহ (Customization Bar Options)
+    ================================================================================
+    -->
     <div class="customization-bar no-print">
+        <!-- Header Font (হেডার ফন্ট সাইজ) -->
+       <div class="customization-bar no-print">
         <div class="pi-type-container" style="background: #fff3cd; border: 1px solid #ffeeba;">
             <label for="headerFontSize">Header Font:</label>
             <input type="number" id="headerFontSize" value="22" min="10" max="42" style="width: 55px; padding: 4px; text-align: center;">
@@ -335,7 +446,13 @@
             <input type="number" id="totalFontInput" value="12" min="8" max="30" style="width: 55px; padding: 4px; text-align: center;" oninput="saveTotalFont()">px
         </div>
     </div>
-
+     <!-- 🆕 সেল মার্জ অ্যাকশন বার -->
+    <div class="cell-merge-toolbar no-print">
+        <span style="font-size: 13px; font-weight: bold; color: #1f6391;">🖱️ Cell Merge Tool:</span>
+        <button type="button" class="btn-merge" onclick="mergeSelectedCells()">🔗 Merge Selected Cells</button>
+        <button type="button" class="btn-unmerge" onclick="unmergeSelectedCells()">🔓 Split / Unmerge Cells</button>
+        <span style="font-size: 11px; color: #666;">(মাউস দিয়ে একের অধিক সেল সিলেক্ট করে মার্জ করুন)</span>
+    </div>
     <!-- প্রতিটি PI Item এর জন্য আলাদা টেবিল সেকশন -->
     <div id="tablesContainer">
         <!-- 1. Elastic Table -->
@@ -390,7 +507,7 @@
             <table id="table-label">
                 <thead>
                     <tr>
-                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY</th><th>Unit</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
+                        <th>SL No.</th><th>H.S CODE</th><th>Description of Goods</th><th>Project No.</th><th>Article No.</th><th>Color</th><th>QTY (Pcs)</th><th>QTY (Dzn)</th><th>Unit Price (USD)</th><th>Amount (USD)</th><th class="no-print">অ্যাকশন</th>
                     </tr>
                 </thead>
                 <tbody id="tbody-label"></tbody>
@@ -398,7 +515,7 @@
                     <tr class="total-row">
                         <td colspan="6" style="text-align: right; font-weight: bold;">Total =</td>
                         <td id="totalQty-label" style="font-weight: bold;">0</td>
-                        <td>-</td>
+                        <td id="totalDzn-label" style="font-weight: bold;">0.00</td>
                         <td>-</td>
                         <td id="totalAmount-label" style="font-weight: bold;">0.00</td>
                         <td class="no-print">-</td>
@@ -493,7 +610,7 @@
         }
     }
 
-    // ------------------- 20 Buyer References Database -------------------
+    // ------------------- BUYER REF (বায়ারের রেফারেন্স) ডাটাবেস -------------------
     const buyerRefDatabase = [
         "GAP SPR",
         "Buyer: H&M AUTUMN'26.",
@@ -528,7 +645,7 @@
         });
     }
 
-    // ------------------- 30 Companies & 20 Merchants Database -------------------
+    // ------------------- Name of Buyer & Attn (বায়ারের নাম ও অ্যাটেনশন) ডাটাবেস -------------------
     const buyerDatabase = [
         {
             name: "BANDO DESIGN LTD.",
@@ -681,8 +798,8 @@
             merchants: ["Mr. Tajul", "Mr. Talukdar", "Ms. Taslima", "Mr. Wahid", "Mr. Robi", "Ms. Runa", "Mr. Sabit", "Mr. Sadiqur", "Ms. Sahana", "Mr. Saif", "Mr. Sajal", "Ms. Samia", "Mr. Sayeed", "Mr. Sezan", "Ms. Sharmin", "Mr. Showkat", "Mr. Sirajum", "Ms. Sonia", "Mr. Sourav", "Mr. Tanzo"]
         }
     ];
-
     // Populating Buyer Datalist on Script Init
+
     function initBuyerDatalist() {
         const buyerListElem = document.getElementById('buyerList');
         if(!buyerListElem) return;
@@ -724,7 +841,7 @@
         saveHeaderToStorage();
     }
 
-    // Existing Logic & Initializations
+    // ------------------- গ্লোবাল ভ্যারিয়েবল এবং ইনিশিয়ালাইজেশন -------------------
     const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
     const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
 
@@ -744,24 +861,27 @@
         redoStack = []; 
     }
 
-    let piColumnWidths = {
+    // Target Col Width (কলাম প্রস্থ অপশন)
+   let piColumnWidths = {
         elastic: { "SL No.": 40, "H.S CODE": 90, "Description of Goods": 100, "Measurement": 100, "PO/Style NO.": 100, "Color": 90, "QTY": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
         poly: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 150, "Style/PO No.": 100, "QTY (Pcs)": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
-        label: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 220, "Project No.": 90, "Article No.": 90, "Color": 90, "QTY": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
+        label: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 200, "Project No.": 90, "Article No.": 90, "Color": 90, "QTY (Pcs)": 80, "QTY (Dzn)": 80, "Unit Price (USD)": 90, "Amount (USD)": 90 },
         thread: { "SL No.": 50, "H.S CODE": 90, "Description of Goods": 180, "Measurement": 100, "Style/ PO No.": 100, "Color": 90, "Bleach/ Non Bleach": 110, "QTY": 90, "Unit": 90, "Unit Price (USD)": 90, "Amount (USD)": 90 },
         combinedA: { "SL No.": 40, "H.S CODE": 80, "Item Name": 100, "Description of Goods": 120, "Measurement": 100, "PO/Style NO.": 100, "Color": 80, "Bleach/ Non Bleach": 100, "QTY": 80, "Unit": 60, "Unit Price (USD)": 80, "Amount (USD)": 90 },
         combinedB: { "SL No.": 40, "H.S CODE": 80, "Description of Goods": 150, "Measurement": 130, "Project/ PO No.": 100, "Article/ Style No.": 100, "Color": 80, "QTY": 80, "Unit": 60, "Unit Price (USD)": 80, "Amount (USD)": 90 }
     };
 
+    // Cell Font Size Col (কলাম ফন্ট সাইজ অপশন)
     let piCellFonts = {
         elastic: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Measurement": 12, "PO/Style NO.": 12, "Color": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
         poly: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Measurement": 12, "Style/PO No.": 12, "QTY (Pcs)": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
-        label: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Project No.": 12, "Article No.": 12, "Color": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
+        label: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Project No.": 12, "Article No.": 12, "Color": 12, "QTY (Pcs)": 12, "QTY (Dzn)": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
         thread: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Measurement": 12, "Style/ PO No.": 12, "Color": 12, "Bleach/ Non Bleach": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
         combinedA: { "SL No.": 12, "H.S CODE": 12, "Item Name": 12, "Description of Goods": 12, "Measurement": 12, "PO/Style NO.": 12, "Color": 12, "Bleach/ Non Bleach": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 },
         combinedB: { "SL No.": 12, "H.S CODE": 12, "Description of Goods": 12, "Measurement": 12, "Project/ PO No.": 12, "Article/ Style No.": 12, "Color": 12, "QTY": 12, "Unit": 12, "Unit Price (USD)": 12, "Amount (USD)": 12 }
     };
 
+    // Total/Sum Font Size (টোটাল ফন্ট সাইজ অপশন)
     let piTotalFonts = {
         elastic: 12, poly: 12, label: 12, thread: 12, combinedA: 12, combinedB: 12
     };
@@ -882,6 +1002,7 @@
         }
     }
 
+    // 💾Save Current Tab (বর্তমান ট্যাব সেভ করুন - JSON ডাউনলোড)
     function downloadJSON() {
         const currentType = document.getElementById('piType').value;
         const currentItems = items.filter(item => item.piType === currentType);
@@ -906,6 +1027,7 @@
         downloadAnchor.remove();
     }
 
+    // 📂UpLoad Current Tab (আপলোড করুন - JSON আপলোড)
     function uploadJSON(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -974,9 +1096,9 @@
         reader.readAsText(file);
     }
 
-    function getColumnsForType(type) {
+     function getColumnsForType(type) {
         if (type === 'label') {
-            return ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
+            return ["SL No.", "H.S CODE", "Description of Goods", "Project No.", "Article No.", "Color", "QTY (Pcs)", "QTY (Dzn)", "Unit Price (USD)", "Amount (USD)"];
         } else if (type === 'elastic') {
             return ["SL No.", "H.S CODE", "Description of Goods", "Measurement", "PO/Style NO.", "Color", "QTY", "Unit", "Unit Price (USD)", "Amount (USD)"];
         } else if (type === 'thread') {
@@ -1037,7 +1159,8 @@
         saveHeaderToStorage();
     }
 
-    function changeAllColumns(scalePercentage) {
+    // Combined Size (%) (শতকরা স্কেল পরিবর্তন)
+       function changeAllColumns(scalePercentage) {
         let val = parseFloat(scalePercentage);
         if (isNaN(val) || val <= 0) return;
 
@@ -1134,8 +1257,8 @@
         localStorage.setItem('pi_total_fonts_data', JSON.stringify(piTotalFonts));
         updateTableStyles();
     }
-
-    function calculatePolyMeasurement() {
+    // পলি ব্যাগ মেজারমেন্ট অপশন (Poly Details Options Calculator)
+function calculatePolyMeasurement() {
         const lengthInput = parseFloat(document.getElementById('polyL')?.value) || 0;
         const flapInput = parseFloat(document.getElementById('polyF')?.value) || 0;
         const widthInput = parseFloat(document.getElementById('polyW')?.value) || 0;
@@ -1158,34 +1281,35 @@
         if (measInput) { measInput.value = result; }
     }
 
+
+    // Product Dynamic Input Rendering (আইটেম ভেদে ডায়নামিক ইনপুট ফিল্ড প্রদর্শন)
     function handlePiTypeChange() {
         const piType = document.getElementById('piType').value;
         const inputContainer = document.getElementById('dynamicInputContainer');
         const currentCounter = slCounters[piType] || 1;
-        
+        // SL No. (ক্রমিক নম্বর), H.S CODE (এইচ এস কোড)
         let baseInputs = `
             <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${currentCounter}" min="1"></div>
-            <div class="form-group"><label for="hsCode">2. H.S CODE</label><input type="text" id="hsCode" placeholder="e.g. 3923.21.00"></div>
+            <div class="form-group"><label for="hsCode">2. H.S CODE</label><textarea id="hsCode" rows="2" placeholder="e.g. 3923.21.00" oninput="this.value = this.value.replace(/,/g, '\\n')"></textarea></div>
         `;
 
-        if(piType === 'label') {
+         if(piType === 'label') {
             inputContainer.innerHTML = `
                 ${baseInputs}
                 <div class="form-group"><label for="item">3. Item</label><input type="text" id="item" value="Printed Care Label"></div>
                 <div class="form-group"><label for="descriptionGoods">4. Description of Goods (Size)</label><input type="text" id="descriptionGoods" value="25mm X 70mm max."></div>
-                <div class="form-group"><label for="projectNo">5. Project No.</label><textarea id="projectNo" rows="2" placeholder="Project No..."></textarea></div>
-                <div class="form-group"><label for="articleNo">6. Article No.</label><textarea id="articleNo" rows="2" placeholder="Article No..."></textarea></div>
-                <div class="form-group"><label for="color">7. Color</label><textarea id="color" rows="2" placeholder="Color..."></textarea></div>
-                <div class="form-group"><label for="qty">8. QTY (Yds/Pcs)</label><input type="number" id="qty" placeholder="0"></div>
-                <div class="form-group"><label for="unitDropdown">9. Unit (Yds/Dzn)</label><select id="unitDropdown"><option value="Pcs">Pcs</option><option value="Yds">Yds</option><option value="Dzn">Dzn</option></select></div>
-                <div class="form-group"><label for="unitPrice">10. Unit Price (USD)</label><input type="number" step="0.0001" id="unitPrice" placeholder="0.0000"></div>
+                <div class="form-group"><label for="projectNo">5. Project No.</label><textarea id="projectNo" rows="2" placeholder="Project No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></textarea></div>
+                <div class="form-group"><label for="articleNo">6. Article No.</label><textarea id="articleNo" rows="2" placeholder="Article No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></textarea></div>
+                <div class="form-group"><label for="color">7. Color</label><textarea id="color" rows="2" placeholder="Color..." oninput="this.value = this.value.replace(/,/g, '\\n')"></textarea></div>
+                <div class="form-group"><label for="qty">8. QTY (Pcs)</label><input type="number" id="qty" placeholder="0"></div>
+                <div class="form-group"><label for="unitPrice">9. Unit Price (USD)</label><input type="number" step="0.0001" id="unitPrice" placeholder="0.0000"></div>
             `;
         } else if(piType === 'poly') {
             inputContainer.innerHTML = `
                 ${baseInputs}
                 <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" value="PP Poly Bag" placeholder="Description..."></div>
-                <div class="form-group"><label for="measurement">Measurement (Auto-generated)</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
-                <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
+                <div class="form-group"><label for="measurement">Measurement</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
+                <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="calculatePolyMeasurement()"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
@@ -1228,9 +1352,9 @@
                 ${baseInputs}
                 <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" placeholder="Description..."></div>
                 <div class="form-group"><label for="measurement">Measurement</label><input type="text" id="measurement" placeholder="Measurement..."></div>
-                <div class="form-group"><label for="styNo">Style No.</label><input type="text" id="styNo" placeholder="Style No..."></div>
-                <div class="form-group"><label for="poNo">PO No.</label><input type="text" id="poNo" placeholder="PO No..."></div>
-                <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..."></div>
+                <div class="form-group"><label for="styNo">Style No.</label><input type="text" id="styNo" placeholder="Style No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
+                <div class="form-group"><label for="poNo">PO No.</label><input type="text" id="poNo" placeholder="PO No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
+                <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Yds"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
@@ -1240,9 +1364,11 @@
                 ${baseInputs}
                 <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" placeholder="Description..."></div>
                 <div class="form-group"><label for="measurement">Measurement</label><input type="text" id="measurement" placeholder="Measurement..."></div>
-                <div class="form-group"><label for="style">Style/ PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
-                <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..."></div>
-                <div class="form-group"><label for="bleach">Bleach/Non Bleach</label><select id="bleach"><option value="Non Bleach">Non Bleach</option><option value="Bleach">Bleach</option></select></div>
+                <div class="form-group"><label for="style">Style/ PO No.</label><input type="text" id="style" placeholder="Style/PO..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
+                <div class="form-group"><label for="color">Color</label><input type="text" id="color" placeholder="Color..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
+               <div class="form-group">
+    <label for="bleach">Bleach/Non Bleach</label>
+<input type="text" id="bleach" list="bleachList" placeholder="Select or type Bleach option..."><datalist id="bleachList"><option value=""><option value="Bleach Proof"><option value="Non Bleach"></datalist></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Cone"></div>
                 <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
@@ -1253,9 +1379,9 @@
                 <div class="form-group"><label for="itemName">3. Item Name</label><input type="text" id="itemName" placeholder="e.g. Swing Thread / Elastic"></div>
                 <div class="form-group"><label for="desc">4. Description of Goods</label><input type="text" id="desc" placeholder="Description..."></div>
                 <div class="form-group"><label for="measurement">5. Measurement</label><input type="text" id="measurement" placeholder="Measurement..."></div>
-                <div class="form-group"><label for="styNo">6. Style No.</label><input type="text" id="styNo" placeholder="Style No..."></div>
-                <div class="form-group"><label for="poNo">7. PO No.</label><input type="text" id="poNo" placeholder="PO No..."></div>
-                <div class="form-group"><label for="color">8. Color</label><input type="text" id="color" placeholder="Color..."></div>
+                <div class="form-group"><label for="styNo">6. Style No.</label><input type="text" id="styNo" placeholder="Style No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
+                <div class="form-group"><label for="poNo">7. PO No.</label><input type="text" id="poNo" placeholder="PO No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
+                <div class="form-group"><label for="color">8. Color</label><input type="text" id="color" placeholder="Color..." oninput="this.value = this.value.replace(/,/g, '\\n')"></div>
                 <div class="form-group"><label for="bleach">9. Bleach/Non Bleach</label><select id="bleach"><option value="">N/A</option><option value="Non Bleach">Non Bleach</option><option value="Bleach">Bleach</option></select></div>
                 <div class="form-group"><label for="qty">10. QTY</label><input type="number" id="qty" placeholder="0"></div>
                 <div class="form-group"><label for="unit">11. Unit</label><input type="text" id="unit" value="Pcs"></div>
@@ -1266,9 +1392,9 @@
                 ${baseInputs}
                 <div class="form-group"><label for="desc">3. Description of Goods</label><input type="text" id="desc" placeholder="Description..."></div>
                 <div class="form-group"><label for="measurement">4. Measurement</label><input type="text" id="measurement" placeholder="Measurement..."></div>
-                <div class="form-group"><label for="projectNo">5. Project / PO No.</label><textarea id="projectNo" rows="2" placeholder="Project / PO No..."></textarea></div>
-                <div class="form-group"><label for="articleNo">6. Article / Style No.</label><textarea id="articleNo" rows="2" placeholder="Article / Style No..."></textarea></div>
-                <div class="form-group"><label for="color">7. Color</label><textarea id="color" rows="2" placeholder="Color..."></textarea></div>
+                <div class="form-group"><label for="projectNo">5. Project / PO No.</label><textarea id="projectNo" rows="2" placeholder="Project / PO No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></textarea></div>
+                <div class="form-group"><label for="articleNo">6. Article / Style No.</label><textarea id="articleNo" rows="2" placeholder="Article / Style No..." oninput="this.value = this.value.replace(/,/g, '\\n')"></textarea></div>
+                <div class="form-group"><label for="color">7. Color</label><textarea id="color" rows="2" placeholder="Color..." oninput="this.value = this.value.replace(/,/g, '\\n')"></textarea></div>
                 <div class="form-group"><label for="qty">8. QTY</label><input type="number" id="qty" placeholder="0" oninput="calculatePolyMeasurement()"></div>
                 <div class="form-group"><label for="unit">9. Unit</label><input type="text" id="unit" value="Pcs"></div>
                 <div class="form-group"><label for="price">10. Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
@@ -1291,8 +1417,7 @@
                     </div>
                 </div>
             `;
-        }
-        
+        }      
         saveHeaderToStorage();
         populateColumnSelect();
         updateTableStyles();
@@ -1328,6 +1453,7 @@
         return parts.join("\n");
     }
 
+    // +Add Row (+ডাটা যোগ করুন)
     function addItem() {
         const piType = document.getElementById('piType').value;
         const slNo = parseInt(document.getElementById('slNo').value) || slCounters[piType];
@@ -1342,14 +1468,8 @@
             itemData.articleNo = document.getElementById('articleNo').value;
             itemData.color = document.getElementById('color').value;
             itemData.qty = parseFloat(document.getElementById('qty').value) || 0;
-            itemData.unitDropdown = document.getElementById('unitDropdown').value;
             itemData.unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
             itemData.amount = parseFloat((itemData.qty * itemData.unitPrice).toFixed(4));
-
-            if (!itemData.projectNo || itemData.qty <= 0 || itemData.unitPrice <= 0) {
-                alert('দয়া করে প্রজেক্ট নম্বর, সঠিক পরিমাণ এবং একক মূল্য লিখুন!');
-                return;
-            }
         } else if(piType === 'combinedA') {
             itemData.itemName = document.getElementById('itemName').value;
             itemData.desc = document.getElementById('desc').value;
@@ -1362,11 +1482,6 @@
             itemData.unit = document.getElementById('unit').value;
             itemData.price = parseFloat(document.getElementById('price').value) || 0;
             itemData.amount = parseFloat((itemData.qty * itemData.price).toFixed(4));
-
-            if (!itemData.desc || itemData.qty <= 0 || itemData.price <= 0) {
-                alert('দয়া করে সঠিক বিবরণ, পরিমাণ এবং একক মূল্য লিখুন!');
-                return;
-            }
         } else if(piType === 'combinedB') {
             itemData.desc = document.getElementById('desc').value;
             itemData.measurement = document.getElementById('measurement').value;
@@ -1377,11 +1492,6 @@
             itemData.unit = document.getElementById('unit').value;
             itemData.price = parseFloat(document.getElementById('price').value) || 0;
             itemData.amount = parseFloat((itemData.qty * itemData.price).toFixed(4));
-
-            if (!itemData.desc || itemData.qty <= 0 || itemData.price <= 0) {
-                alert('দয়া করে সঠিক বিবরণ, পরিমাণ এবং একক মূল্য লিখুন!');
-                return;
-            }
         } else {
             itemData.desc = document.getElementById('desc').value;
             itemData.measurement = document.getElementById('measurement').value;
@@ -1404,16 +1514,12 @@
                 itemData.styNo = document.getElementById('styNo')?.value;
                 itemData.poNo = document.getElementById('poNo')?.value;
                 itemData.color = document.getElementById('color')?.value;
-            } else if(piType === 'thread') {
-                itemData.style = document.getElementById('style')?.value;
-                itemData.color = document.getElementById('color')?.value;
-                itemData.bleach = document.getElementById('bleach')?.value;
-            }
-
-            if (!itemData.desc || itemData.qty <= 0 || itemData.price <= 0) {
-                alert('দয়া করে সঠিক বিবরণ, পরিমাণ এবং একক মূল্য লিখুন!');
-                return;
-            }
+           } else if(piType === 'thread') {
+    itemData.style = document.getElementById('style')?.value;
+    itemData.color = document.getElementById('color')?.value;
+    // খালি রাখা বা যেকোনো ম্যানুয়াল ইনপুট নেয়ার জন্য:
+    itemData.bleach = document.getElementById('bleach')?.value.trim() || '';
+}
         }
 
         saveStateForUndo(); 
@@ -1433,7 +1539,6 @@
 
         saveDataToStorage();
         updateTable();
-        clearInputs();
     }
 
     function editItem(index) {
@@ -1452,7 +1557,6 @@
             document.getElementById('articleNo').value = item.articleNo || '';
             document.getElementById('color').value = item.color || '';
             document.getElementById('qty').value = item.qty || '';
-            document.getElementById('unitDropdown').value = item.unitDropdown || 'Pcs';
             document.getElementById('unitPrice').value = item.unitPrice || '';
         } else if(item.piType === 'combinedA') {
             document.getElementById('itemName').value = item.itemName || '';
@@ -1507,6 +1611,7 @@
         addBtn.style.backgroundColor = '#f39c12';
     }
 
+    // X Delete (ডিলিট বাটন)
     function deleteItem(index) {
         saveStateForUndo(); 
         items.splice(index, 1);
@@ -1514,7 +1619,8 @@
         updateTable();
     }
 
-    function resetAllData() {
+    // 🗑️Reset All (সব মুছে ফেলুন)
+     function resetAllData() {
         const piType = document.getElementById('piType').value;
         if (confirm(`আপনি কি নিশ্চিত যে বর্তমান "${piType.toUpperCase()}" টেবিলের সব ডাটা মুছে ফেলতে চান?`)) {
             saveStateForUndo(); 
@@ -1550,24 +1656,30 @@
             }
 
             let totalQty = 0;
+            let totalDzn = 0;
             let totalAmount = 0;
 
-            filteredItems.forEach((item) => {
+            filteredItems.forEach((item, index) => {
                 totalQty += item.qty;
+                const dznVal = item.qty / 12;
+                totalDzn += dznVal;
                 totalAmount += (item.amount || 0);
+
+                // আপনার বর্তমান কোড পরিবর্তন করে এটি লিখুন:
+            let hsCodeCell = `<td>${item.hsCode || ''}</td>`;
 
                 let row = '';
                 if(type === 'label') {
                     const formattedDesc = formatLabelDescription(item.item, item.descriptionGoods);
                     row = `<tr>
                         <td style="text-align:center;">${item.slNo}</td>
-                        <td>${item.hsCode || ''}</td>
+                        ${hsCodeCell}
                         <td class="wrap-cell">${formattedDesc}</td>
                         <td class="wrap-cell">${item.projectNo || ''}</td>
                         <td class="wrap-cell">${item.articleNo || ''}</td>
                         <td class="wrap-cell">${item.color || ''}</td>
                         <td>${item.qty}</td>
-                        <td>${item.unitDropdown || 'Pcs'}</td>
+                        <td>${dznVal.toFixed(2)}</td>
                         <td>$${(item.unitPrice || 0).toFixed(4)}</td>
                         <td>$${(item.amount || 0).toFixed(2)}</td>
                         <td style="white-space: nowrap; text-align:center;" class="no-print">
@@ -1578,7 +1690,7 @@
                 } else if(type === 'combinedA') {
                     row = `<tr>
                         <td style="text-align:center;">${item.slNo}</td>
-                        <td>${item.hsCode || ''}</td>
+                        ${hsCodeCell}
                         <td>${item.itemName || ''}</td>
                         <td>${item.desc || ''}</td>
                         <td>${item.measurement || ''}</td>
@@ -1597,7 +1709,7 @@
                 } else if(type === 'combinedB') {
                     row = `<tr>
                         <td style="text-align:center;">${item.slNo}</td>
-                        <td>${item.hsCode || ''}</td>
+                        ${hsCodeCell}
                         <td class="wrap-cell">${item.desc || ''}</td>
                         <td class="wrap-cell">${item.measurement || ''}</td>
                         <td class="wrap-cell">${item.projectNo || ''}</td>
@@ -1615,7 +1727,7 @@
                 } else if(type === 'elastic') {
                     row = `<tr>
                         <td>${item.slNo}</td>
-                        <td>${item.hsCode || ''}</td>
+                        ${hsCodeCell}
                         <td>${item.desc}</td>
                         <td>${item.measurement || ''}</td>
                         <td>Sty: ${item.styNo || ''},<br>PO: ${item.poNo || ''}</td>
@@ -1632,7 +1744,7 @@
                 } else if(type === 'thread') {
                     row = `<tr>
                         <td>${item.slNo}</td>
-                        <td>${item.hsCode || ''}</td>
+                        ${hsCodeCell}
                         <td>${item.desc}</td>
                         <td>${item.measurement || ''}</td>
                         <td>${item.style || ''}</td>
@@ -1650,7 +1762,7 @@
                 } else {
                     row = `<tr>
                         <td>${item.slNo}</td>
-                        <td>${item.hsCode || ''}</td>
+                        ${hsCodeCell}
                         <td>${item.desc}</td>
                         <td>${item.measurement || ''}</td>
                         <td>${item.style || ''}</td>
@@ -1668,10 +1780,14 @@
             });
 
             const tQty = document.getElementById(`totalQty-${type}`);
+            const tDzn = document.getElementById(`totalDzn-${type}`);
             const tAmt = document.getElementById(`totalAmount-${type}`);
             if(tQty) tQty.innerText = totalQty;
+            if(tDzn) tDzn.innerText = totalDzn.toFixed(2);
             if(tAmt) tAmt.innerText = totalAmount.toFixed(2);
-        });
+         });
+            // টেবিল ডাট লোড হওয়ার পর ড্র্যাগ মার্জার সিস্টেমটি বাইন্ড করা হবে
+        initCellSelectionSystem();
     }
 
     function clearInputs() {
@@ -1689,7 +1805,6 @@
             document.getElementById('articleNo').value = '';
             document.getElementById('color').value = '';
             document.getElementById('qty').value = '';
-            document.getElementById('unitDropdown').value = 'Pcs';
             document.getElementById('unitPrice').value = '';
         } else if(piType === 'combinedA') {
             document.getElementById('itemName').value = '';
@@ -1729,6 +1844,237 @@
         }
     }
 
+    // ------------------- 🆕 মাউস দিয়ে সেলে ড্র্যাগ সিলেক্ট ও মার্জ লজিক (Fixed) -------------------
+    let isMouseDown = false;
+    let startCell = null;
+    let selectedCells = [];
+
+    function initCellSelectionSystem() {
+        const piType = document.getElementById('piType').value;
+        const currentTable = document.getElementById(`table-${piType}`);
+        if (!currentTable) return;
+
+        const tbody = currentTable.querySelector('tbody');
+        if (!tbody) return;
+
+        const cells = tbody.querySelectorAll('td');
+
+        cells.forEach(cell => {
+            // অ্যাকশন বোতামের কলাম যেন সিলেক্ট না হয়
+            if (cell.classList.contains('no-print')) return;
+
+            cell.addEventListener('mousedown', function(e) {
+                isMouseDown = true;
+                clearSelection();
+                startCell = this;
+                selectCell(this);
+                e.preventDefault();
+            });
+
+            cell.addEventListener('mouseenter', function() {
+                if (isMouseDown && startCell) {
+                    highlightArea(startCell, this);
+                }
+            });
+        });
+
+        document.addEventListener('mouseup', function() {
+            isMouseDown = false;
+        });
+    }
+
+    function clearSelection() {
+        selectedCells.forEach(cell => cell.classList.remove('cell-selected'));
+        selectedCells = [];
+    }
+
+    function selectCell(cell) {
+        if (!selectedCells.includes(cell)) {
+            cell.classList.add('cell-selected');
+            selectedCells.push(cell);
+        }
+    }
+
+    function highlightArea(cell1, cell2) {
+        clearSelection();
+        const piType = document.getElementById('piType').value;
+        const tbody = document.getElementById(`tbody-${piType}`);
+        
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        let r1 = cell1.parentElement.rowIndex - 1;
+        let c1 = cell1.cellIndex;
+        let r2 = cell2.parentElement.rowIndex - 1;
+        let c2 = cell2.cellIndex;
+
+        let startRow = Math.min(r1, r2);
+        let endRow = Math.max(r1, r2);
+        let startCol = Math.min(c1, c2);
+        let endCol = Math.max(c1, c2);
+
+        for (let r = startRow; r <= endRow; r++) {
+            if (rows[r]) {
+                let currentCells = rows[r].children;
+                for (let c = startCol; c <= endCol; c++) {
+                    if (currentCells[c] && !currentCells[c].classList.contains('no-print') && currentCells[c].style.display !== 'none') {
+                        selectCell(currentCells[c]);
+                    }
+                }
+            }
+        }
+    }
+
+    // 🔗 সিলেক্ট করা সেলে মাউস ক্লিক করে মার্জ করা
+    function mergeSelectedCells() {
+        if (selectedCells.length < 2) {
+            alert("অনুগ্রহ করে একাধিক সেল মাউস দিয়ে সিলেক্ট করুন মার্জ করার জন্য!");
+            return;
+        }
+
+        const piType = document.getElementById('piType').value;
+        const tbody = document.getElementById(`tbody-${piType}`);
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        let minRow = Infinity, maxRow = -1;
+        let minCol = Infinity, maxCol = -1;
+
+        selectedCells.forEach(cell => {
+            let r = cell.parentElement.rowIndex - 1;
+            let c = cell.cellIndex;
+            if (r < minRow) minRow = r;
+            if (r > maxRow) maxRow = r;
+            if (c < minCol) minCol = c;
+            if (c > maxCol) maxCol = c;
+        });
+
+        let rowSpan = maxRow - minRow + 1;
+        let colSpan = maxCol - minCol + 1;
+
+        let masterCell = null;
+        let combinedText = [];
+
+        for (let r = minRow; r <= maxRow; r++) {
+            let rowCells = rows[r].children;
+            for (let c = minCol; c <= maxCol; c++) {
+                let cell = rowCells[c];
+                if (cell) {
+                    if (r === minRow && c === minCol) {
+                        masterCell = cell;
+                    } else {
+                        if (cell.innerText.trim() !== "") {
+                            combinedText.push(cell.innerText.trim());
+                        }
+                        cell.style.display = 'none';
+                        cell.classList.add('merged-hidden');
+                    }
+                }
+            }
+        }
+
+        if (masterCell) {
+            if (rowSpan > 1) masterCell.setAttribute('rowspan', rowSpan);
+            if (colSpan > 1) masterCell.setAttribute('colspan', colSpan);
+            if (combinedText.length > 0) {
+                // ডুপ্লিকেট টেক্সট এড়াতে ও সুন্দর বিন্যাসের জন্য
+                let currentVal = masterCell.innerText.trim();
+                let newAdditions = combinedText.filter(t => !currentVal.includes(t));
+                if(newAdditions.length > 0) {
+                    masterCell.innerText += " " + newAdditions.join(" ");
+                }
+            }
+        }
+
+        clearSelection();
+        alert("সেলগুলো সফলভাবে মার্জ করা হয়েছে!");
+    }
+    // 🔗 সিলেক্ট করা সেলে মাউস ক্লিক করে মার্জ করা
+    function mergeSelectedCells() {
+        if (selectedCells.length < 2) {
+            alert("অনুগ্রহ করে একাধিক সেল মাউস দিয়ে সিলেক্ট করুন মার্জ করার জন্য!");
+            return;
+        }
+
+        const piType = document.getElementById('piType').value;
+        const tbody = document.getElementById(`tbody-${piType}`);
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        let minRow = Infinity, maxRow = -1;
+        let minCol = Infinity, maxCol = -1;
+
+        selectedCells.forEach(cell => {
+            let r = cell.parentElement.rowIndex - 1;
+            let c = cell.cellIndex;
+            if (r < minRow) minRow = r;
+            if (r > maxRow) maxRow = r;
+            if (c < minCol) minCol = c;
+            if (c > maxCol) maxCol = c;
+        });
+
+        let rowSpan = maxRow - minRow + 1;
+        let colSpan = maxCol - minCol + 1;
+
+        let masterCell = null;
+        let combinedText = [];
+
+        for (let r = minRow; r <= maxRow; r++) {
+            let rowCells = rows[r].children;
+            for (let c = minCol; c <= maxCol; c++) {
+                let cell = rowCells[c];
+                if (cell) {
+                    if (r === minRow && c === minCol) {
+                        masterCell = cell;
+                    } else {
+                        if (cell.innerText.trim() !== "") {
+                            combinedText.push(cell.innerText.trim());
+                        }
+                        cell.style.display = 'none'; // হিডেন করে দেবে
+                        cell.classList.add('merged-hidden');
+                    }
+                }
+            }
+        }
+
+        if (masterCell) {
+            if (rowSpan > 1) masterCell.setAttribute('rowspan', rowSpan);
+            if (colSpan > 1) masterCell.setAttribute('colspan', colSpan);
+            if (combinedText.length > 0) {
+                masterCell.innerText += " " + combinedText.join(" ");
+            }
+        }
+
+        clearSelection();
+        alert("সেলগুলো সফলভাবে মার্জ করা হয়েছে!");
+    }
+
+    // 🔓 মার্জ করা ভাঙা (Unmerge Cells)
+    function unmergeSelectedCells() {
+        if (selectedCells.length === 0) {
+            alert("অনুগ্রহ করে যে সেল স্প্লিট করতে চান সেটি সিলেক্ট করুন!");
+            return;
+        }
+
+        selectedCells.forEach(cell => {
+            if (cell.hasAttribute('rowspan') || cell.hasAttribute('colspan')) {
+                cell.removeAttribute('rowspan');
+                cell.removeAttribute('colspan');
+            }
+        });
+
+        const piType = document.getElementById('piType').value;
+        const tbody = document.getElementById(`tbody-${piType}`);
+        const hiddenCells = tbody.querySelectorAll('.merged-hidden');
+        
+        hiddenCells.forEach(cell => {
+            cell.style.display = '';
+            cell.classList.remove('merged-hidden');
+        });
+
+        clearSelection();
+        alert("সেলগুলোর মার্জ বাতিল করা হয়েছে!");
+    }
+
+
+
     function numToWords(num) {
         const a = ['','one ','two ','three ','four ','five ','six ','seven ','eight ','nine ','ten ','eleven ','twelve ','thirteen ','fourteen ','fifteen ','sixteen ','seventeen ','eighteen ','nineteen '];
         const b = ['', '', 'twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
@@ -1760,6 +2106,7 @@
         return result.replace(/\s+/g, ' ').trim();
     }
 
+    // 📥Export to Excel (এক্সেল এক্সপোর্ট)
      function exportToExcel() {
         const piType = document.getElementById('piType').value;
         const selectedItems = items.filter(item => item.piType === piType);
@@ -2098,8 +2445,8 @@
         XLSX.utils.book_append_sheet(workbook, worksheet, "PI_Report");
         XLSX.writeFile(workbook, `${piType.toUpperCase()}_PI_${piNo.replace(/\//g, '_')}.xlsx`);
     }
-
-    function printPDF() {
+     // 📥PDF-SAVE & PRINT (পিডিএফ এবং প্রিন্)
+ function printPDF() {
         const piType = document.getElementById('piType').value;
         const selectedItems = items.filter(item => item.piType === piType);
 
@@ -2268,7 +2615,7 @@
                         <div style="text-align: center;">
                             <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px; font-family: 'Broadway', sans-serif;">STERLING ACCESSORIES LIMITED.</h2>
                             <div style="font-size: ${Math.round(customFontSize * 0.45)}px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
-                            <div style="font-size: ${Math.round(customFontSize * 0.40)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                            <div style="font-size: ${Math.round(customFontSize * 0.45)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
                         </div>
                     </div>
                 </div>
@@ -2349,14 +2696,14 @@
                     <b>13.Claim/ Complain:</b> Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods.No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change.
                 </div>
 
-                <table style="width: 100%; border-collapse: collapse; border: none !important; margin-top: 10px;">
+                 <table style="width: 100%; border-collapse: collapse; border: none !important; margin-top: 10px;">
                     <tr>
                         <td style="width: 50%; border: none !important; padding: 10px; vertical-align: top; text-align: left;">
                             <b style="font-size: 11px;">For Sterling Accessories Ltd.</b><br>
                             <div style="margin: 10px 0;">
-                                <img src="${stampImageUrl}" style="height: 100px; width: auto; display: inline-block;" alt="Seal & Signature" />
-                            </div>
-                            <div style="margin-top: 20px; font-weight: bold;">
+    <img src="${stampImageUrl}" style="height: 70px; width: auto; display: inline-block; margin-left: 30px; margin-top: 0px;" alt="Seal & Signature" />
+</div>
+                            <div style="margin-top: -10px; font-weight: bold;">
                                 ________________________<br> 
                                 Authorised Signature
                             </div>
