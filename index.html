@@ -531,13 +531,13 @@
     // ------------------- 30 Companies & 20 Merchants Database -------------------
     const buyerDatabase = [
         {
-           name: "STERLING CREATIONC LTD.",
-           address: "Beron, Earpur, Ashulia,<br>Saver, Dhaka-1349.",
-           merchants: ["Mr. Kamrul Islam", "Mr. Asif", "Mr. Sohrab", "Mr. Yousuf", "Mr. Najmus Sakib", "Mr. Adnan"]
+            name: "BANDO DESIGN LTD.",
+            address: "PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.",
+            merchants: ["Mr. Rion", "Mr. Tanvir", "Ms. Sadia", "Mr. Faisal", "Mr. Sakib", "Mr. Imran", "Ms. Nusrat", "Mr. Ariful", "Mr. Fahim", "Mr. Tareq", "Ms. Mim", "Mr. Nahid", "Mr. Alamin", "Mr. Naim", "Ms. Ritu", "Mr. Kawsar", "Mr. Shuvo", "Ms. Asha", "Mr. Hasan", "Mr. Jewel"]
         },
         {
             name: "HA-MEEM GROUP LTD.",
-            address: "387, TEJGAON INDUSTRIAL AREA,<br> DHAKA-1208, BANGLADESH.",
+            address: "387, TEJGAON INDUSTRIAL AREA, DHAKA-1208, BANGLADESH.",
             merchants: ["Mr. Rahim", "Mr. Karim", "Ms. Farhana", "Mr. Shuvo", "Mr. Sabbir", "Ms. Tania", "Mr. Bijoy", "Mr. Rakib", "Mr. Nayeem", "Ms. Sharmin", "Mr. Jubayer", "Mr. Habib", "Ms. Sumi", "Mr. Asif", "Mr. Rayhan", "Mr. Munna", "Ms. Jesmin", "Mr. Zihad", "Mr. Sajid", "Mr. Manik"]
         },
         {
@@ -1184,7 +1184,7 @@
             inputContainer.innerHTML = `
                 ${baseInputs}
                 <div class="form-group"><label for="desc">Description of Goods</label><input type="text" id="desc" value="PP Poly Bag" placeholder="Description..."></div>
-                <div class="form-group"><label for="measurement">Measurement</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
+                <div class="form-group"><label for="measurement">Measurement (Auto-generated)</label><input type="text" id="measurement" placeholder="Measurement..." readonly style="background-color: #eef2f5; font-weight: normal;"></div>
                 <div class="form-group"><label for="style">Style/PO No.</label><input type="text" id="style" placeholder="Style/PO..."></div>
                 <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="calculatePolyMeasurement()"></div>
                 <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
@@ -2268,7 +2268,7 @@
                         <div style="text-align: center;">
                             <h2 style="margin: 0; font-size: ${customFontSize}px; font-weight: bold; color: #000; line-height: 1.1; letter-spacing: 0.5px; font-family: 'Broadway', sans-serif;">STERLING ACCESSORIES LIMITED.</h2>
                             <div style="font-size: ${Math.round(customFontSize * 0.45)}px; margin-top: 2px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
-                            <div style="font-size: ${Math.round(customFontSize * 0.45)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                            <div style="font-size: ${Math.round(customFontSize * 0.40)}px; font-weight: bold; margin-top: 2px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
                         </div>
                     </div>
                 </div>
@@ -2285,21 +2285,24 @@
 </tr>
                 </table>
 
-                <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse; font-size: 14px; border: none !important;">
+                <table style="width: 100%; margin-bottom: 12px; border-collapse: collapse; font-size: 10px; border: none !important;">
                     <tr>
-                        <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: left;">
-                            <u><b>NAME & ADDRESS OF BUYER:</b></u><br>
-                            <b>${buyerName}</b><br><div style="white-space: pre-line;">${buyerAddress}</div><br>
-                            <b>BUYER REF : ${buyerRef}</b><br>
-                            <b>Atten: ${attn}</b>
-                        </td>
-                        <td style="width: 18%; vertical-align: top; border: none !important; padding: 0; text-align: Left;">
-                            <u><b>NAME & ADDRESS OF SELLER:</b></u><br>
-                            <b>STERLING ACCESSORIES LTD.</b><br>
-                            Holding-375, East Bagbari,<br>
-                            Kashimpur, Gazipur, Bangladesh.<br>
-                            BIN Number: 005634023-1201.
-                        </td>
+ <td style="width: 50%; vertical-align: top; border: none !important; padding: 0; text-align: left; font-size: 14px;">
+    <u><b>NAME & ADDRESS OF BUYER:</b></u><br>
+    <b style="font-size: 16px; font-weight: bold;">${buyerName}</b><br>
+    <div style="white-space: pre-line; font-size: 13px;">${buyerAddress}</div><br>
+    <b style="font-size: 14px;">BUYER REF : ${buyerRef}</b><br>
+    <b style="font-size: 14px;">Atten: ${attn}</b>
+</td>
+                       <td style="width: 18%; vertical-align: top; border: none !important; padding: 0; text-align: left; font-size: 14px; line-height: 1.5; color: #000000;">
+    <u style="font-size: 14px;"><b>NAME & ADDRESS OF SELLER:</b></u><br>
+    <b style="font-size: 16px; font-weight: bold; display: inline-block; margin-top: 2px;">STERLING ACCESSORIES LTD.</b><br>
+    <span style="font-size: 13px; display: inline-block;">
+        Holding-375, East Bagbari,<br>
+        Kashimpur, Gazipur, Bangladesh.<br>
+        <b>BIN Number:</b> 005634023-0103
+    </span>
+</td>
                     </tr>
                 </table>
 
@@ -2351,9 +2354,9 @@
                         <td style="width: 50%; border: none !important; padding: 10px; vertical-align: top; text-align: left;">
                             <b style="font-size: 11px;">For Sterling Accessories Ltd.</b><br>
                             <div style="margin: 10px 0;">
-    <img src="${stampImageUrl}" style="height: 70px; width: auto; display: inline-block; margin-left: 30px; margin-top: 0px;" alt="Seal & Signature" />
-</div>
-                            <div style="margin-top: -10px; font-weight: bold;">
+                                <img src="${stampImageUrl}" style="height: 100px; width: auto; display: inline-block;" alt="Seal & Signature" />
+                            </div>
+                            <div style="margin-top: 20px; font-weight: bold;">
                                 ________________________<br> 
                                 Authorised Signature
                             </div>
