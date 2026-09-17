@@ -1772,6 +1772,7 @@
             alert("মার্জ করার জন্য কমপক্ষে ২টি সেল সিলেক্ট করুন।");
             return;
         }
+
         let cellPositions = selectedCells.map(cell => ({
             cell: cell,
             rowIndex: cell.parentElement.rowIndex,
@@ -1786,20 +1787,33 @@
         let isHorizontal = cellPositions.every(p => p.rowIndex === firstRow);
 
         let firstCell = selectedCells[0];
-        let mergedText = selectedCells.map(c => c.innerText.trim()).filter(t => t !== '').join('\n');
+        let mainOrigIndex = cellPositions[0].origIndex;
+        let mainCol = cellPositions[0].dataCol;
+
+        // আগের কোনো মার্জ ইনফো থাকলে তা রিট্রিভ করা বা নতুন তৈরি করা
+        if (!items[mainOrigIndex].mergeInfo) items[mainOrigIndex].mergeInfo = {};
+        let existingMerge = items[mainOrigIndex].mergeInfo[mainCol] || { rowspan: 1, colspan: 1, text: firstCell.innerText.trim(), hidden: false };
 
         saveStateForUndo();
 
+        let accumulatedValues = [];
+        selectedCells.forEach(c => {
+            let val = c.innerText.trim();
+            if (val !== '' && !accumulatedValues.includes(val)) {
+                accumulatedValues.push(val);
+            }
+        });
+        let mergedText = accumulatedValues.join('\n');
+
         if (isVertical) {
+            let currentSpan = existingMerge.rowspan || 1;
+            let newSpan = currentSpan + (selectedCells.length - 1);
+
             firstCell.innerText = mergedText;
-            firstCell.setAttribute('rowspan', selectedCells.length);
+            firstCell.setAttribute('rowspan', newSpan);
 
-            let mainOrigIndex = cellPositions[0].origIndex;
-            let mainCol = cellPositions[0].dataCol;
-
-            if (!items[mainOrigIndex].mergeInfo) items[mainOrigIndex].mergeInfo = {};
             items[mainOrigIndex].mergeInfo[mainCol] = {
-                rowspan: selectedCells.length,
+                rowspan: newSpan,
                 colspan: 1,
                 text: mergedText,
                 hidden: false
@@ -1813,16 +1827,15 @@
                 items[hiddenOrigIndex].mergeInfo[hiddenCol] = { hidden: true };
             }
         } else if (isHorizontal) {
+            let currentSpan = existingMerge.colspan || 1;
+            let newSpan = currentSpan + (selectedCells.length - 1);
+
             firstCell.innerText = mergedText;
-            firstCell.setAttribute('colspan', selectedCells.length);
+            firstCell.setAttribute('colspan', newSpan);
 
-            let mainOrigIndex = cellPositions[0].origIndex;
-            let mainCol = cellPositions[0].dataCol;
-
-            if (!items[mainOrigIndex].mergeInfo) items[mainOrigIndex].mergeInfo = {};
             items[mainOrigIndex].mergeInfo[mainCol] = {
                 rowspan: 1,
-                colspan: selectedCells.length,
+                colspan: newSpan,
                 text: mergedText,
                 hidden: false
             };
@@ -1833,15 +1846,15 @@
                 items[mainOrigIndex].mergeInfo[hiddenCol] = { hidden: true };
             }
         } else {
-            alert("অনুগ্রহ করে একটি কলামের একাধিক সারি অথবা সারির একাধিক কলাম সিলেক্ট করুন।");
+            alert("অনুগ্রহ করে একই কলামের একাধিক সারি অথবা একই সারির একাধিক কলাম সিলেক্ট করুন।");
             clearSelection();
             return;
         }
 
         saveDataToStorage();
         clearSelection();
+        updateTable();
     }
-
     function unmergeSelectedCells() {
         if (selectedCells.length === 0) {
             alert("আনমার্জ করতে সেল সিলেক্ট করুন।");
