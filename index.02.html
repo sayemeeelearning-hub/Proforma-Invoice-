@@ -1,0 +1,1944 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proforma Invoice (PI) Generator</title>
+    <!-- SheetJS Style CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            margin: 0;
+            padding-top: 85px;
+        }
+
+        .top-dev-ribbon {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1e3a8a;
+            color: #ffffff;
+            padding: 4px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            z-index: 10000;
+        }
+
+        .excel-ribbon {
+            position: fixed;
+            top: 24px;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border-bottom: 2px solid #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            padding: 4px 10px;
+            gap: 4px;
+            overflow-x: auto;
+        }
+        .ribbon-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .ribbon-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #ffffff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #d1d5db;
+        }
+        .ribbon-title {
+            font-size: 9px;
+            font-weight: bold;
+            color: #475569;
+            text-transform: uppercase;
+            border-right: 1px solid #e2e8f0;
+            padding-right: 4px;
+            margin-right: 2px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 5px auto 20px auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            background-color: #34495e;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        #dynamicInputContainer.form-grid {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 12px;
+            color: #333;
+        }
+        input, select, textarea {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+            font-size: 12px;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #3498db;
+        }
+        textarea {
+            resize: vertical;
+            white-space: pre-line;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            table-layout: fixed;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 2px 6px;
+            font-size: 12px;
+            vertical-align: middle;
+            overflow: hidden;
+            word-wrap: break-word;
+            white-space: pre-line;
+            position: relative;
+        }
+        th {
+            background-color: #f2f2f2;
+            color: #000;
+            font-weight: bold;
+            text-align: center;
+        }
+        /* Resize handle element for manual column width drag */
+        .resizer {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 5px;
+            cursor: col-resize;
+            user-select: none;
+            height: 100%;
+            z-index: 10;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #fff !important;
+        }
+        .action-btn {
+            background-color: #ff4d4d;
+            color: white;
+            padding: 2px 5px;
+            font-size: 11px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-edit {
+            background-color: #f39c12;
+            color: white;
+            padding: 2px 5px;
+            font-size: 11px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 3px;
+        }
+
+        td.cell-selected, th.cell-selected {
+            background-color: #b3d4fc !important;
+            outline: 2px dashed #2980b9;
+        }
+        table tbody td, table thead th, table tfoot td {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #printTemplate { display: none; }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm 10mm 8mm 10mm;
+            }
+            body { background-color: #fff !important; margin: 0 !important; padding: 0 !important; }
+            .top-dev-ribbon, .excel-ribbon { display: none !important; }
+            .container { display: none !important; }
+            #printTemplate { display: block !important; width: 100% !important; }
+            img {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-dev-ribbon">
+        <span>Proforma Invoice (PI) Generator</span>
+        <span>Developer By: ENGR. MINHAZ ALAM</span>
+    </div>
+
+    <div class="excel-ribbon no-print">
+        <div class="ribbon-row" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                <button type="button" class="btn-print" style="padding: 2px 6px; font-size: 9px; background-color: #8e44ad; color: white; border: none; border-radius: 3px; cursor: pointer;" onclick="printPDF()">🖨️ PDF</button>
+                <button type="button" class="btn-export" style="padding: 2px 6px; font-size: 9px; background-color: #2980b9; color: white; border: none; border-radius: 3px; cursor: pointer;" onclick="exportToExcel()">📥 Excel</button>
+                <button type="button" class="btn-export" style="background-color: #16a085; color: white; padding: 2px 6px; font-size: 9px; border: none; border-radius: 3px; cursor: pointer;" onclick="downloadJSON()">💾 Save Tab</button>
+                <button type="button" class="btn-export" style="background-color: #d35400; color: white; padding: 2px 6px; font-size: 9px; border: none; border-radius: 3px; cursor: pointer;" onclick="document.getElementById('jsonFileInput').click()">📂 Load Tab</button>
+                <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
+
+                <div style="display: flex; align-items: center; gap: 3px; background: #fff3e0; border: 1px solid #ffe0b2; padding: 1px 5px; border-radius: 3px;">
+                    <input type="checkbox" id="fitToOnePage" style="margin: 0; cursor: pointer;">
+                    <label for="fitToOnePage" style="font-size: 9px; font-weight: bold; cursor: pointer; margin: 0; color: #d35400;">📄 Fit to 1 Page</label>
+                </div>
+
+                <div class="pi-type-container" style="background: #fff3cd; border: 1px solid #ffeeba; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
+                    <label for="bar1HeaderFont" style="font-size: 9px; margin:0;">HDR:</label>
+                    <input type="number" id="bar1HeaderFont" value="22" min="10" max="42" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                </div>
+                <div class="pi-type-container" style="background: #e3f2fd; border: 1px solid #bbdefb; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
+                    <label for="bar2PiTitleFont" style="font-size: 9px; margin:0;">PI:</label>
+                    <input type="number" id="bar2PiTitleFont" value="14" min="8" max="30" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                </div>
+                <div class="pi-type-container" style="background: #e8f5e9; border: 1px solid #c8e6c9; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
+                    <label for="bar3InfoFont" style="font-size: 9px; margin:0;">INFO:</label>
+                    <input type="number" id="bar3InfoFont" value="11" min="6" max="24" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                </div>
+                <div class="pi-type-container" style="background: #f3e5f5; border: 1px solid #e1bee7; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
+                    <label for="bar4TermsFont" style="font-size: 9px; margin:0;">TERM:</label>
+                    <input type="number" id="bar4TermsFont" value="11" min="6" max="24" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                </div>
+                <div class="pi-type-container" style="background: #fbe9e7; border: 1px solid #ffccbc; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
+                    <label for="bar5SigFont" style="font-size: 9px; margin:0;">SIG:</label>
+                    <input type="number" id="bar5SigFont" value="11" min="6" max="24" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                </div>
+                <div class="pi-type-container" style="background: #e0f7fa; border: 1px solid #b2ebf2; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
+                    <label for="bar6StampSize" style="font-size: 9px; margin:0; font-weight: bold; color: #006064;">SEAL:</label>
+                    <input type="number" id="bar6StampSize" value="55" min="20" max="200" style="width: 35px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                </div>
+
+                <button type="button" class="btn-reset" style="padding: 2px 6px; font-size: 9px; background-color: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer;" onclick="resetAllData()">🗑️ Reset</button>
+            </div>
+
+            <div class="pi-type-container" style="background: #eef2f3; padding: 2px 6px; border-radius: 3px; display: flex; align-items: center; gap: 4px; border: 1px solid #cbd5e1;">
+                <label for="piType" style="font-weight: bold; font-size: 9px; color: #2c3e50; margin:0;">PI Item Select:</label>
+                <select id="piType" onchange="handlePiTypeChange()" style="padding: 1px; font-size: 9px;">
+                    <option value="allPi" selected>1. All PI</option>
+                    <option value="poly">2. Poly</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="ribbon-row">
+            <div class="ribbon-group">
+                <span class="ribbon-title">Font Size</span>
+                <div style="display: flex; align-items: center; gap: 2px;">
+                    <input type="number" id="fontSizeInputBox" value="12" min="8" max="72" style="width: 35px; padding: 1px; text-align: center; font-size: 10px; font-weight: bold;" oninput="applyDirectFontSize(this.value)" onchange="applyDirectFontSize(this.value)">
+                    <span style="font-size: 9px; font-weight: bold;">px</span>
+                </div>
+            </div>
+
+            <div class="ribbon-group">
+                <span class="ribbon-title">Size/Width</span>
+                <div style="display: flex; align-items: center; gap: 2px;">
+                    <input type="number" id="sizeIndicatorBox" value="0" min="10" max="1000" 
+                           style="width: 35px; padding: 1px; text-align: center; font-size: 10px; font-weight: bold;" 
+                           onmousedown="event.stopPropagation();"
+                           oninput="applyDirectDimension(this.value)" 
+                           onchange="applyDirectDimension(this.value)">
+                    <span style="font-size: 9px; font-weight: bold;">px</span>
+                </div>
+            </div>
+
+            <div class="ribbon-group">
+                <span class="ribbon-title">Style & Align</span>
+                <button type="button" onclick="toggleSelectionBold()" style="padding: 1px 4px; font-size: 9px; font-weight: bold; background: #34495e; color: #fff; border-radius: 2px; border: none; cursor: pointer;">𝐁 Bold</button>
+                <select id="cellAlignmentSelect" onchange="applySelectionAlignment(this.value)" style="padding: 1px; font-size: 9px;">
+                    <option value="" disabled selected>Align</option>
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+
+            <div class="ribbon-group">
+                <span class="ribbon-title">Merge</span>
+                <button type="button" class="btn-merge" style="padding: 1px 4px; font-size: 9px; border: none; background: #ddd; border-radius: 2px; cursor: pointer;" onclick="mergeSelectedCells()">🔗 Merge</button>
+                <button type="button" class="btn-unmerge" style="padding: 1px 4px; font-size: 9px; border: none; background: #ddd; border-radius: 2px; cursor: pointer;" onclick="unmergeSelectedCells()">🔓 Split</button>
+            </div>
+
+            <div class="ribbon-group">
+                <span class="ribbon-title">Columns</span>
+                <input type="text" id="newColTemplateSelect" list="colTemplateList" placeholder="Col name..." style="padding: 1px 3px; font-size: 9px; width: 75px;">
+                <datalist id="colTemplateList"></datalist>
+                <select id="targetReferenceCol" style="padding: 1px; font-size: 9px;"></select>
+                <select id="beforeAfterSelect" style="padding: 1px; font-size: 9px;">
+                    <option value="after">After</option>
+                    <option value="before">Before</option>
+                </select>
+                <button type="button" style="background-color: #27ae60; color: white; padding: 1px 4px; font-size: 9px; border: none; border-radius: 2px;" onclick="addNewCustomColumn()">+Add</button>
+                <button type="button" style="background-color: #e74c3c; color: white; padding: 1px 4px; font-size: 9px; border: none; border-radius: 2px;" onclick="removeCustomColumn()">-Rem</button>
+            </div>
+        </div>
+    </div>
+      
+    <div class="container">
+        <div class="section-title" onclick="toggleBuyerInfoSection()">
+            <span>Invoice & Buyer Info</span>
+            <span id="buyerInfoToggleArrow" style="font-size: 16px;">▲</span>
+        </div>
+        <div class="form-grid" id="buyerInfoContentGrid">
+            <div class="form-group">
+                <label for="piNo">PI NO</label>
+                <input type="text" id="piNo" value="SACL/296/2026">
+            </div>
+            <div class="form-group">
+                <label for="piDate">DATE</label>
+                <input type="text" id="piDate" value="08.08.2026">
+            </div>
+            <div class="form-group">
+                <label for="buyerName">Name of Buyer</label>
+                <input type="text" id="buyerName" list="buyerList" placeholder="Select or type Buyer Name..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="onBuyerChange()" oninput="onBuyerChange()" value="BANDO DESIGN LTD.">
+                <datalist id="buyerList"></datalist>
+            </div>
+            <div class="form-group">
+                <label for="buyerRef">BUYER REF</label>
+                <input type="text" id="buyerRef" list="buyerRefList" placeholder="Select or type Buyer Ref..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="GAP SPR'26.">
+                <datalist id="buyerRefList"></datalist>
+            </div>
+            <div class="form-group">
+                <label for="attn">Attn</label>
+                <input type="text" id="attn" list="attnList" placeholder="Select or type Merchant..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="onAttnChange()" oninput="onAttnChange()" value="Mr. Rion">
+                <datalist id="attnList"></datalist>
+            </div>
+            <div class="form-group full-width">
+                <label for="buyerAddress">Address of Buyer</label>
+                <textarea id="buyerAddress" rows="3" placeholder="Enter buyer address...">PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.</textarea>
+            </div>
+        </div>
+
+        <div class="section-title" style="cursor: default;">Product Details</div>
+        <div class="form-grid" id="hsCodeContainer" style="margin-bottom: 12px;">
+            <div class="form-group full-width">
+                <label for="hsCodeInput">H.S CODE</label>
+                <textarea id="hsCodeInput" rows="2" placeholder="Enter H.S CODE..." onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()"></textarea>
+            </div>
+        </div>
+        <div class="form-grid" id="dynamicInputContainer"></div>
+
+        <div id="tablesContainer">
+            <div id="sec-allPi" style="display: none;">
+                <table id="table-allPi">
+                    <thead></thead>
+                    <tbody id="tbody-allPi"></tbody>
+                    <tfoot id="tfoot-allPi"></tfoot>
+                </table>
+                <div id="totalInWord-allPi" style="font-weight: bold; font-size: 12px; margin-top: 5px; margin-bottom: 15px; padding: 5px 8px; background: #fff;">
+                    Total Value In Word: 
+                </div>
+            </div>
+
+            <div id="sec-poly" style="display: none;">
+                <table id="table-poly">
+                    <thead></thead>
+                    <tbody id="tbody-poly"></tbody>
+                    <tfoot id="tfoot-poly"></tfoot>
+                </table>
+                <div id="totalInWord-poly" style="font-weight: bold; font-size: 12px; margin-top: 5px; margin-bottom: 15px; padding: 5px 8px; background: #fff;">
+                    Total Value In Word: 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="printTemplate"></div>
+
+<script>
+    const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
+    const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
+
+    function toggleBuyerInfoSection() {
+        const grid = document.getElementById('buyerInfoContentGrid');
+        const arrow = document.getElementById('buyerInfoToggleArrow');
+        if (grid.style.display === 'none') {
+            grid.style.display = 'grid';
+            arrow.innerText = '▲';
+        } else {
+            grid.style.display = 'none';
+            arrow.innerText = '▼';
+        }
+    }
+
+    let tempInputValueStore = {};
+
+    function handleInputFocus(inputElement) {
+        tempInputValueStore[inputElement.id] = inputElement.value;
+        inputElement.value = '';
+    }
+
+    function handleInputBlur(inputElement) {
+        if (inputElement.value.trim() === '' && tempInputValueStore[inputElement.id] !== undefined) {
+            inputElement.value = tempInputValueStore[inputElement.id];
+        }
+    }
+
+    const buyerRefDatabase = [
+        "GAP SPR",
+        "Buyer: H&M AUTUMN'26.",
+        "Buyer: ZARA WINTER'26.",
+        "Buyer: PULL&BEAR 2026.",
+        "Buyer: TARGET CORP."
+    ];
+
+    function initBuyerRefDatalist() {
+        const refListElem = document.getElementById('buyerRefList');
+        if(!refListElem) return;
+        refListElem.innerHTML = '';
+        buyerRefDatabase.forEach(ref => {
+            const opt = document.createElement('option');
+            opt.value = ref;
+            refListElem.appendChild(opt);
+        });
+    }
+
+    const buyerDatabase = [
+        { name: "Green Orion INDUSTRIES LTD.", address: "716, MOTIJHEEL C/A, DHAKA-1073, BANGLADESH.", merchants: ["Ms. Sathi", "Mr. Kamal", "Ms. Rina", "Mr. Tanvir"] },
+        { name: "Orion M Meghna ENTERPRISES", address: "785, AGARGAON, DHAKA-1023, BANGLADESH.", merchants: ["Mr. Kamal", "Mr. Kabir", "Ms. Sathi", "Mr. Tanvir"] },
+        { name: "BANDO DESIGN LTD.", address: "PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.", merchants: ["Mr. Rion", "Ms. Sathi", "Mr. Kamal"] }
+    ];
+
+    function initBuyerDatalist() {
+        const buyerListElem = document.getElementById('buyerList');
+        if(!buyerListElem) return;
+        buyerListElem.innerHTML = '';
+        buyerDatabase.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.name;
+            buyerListElem.appendChild(opt);
+        });
+    }
+
+    function onBuyerChange() {
+        const buyerInputVal = document.getElementById('buyerName').value.trim();
+        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+        const attnListElem = document.getElementById('attnList');
+        attnListElem.innerHTML = '';
+
+        if (foundBuyer) {
+            foundBuyer.merchants.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                attnListElem.appendChild(opt);
+            });
+        }
+        saveHeaderToStorage();
+    }
+
+    function onAttnChange() {
+        const buyerInputVal = document.getElementById('buyerName').value.trim();
+        const attnInputVal = document.getElementById('attn').value.trim();
+        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+
+        if (foundBuyer) {
+            if (foundBuyer.merchants.some(m => m.toLowerCase() === attnInputVal.toLowerCase())) {
+                document.getElementById('buyerAddress').value = foundBuyer.address;
+            }
+        }
+        saveHeaderToStorage();
+    }
+
+    let items = [];
+    let slCounters = { allPi: 1, poly: 1 };
+    let editIndex = -1;
+    let customColumnsStore = { allPi: [], poly: [] };
+    let mergedCellsStore = { allPi: [], poly: [] };
+
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 50;
+
+    function saveStateForUndo() {
+        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths }));
+        if (undoStack.length > MAX_HISTORY) undoStack.shift();
+        redoStack = []; 
+    }
+
+    function performUndo() {
+        if (undoStack.length === 0) return;
+        redoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths }));
+        const prevState = JSON.parse(undoStack.pop());
+        items = prevState.items;
+        customColumnsStore = prevState.customColumnsStore || customColumnsStore;
+        mergedCellsStore = prevState.mergedCellsStore || mergedCellsStore;
+        piColumnWidths = prevState.piColumnWidths || piColumnWidths;
+        saveDataToStorage();
+        updateTable();
+    }
+
+    function performRedo() {
+        if (redoStack.length === 0) return;
+        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths }));
+        const nextState = JSON.parse(redoStack.pop());
+        items = nextState.items;
+        customColumnsStore = nextState.customColumnsStore || customColumnsStore;
+        mergedCellsStore = nextState.mergedCellsStore || mergedCellsStore;
+        piColumnWidths = nextState.piColumnWidths || nextState.piColumnWidths;
+        saveDataToStorage();
+        updateTable();
+    }
+
+    document.addEventListener('keydown', function(e) {
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
+
+        const isCtrl = e.ctrlKey || e.metaKey;
+        if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
+            if (e.shiftKey) { e.preventDefault(); performRedo(); } 
+            else { e.preventDefault(); performUndo(); }
+        } else if (isCtrl && (e.key === 'y' || e.key === 'Y')) {
+            e.preventDefault(); performRedo();
+        }
+    });
+
+    let piColumnWidths = {
+        allPi: {},
+        poly: {}
+    };
+
+    window.onload = function() {
+        initBuyerDatalist();
+        initBuyerRefDatalist();
+
+        const savedItems = localStorage.getItem('pi_items_data');
+        const savedHeader = localStorage.getItem('pi_header_data');
+        const savedColWidths = localStorage.getItem('pi_col_widths_data');
+        const savedCustomCols = localStorage.getItem('pi_custom_cols_data');
+        const savedMergedCells = localStorage.getItem('pi_merged_cells_data');
+
+        if (savedColWidths) { try { piColumnWidths = JSON.parse(savedColWidths); } catch(e) {} }
+        if (savedCustomCols) { try { customColumnsStore = JSON.parse(savedCustomCols); } catch(e) {} }
+        if (savedMergedCells) { try { mergedCellsStore = JSON.parse(savedMergedCells); } catch(e) {} }
+
+        if (savedItems) {
+            try {
+                items = JSON.parse(savedItems);
+                items.forEach(i => { if(i.piType !== 'poly') i.piType = 'allPi'; });
+                ['allPi', 'poly'].forEach(type => {
+                    const typeItems = items.filter(i => i.piType === type);
+                    if (typeItems.length > 0) {
+                        const maxSl = Math.max(...typeItems.map(i => i.slNo || 0));
+                        slCounters[type] = maxSl + 1;
+                    }
+                });
+            } catch (e) { items = []; }
+        }
+
+        if (savedHeader) {
+            try {
+                const headerObj = JSON.parse(savedHeader);
+                if (headerObj.piType && headerObj.piType !== 'poly') document.getElementById('piType').value = 'allPi';
+                else if (headerObj.piType) document.getElementById('piType').value = headerObj.piType;
+                document.getElementById('piNo').value = headerObj.piNo || 'SACL/296/2026';
+                document.getElementById('piDate').value = headerObj.piDate || '08.08.2026';
+                document.getElementById('buyerName').value = headerObj.buyerName || 'BANDO DESIGN LTD.';
+                document.getElementById('buyerAddress').value = headerObj.buyerAddress || '';
+                document.getElementById('buyerRef').value = headerObj.buyerRef || '';
+                document.getElementById('attn').value = headerObj.attn || '';
+                if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = headerObj.hsCode || '';
+                if (headerObj.bar1HeaderFont) document.getElementById('bar1HeaderFont').value = headerObj.bar1HeaderFont;
+                if (headerObj.bar2PiTitleFont) document.getElementById('bar2PiTitleFont').value = headerObj.bar2PiTitleFont;
+                if (headerObj.bar3InfoFont) document.getElementById('bar3InfoFont').value = headerObj.bar3InfoFont;
+                if (headerObj.bar4TermsFont) document.getElementById('bar4TermsFont').value = headerObj.bar4TermsFont;
+                if (headerObj.bar5SigFont) document.getElementById('bar5SigFont').value = headerObj.bar5SigFont;
+                if (headerObj.bar6StampSize) document.getElementById('bar6StampSize').value = headerObj.bar6StampSize;
+            } catch (e) {}
+        }
+
+        onBuyerChange();
+        handlePiTypeChange(); 
+        updateAllCustomBars();
+        updateTable();
+    };
+
+    function updateAllCustomBars() {
+        saveHeaderToStorage();
+    }
+
+    function numberToWords(num) {
+        if (isNaN(num)) return "Zero";
+        if (num === 0) return "Zero";
+        
+        const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+        function getLessThanThousand(n) {
+            if (n === 0) return '';
+            if (n < 20) return a[n];
+            if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+            return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + getLessThanThousand(n % 100) : '');
+        }
+
+        let parts = num.toFixed(2).split('.');
+        let integerPart = parseInt(parts[0], 10);
+        let decimalPart = parseInt(parts[1], 10);
+
+        let wordStr = '';
+        if (integerPart >= 10000000) {
+            wordStr += getLessThanThousand(Math.floor(integerPart / 10000000)) + ' Crore ';
+            integerPart %= 10000000;
+        }
+        if (integerPart >= 100000) {
+            wordStr += getLessThanThousand(Math.floor(integerPart / 100000)) + ' Lakh ';
+            integerPart %= 100000;
+        }
+        if (integerPart >= 1000) {
+            wordStr += getLessThanThousand(Math.floor(integerPart / 1000)) + ' Thousand ';
+            integerPart %= 1000;
+        }
+        if (integerPart > 0) {
+            wordStr += getLessThanThousand(integerPart);
+        }
+
+        wordStr = wordStr.trim() + ' US Dollars';
+        if (decimalPart > 0) {
+            wordStr += ' and ' + getLessThanThousand(decimalPart) + ' Cents';
+        }
+        return wordStr + ' Only.';
+    }
+
+    function downloadJSON() {
+        const currentType = document.getElementById('piType').value;
+        const backupData = {
+            piType: currentType,
+            items: items.filter(item => item.piType === currentType),
+            customColumns: customColumnsStore[currentType],
+            colWidths: piColumnWidths[currentType],
+            mergedCells: mergedCellsStore[currentType]
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 4));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `PI_${currentType.toUpperCase()}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function uploadJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = JSON.parse(e.target.result);
+                const currentType = document.getElementById('piType').value;
+                const targetType = content.piType || currentType;
+                if (content.items) {
+                    saveStateForUndo(); 
+                    items = items.filter(item => item.piType !== targetType);
+                    items = items.concat(content.items);
+                    if(content.customColumns) customColumnsStore[targetType] = content.customColumns;
+                    if(content.mergedCells) mergedCellsStore[targetType] = content.mergedCells;
+                    if(content.colWidths) piColumnWidths[targetType] = content.colWidths;
+                    localStorage.setItem('pi_items_data', JSON.stringify(items));
+                    localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
+                    localStorage.setItem('pi_merged_cells_data', JSON.stringify(mergedCellsStore));
+                    localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+                }
+                handlePiTypeChange();
+                updateTable();
+                alert('সফলভাবে ডাটা লোড করা হয়েছে!');
+            } catch (err) {
+                alert('ফাইলটি সঠিক JSON ফরম্যাটে নেই!');
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function getBaseColumnsForType(type) {
+        if (type === 'poly') return ["SL No.", "Description of Goods", "Measurement", "Style/PO No.", "Unit", "QTY", "Unit Price (USD)", "Amount (USD)"];
+        return ["SL No.", "Description of Goods", "Measurement", "Color", "Unit", "QTY", "Unit Price (USD)", "Amount (USD)"];
+    }
+
+    function getColumnsForType(type) {
+        let base = getBaseColumnsForType(type);
+        let customList = customColumnsStore[type] || [];
+        customList.forEach(c => {
+            if (!base.includes(c.name)) {
+                if (c.position === 'before') {
+                    let idx = base.indexOf(c.refCol);
+                    if (idx !== -1) base.splice(idx, 0, c.name);
+                    else base.push(c.name);
+                } else {
+                    let idx = base.indexOf(c.refCol);
+                    if (idx !== -1) base.splice(idx + 1, 0, c.name);
+                    else base.push(c.name);
+                }
+            }
+        });
+        return base;
+    }
+
+    function populateDynamicAddColumnUI() {
+        const piType = document.getElementById('piType').value;
+        const currentCols = getColumnsForType(piType);
+        
+        let uniqueHeaders = [];
+        ['allPi', 'poly'].forEach(t => {
+            getBaseColumnsForType(t).forEach(h => {
+                if (!uniqueHeaders.includes(h) && !currentCols.includes(h)) uniqueHeaders.push(h);
+            });
+        });
+        ["Others", "QTY (Dzn)", "Remarks", "Brand", "Season", "PO Ref", "Buyer Style", "Shipment Mode"].forEach(h => {
+            if (!uniqueHeaders.includes(h) && !currentCols.includes(h)) uniqueHeaders.push(h);
+        });
+
+        const templateList = document.getElementById('colTemplateList');
+        templateList.innerHTML = '';
+        uniqueHeaders.forEach(h => {
+            let opt = document.createElement('option');
+            opt.value = h;
+            templateList.appendChild(opt);
+        });
+
+        const refSelect = document.getElementById('targetReferenceCol');
+        refSelect.innerHTML = '';
+        currentCols.forEach(col => {
+            let opt = document.createElement('option');
+            opt.value = col;
+            opt.innerText = col;
+            refSelect.appendChild(opt);
+        });
+    }
+
+    function addNewCustomColumn() {
+        const piType = document.getElementById('piType').value;
+        const colNameInput = document.getElementById('newColTemplateSelect');
+        const colName = colNameInput.value.trim();
+        const refCol = document.getElementById('targetReferenceCol').value;
+        const position = document.getElementById('beforeAfterSelect').value;
+
+        if (!colName) {
+            alert("অনুগ্রহ করে কলামের নাম লিখুন বা সিলেক্ট করুন!");
+            return;
+        }
+        if (!customColumnsStore[piType]) customColumnsStore[piType] = [];
+
+        if (customColumnsStore[piType].some(c => c.name === colName)) {
+            alert("এই কলামটি ইতিমধ্যে যোগ করা হয়েছে!");
+            return;
+        }
+
+        saveStateForUndo();
+        customColumnsStore[piType].push({ name: colName, refCol: refCol, position: position });
+        localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
+        
+        colNameInput.value = '';
+        handlePiTypeChange();
+        updateTable();
+    }
+
+    function removeCustomColumn() {
+        const piType = document.getElementById('piType').value;
+        const colName = document.getElementById('targetReferenceCol').value;
+        const baseCols = getBaseColumnsForType(piType);
+
+        if (baseCols.includes(colName)) {
+            alert("মূল (Base) কলামগুলো ডিলিট করা যাবে না। শুধু কাস্টম যোগ করা কলাম মাইনাস করা যাবে!");
+            return;
+        }
+
+        saveStateForUndo();
+        if (customColumnsStore[piType]) {
+            customColumnsStore[piType] = customColumnsStore[piType].filter(c => c.name !== colName);
+            localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
+        }
+
+        handlePiTypeChange();
+        updateTable();
+    }
+
+    function handlePiTypeChange() {
+        const piType = document.getElementById('piType').value;
+        const inputContainer = document.getElementById('dynamicInputContainer');
+        const currentCounter = slCounters[piType] || 1;
+
+        let baseInputs = `
+            <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${currentCounter}" min="1"></div>
+            <div class="form-group"><label for="desc">Description of Goods</label><textarea id="desc" rows="2"></textarea></div>
+            <div class="form-group"><label for="measurement">Measurement</label><textarea id="measurement" rows="2" placeholder="Enter measurement..."></textarea></div>
+        `;
+
+        let specificInputs = `
+            ${piType === 'poly' ? '<div class="form-group"><label for="stylepo">Style/PO No.</label><textarea id="stylepo" rows="2" placeholder="Enter Style/PO..."></textarea></div>' : ''}
+            ${piType === 'allPi' ? '<div class="form-group"><label for="color">Color</label><textarea id="color" rows="2" placeholder="Enter color..."></textarea></div>' : ''}
+            <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
+            <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
+            <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
+            <div class="form-group" style="display: flex; flex-direction: row; gap: 8px; align-items: flex-end; grid-column: span 2;">
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <label for="othersPercent">Others (%)</label>
+                    <input type="number" step="0.01" id="othersPercent" placeholder="0" style="width: 100%;">
+                </div>
+                <button type="button" class="btn-add" onclick="addItem()" style="height: 30px; padding: 0 12px; white-space: nowrap; flex: initial; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">+Add Row</button>
+            </div>
+        `;
+
+        let customCols = customColumnsStore[piType] || [];
+        let customInputsHTML = '';
+        customCols.forEach(c => {
+            if (c.name !== "Amount (USD)" && c.name !== "QTY (Dzn)") {
+                customInputsHTML += `
+                    <div class="form-group" id="input_group_${c.name}">
+                        <label for="custom_${c.name}">${c.name}</label>
+                        <textarea id="custom_${c.name}" rows="2" placeholder="Enter ${c.name}..."></textarea>
+                    </div>
+                `;
+            }
+        });
+
+        inputContainer.innerHTML = baseInputs + specificInputs + customInputsHTML;
+        
+        saveHeaderToStorage();
+        populateDynamicAddColumnUI();
+        updateTable();
+    }
+
+    function saveHeaderToStorage() {
+        const headerObj = {
+            piType: document.getElementById('piType').value,
+            piNo: document.getElementById('piNo').value,
+            piDate: document.getElementById('piDate').value,
+            buyerName: document.getElementById('buyerName').value,
+            buyerAddress: document.getElementById('buyerAddress').value,
+            buyerRef: document.getElementById('buyerRef').value,
+            attn: document.getElementById('attn').value,
+            hsCode: document.getElementById('hsCodeInput')?.value || '',
+            bar1HeaderFont: document.getElementById('bar1HeaderFont').value,
+            bar2PiTitleFont: document.getElementById('bar2PiTitleFont').value,
+            bar3InfoFont: document.getElementById('bar3InfoFont').value,
+            bar4TermsFont: document.getElementById('bar4TermsFont').value,
+            bar5SigFont: document.getElementById('bar5SigFont').value,
+            bar6StampSize: document.getElementById('bar6StampSize').value
+        };
+        localStorage.setItem('pi_header_data', JSON.stringify(headerObj));
+    }
+
+    function saveDataToStorage() {
+        localStorage.setItem('pi_items_data', JSON.stringify(items));
+        localStorage.setItem('pi_merged_cells_data', JSON.stringify(mergedCellsStore));
+        localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+    }
+
+    function addItem() {
+        const piType = document.getElementById('piType').value;
+        const slNo = parseInt(document.getElementById('slNo').value) || slCounters[piType];
+        
+        let qty = parseFloat(document.getElementById('qty')?.value) || 0;
+        let basePrice = parseFloat(document.getElementById('price')?.value) || 0;
+        let othersVal = parseFloat(document.getElementById('othersPercent')?.value) || 0;
+        
+        let effectivePrice = basePrice + (basePrice * othersVal / 100);
+        
+        let customCols = customColumnsStore[piType] || [];
+        let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
+
+        let calculatedAmount = 0;
+
+        if (hasQtyDzn) {
+            let calculatedDzn = qty / 12;
+            calculatedAmount = calculatedDzn * effectivePrice;
+        } else {
+            calculatedAmount = qty * effectivePrice;
+        }
+
+        let itemData = { 
+            piType, 
+            slNo, 
+            qty, 
+            price: basePrice, 
+            othersPercent: othersVal,
+            effectivePrice: parseFloat(effectivePrice.toFixed(4)),
+            amount: parseFloat(calculatedAmount.toFixed(4)), 
+            customValues: {} 
+        };
+
+        let colsList = getColumnsForType(piType);
+        colsList.forEach(col => {
+            let customElem = document.getElementById(`custom_${col}`);
+            if (customElem) {
+                itemData.customValues[col] = customElem.value;
+            }
+        });
+
+        itemData.desc = document.getElementById('desc')?.value || '';
+        itemData.measurement = document.getElementById('measurement')?.value || '';
+        if (piType === 'allPi') {
+            itemData.color = document.getElementById('color')?.value || '';
+        }
+        if (piType === 'poly') {
+            itemData.stylepo = document.getElementById('stylepo')?.value || '';
+        }
+        itemData.unit = document.getElementById('unit')?.value || 'Pcs';
+
+        saveStateForUndo(); 
+        if (editIndex === -1) {
+            items.push(itemData);
+            slCounters[piType] = slNo + 1;
+        } else {
+            items[editIndex] = itemData;
+            editIndex = -1;
+            const addBtn = document.querySelector('.form-group button.btn-add');
+            if (addBtn) addBtn.innerText = '+Add Row';
+        }
+
+        saveDataToStorage();
+        updateTable();
+
+        document.getElementById('slNo').value = slCounters[piType];
+    }
+
+    function editItem(index) {
+        const item = items[index];
+        if(item.piType) {
+            document.getElementById('piType').value = item.piType;
+            handlePiTypeChange();
+        }
+        document.getElementById('slNo').value = item.slNo;
+        if(document.getElementById('qty')) document.getElementById('qty').value = item.qty || '';
+        if(document.getElementById('price')) document.getElementById('price').value = item.price || '';
+        if(document.getElementById('othersPercent')) document.getElementById('othersPercent').value = item.othersPercent || '';
+        if(document.getElementById('desc')) document.getElementById('desc').value = item.desc || '';
+        if(document.getElementById('measurement')) document.getElementById('measurement').value = item.measurement || '';
+        if(document.getElementById('color')) document.getElementById('color').value = item.color || '';
+        if(document.getElementById('stylepo')) document.getElementById('stylepo').value = item.stylepo || '';
+        if(document.getElementById('unit')) document.getElementById('unit').value = item.unit || 'Pcs';
+
+        if (item.customValues) {
+            for (let key in item.customValues) {
+                let elem = document.getElementById(`custom_${key}`);
+                if (elem) {
+                    elem.value = item.customValues[key];
+                }
+            }
+        }
+
+        editIndex = index;
+        const addBtn = document.querySelector('.form-group button.btn-add');
+        if (addBtn) addBtn.innerText = '💾 Update Row';
+    }
+
+    function deleteItem(index) {
+        saveStateForUndo(); 
+        items.splice(index, 1);
+        saveDataToStorage();
+        updateTable();
+    }
+
+    function resetAllData() {
+        const piType = document.getElementById('piType').value;
+        if (confirm(`আপনি কি নিশ্চিত যে বর্তমান "${piType.toUpperCase()}" টেবিলের সব ডাটা মুছে ফেলতে চান?`)) {
+            saveStateForUndo(); 
+            items = items.filter(item => item.piType !== piType);
+            mergedCellsStore[piType] = [];
+            slCounters[piType] = 1;
+            document.getElementById('slNo').value = 1;
+            editIndex = -1;
+            const addBtn = document.querySelector('.form-group button.btn-add');
+            if (addBtn) addBtn.innerText = '+Add Row';
+            saveDataToStorage();
+            updateTable();
+        }
+    }
+
+    function updateTable() {
+        const types = ['allPi', 'poly'];
+        const currentSelectedType = document.getElementById('piType').value;
+        
+        types.forEach(type => {
+            const sec = document.getElementById(`sec-${type}`);
+            if(!sec) return;
+
+            let table = sec.querySelector('table');
+            let colsList = getColumnsForType(type);
+
+            let theadHTML = `<tr>`;
+            colsList.forEach((col, cIdx) => { 
+                let widthStyle = (piColumnWidths[type] && piColumnWidths[type][col]) ? ` style="width: ${piColumnWidths[type][col]}px;"` : '';
+                theadHTML += `<th data-col="${cIdx}" data-colname="${col}" contenteditable="true"${widthStyle} oninput="updateHeaderContent(event, '${type}', ${cIdx})">${col}<div class="resizer"></div></th>`; 
+            });
+            // Action column is given auto width to absorb remaining space
+            theadHTML += `<th class="no-print" style="width: auto;">অ্যাকশন</th></tr>`;
+            table.querySelector('thead').innerHTML = theadHTML;
+
+            let tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === type);
+
+            if (type === currentSelectedType) sec.style.display = 'block';
+            else sec.style.display = 'none';
+
+            filteredItems.forEach((item, rIdx) => {
+                let rowHTML = `<tr data-index="${item.originalIndex}">`;
+                colsList.forEach((col, cIdx) => {
+                    let cellVal = "";
+                    let alignStyle = "text-align: center;";
+
+                    let baseP = item.price || 0;
+                    let oPct = item.othersPercent || 0;
+                    let finalUnitP = item.effectivePrice !== undefined ? item.effectivePrice : (baseP + (baseP * oPct / 100));
+
+                    if (col === "SL No.") {
+                        cellVal = item.slNo;
+                        alignStyle = "text-align: center;";
+                    }
+                    else if (col === "Description of Goods" || col === "Measurement" || col === "Style/PO No." || col === "Color") {
+                        cellVal = col === "Description of Goods" ? (item.desc || '') :
+                                  col === "Measurement" ? (item.measurement || '') :
+                                  col === "Style/PO No." ? (item.stylepo || '') : (item.color || '');
+                        alignStyle = "text-align: center;";
+                    }
+                    else if (col === "Unit") {
+                        cellVal = item.unit || '';
+                        alignStyle = "text-align: center;";
+                    }
+                    else if (col === "QTY") {
+                        cellVal = item.qty || 0;
+                        alignStyle = "text-align: right;";
+                    }
+                    else if (col === "QTY (Dzn)") {
+                        let dznVal = (item.qty || 0) / 12;
+                        cellVal = dznVal.toFixed(2);
+                        alignStyle = "text-align: right;";
+                    }
+                    else if (col === "Unit Price (USD)") {
+                        cellVal = finalUnitP > 0 ? finalUnitP.toFixed(4) : "0.0000";
+                        alignStyle = "text-align: right;";
+                    }
+                    else if (col === "Amount (USD)") {
+                        let finalAmt = 0;
+                        let customCols = customColumnsStore[type] || [];
+                        let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
+                        
+                        if (hasQtyDzn) {
+                            let dznVal = (item.qty || 0) / 12;
+                            finalAmt = dznVal * finalUnitP;
+                        } else {
+                            finalAmt = (item.qty || 0) * finalUnitP;
+                        }
+                        item.amount = finalAmt;
+                        cellVal = `$${finalAmt.toFixed(2)}`;
+                        alignStyle = "text-align: right;";
+                    }
+                    else if (item.customValues && item.customValues[col] !== undefined && item.customValues[col] !== '') {
+                        cellVal = item.customValues[col];
+                        alignStyle = "text-align: center;";
+                    }
+                    else {
+                        let safeKey = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        cellVal = item[safeKey] || item[col] || '';
+                        alignStyle = "text-align: center;";
+                    }
+
+                    let isHidden = false;
+                    let rowspanAttr = 1;
+                    let colspanAttr = 1;
+                    let customContent = cellVal;
+
+                    if (mergedCellsStore[type]) {
+                        mergedCellsStore[type].forEach(m => {
+                            if (rIdx >= m.startRow && rIdx <= m.endRow && cIdx >= m.startCol && cIdx <= m.endCol) {
+                                if (rIdx === m.startRow && cIdx === m.startCol) {
+                                    rowspanAttr = (m.endRow - m.startRow) + 1;
+                                    colspanAttr = (m.endCol - m.startCol) + 1;
+                                    customContent = m.content !== undefined ? m.content : cellVal;
+                                } else {
+                                    isHidden = true;
+                                }
+                            }
+                        });
+                    }
+
+                    if (!isHidden) {
+                        let spanString = "";
+                        if (rowspanAttr > 1) spanString += ` rowspan="${rowspanAttr}"`;
+                        if (colspanAttr > 1) spanString += ` colspan="${colspanAttr}"`;
+                        
+                        if (piColumnWidths[type] && piColumnWidths[type][col]) {
+                            alignStyle += ` width: ${piColumnWidths[type][col]}px;`;
+                        }
+
+                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" oninput="updateCellContent(event, ${rIdx}, ${cIdx})">${customContent}</td>`;
+                    }
+                });
+
+                rowHTML += `
+                    <td style="white-space: nowrap; text-align:center;" class="no-print">
+                        <button class="btn-edit" onclick="editItem(${item.originalIndex})">✏️ Edit</button>
+                        <button class="action-btn" onclick="deleteItem(${item.originalIndex})">X</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += rowHTML;
+            });
+
+            let totalQtySum = filteredItems.reduce((acc, curr) => acc + (curr.qty || 0), 0);
+            let totalAmountSum = filteredItems.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+            let totalDznSum = (totalQtySum / 12).toFixed(2);
+
+            let tfoot = table.querySelector('tfoot');
+            let tfootHTML = `<tr class="total-row">`;
+            
+            let firstQtyIdx = colsList.findIndex(c => c === "QTY");
+
+            colsList.forEach((col, idx) => {
+                let widthStyle = (piColumnWidths[type] && piColumnWidths[type][col]) ? ` style="width: ${piColumnWidths[type][col]}px;"` : '';
+                if (idx === 0) {
+                    let colspanCount = firstQtyIdx > 0 ? firstQtyIdx : 1;
+                    tfootHTML += `<td colspan="${colspanCount}" contenteditable="true" style="text-align: right; font-weight: bold; padding-right: 10px;" oninput="updateFooterContent(event)">Total =</td>`;
+                } else if (idx > 0 && idx < firstQtyIdx) {
+                } else if (col === "QTY") {
+                    tfootHTML += `<td contenteditable="true"${widthStyle} style="font-weight: bold; text-align: right;" oninput="updateFooterContent(event)">${totalQtySum}</td>`;
+                } else if (col === "QTY (Dzn)") {
+                    tfootHTML += `<td contenteditable="true"${widthStyle} style="font-weight: bold; text-align: right;" oninput="updateFooterContent(event)">${totalDznSum}</td>`;
+                } else if (col === "Amount (USD)") {
+                    tfootHTML += `<td contenteditable="true"${widthStyle} style="font-weight: bold; text-align: right;" oninput="updateFooterContent(event)">${totalAmountSum.toFixed(2)}</td>`;
+                } else {
+                    tfootHTML += `<td contenteditable="true"${widthStyle} style="text-align: right;" oninput="updateFooterContent(event)">-</td>`;
+                }
+            });
+
+            tfootHTML += `<td class="no-print">-</td></tr>`;
+            tfoot.innerHTML = tfootHTML;
+
+            let wordDiv = document.getElementById(`totalInWord-${type}`);
+            if (wordDiv) {
+                wordDiv.innerText = `Total Value In Word: ${numberToWords(totalAmountSum)}`;
+            }
+        });
+        initCellSelection();
+        makeColumnsResizable();
+    }
+
+    function updateHeaderContent(e, type, cIdx) {}
+    function updateFooterContent(e) {}
+
+    function updateCellContent(e, rIdx, cIdx) {
+        const currentType = document.getElementById('piType').value;
+        const newText = e.target.innerText;
+        if (mergedCellsStore[currentType]) {
+            mergedCellsStore[currentType].forEach(m => {
+                if (m.startRow === rIdx && m.startCol === cIdx) {
+                    m.content = newText;
+                }
+            });
+            saveDataToStorage();
+        }
+    }
+
+    let isMouseDown = false;
+    function initCellSelection() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const allElements = table.querySelectorAll('thead th, tbody td, tfoot td');
+        allElements.forEach(el => {
+            el.onmousedown = function(e) {
+                if (e.target.classList.contains('resizer')) return;
+                isMouseDown = true;
+                if (!e.shiftKey) {
+                    table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+                }
+                this.classList.toggle('cell-selected');
+                updateFontSizeDisplay();
+                updateDimensionDisplay();
+            };
+            el.onmouseover = function() {
+                if (isMouseDown) {
+                    this.classList.add('cell-selected');
+                    updateFontSizeDisplay();
+                    updateDimensionDisplay();
+                }
+            };
+        });
+    }
+
+    /* Enables column resizing via dragging boundaries and auto-saves the width in piColumnWidths & LocalStorage */
+    function makeColumnsResizable() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const resizers = table.querySelectorAll('.resizer');
+        resizers.forEach(resizer => {
+            resizer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const th = e.target.parentElement;
+                const colName = th.getAttribute('data-colname');
+                const startX = e.pageX;
+                const startWidth = th.offsetWidth;
+
+                function onMouseMove(e) {
+                    const newWidth = Math.max(30, startWidth + (e.pageX - startX));
+                    
+                    // Directly set target column width
+                    th.style.width = newWidth + 'px';
+                    let cIdx = th.getAttribute('data-col');
+                    let targetCells = table.querySelectorAll(`td[data-col="${cIdx}"]`);
+                    targetCells.forEach(tc => tc.style.width = newWidth + 'px');
+
+                    if (!piColumnWidths[currentType]) piColumnWidths[currentType] = {};
+                    piColumnWidths[currentType][colName] = newWidth;
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    saveDataToStorage();
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        });
+    }
+
+    document.onmouseup = function() {
+        isMouseDown = false;
+    };
+
+    function toggleSelectionBold() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) {
+            alert("বোল্ড বা আনবোল্ড করার জন্য অনুগ্রহ করে টেবিল থেকে সেল সিলেক্ট করুন!");
+            return;
+        }
+
+        let isCurrentlyBold = window.getComputedStyle(selectedCells[0]).fontWeight;
+        let makeBold = (isCurrentlyBold === 'normal' || isCurrentlyBold === '400' || !isCurrentlyBold);
+
+        selectedCells.forEach(cell => {
+            cell.style.fontWeight = makeBold ? 'bold' : 'normal';
+        });
+    }
+
+    function applySelectionAlignment(alignValue) {
+        if (!alignValue) return;
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) {
+            alert("অ্যালাইনমেন্ট পরিবর্তন করার জন্য অনুগ্রহ করে টেবিল থেকে সেল সিলেক্ট করুন!");
+            document.getElementById('cellAlignmentSelect').selectedIndex = 0;
+            return;
+        }
+
+        selectedCells.forEach(cell => {
+            cell.style.textAlign = alignValue;
+        });
+
+        document.getElementById('cellAlignmentSelect').selectedIndex = 0;
+    }
+
+    function mergeSelectedCells() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('tbody td.cell-selected');
+        if (selectedCells.length < 2) {
+            alert("মার্জ করার জন্য টেবিল বডি থেকে কমপক্ষে দুটি সেল সিলেক্ট করুন!");
+            return;
+        }
+
+        let minRow = 9999, maxRow = -1, minCol = 9999, maxCol = -1;
+        let combinedText = "";
+
+        selectedCells.forEach(cell => {
+            let r = parseInt(cell.getAttribute('data-row'));
+            let c = parseInt(cell.getAttribute('data-col'));
+            if (!isNaN(r) && !isNaN(c)) {
+                if (r < minRow) minRow = r;
+                if (r > maxRow) maxRow = r;
+                if (c < minCol) minCol = c;
+                if (c > maxCol) maxCol = c;
+                if (cell.innerText.trim() !== "" && !combinedText) {
+                    combinedText = cell.innerText.trim();
+                }
+            }
+        });
+
+        saveStateForUndo();
+        if (!mergedCellsStore[currentType]) mergedCellsStore[currentType] = [];
+
+        mergedCellsStore[currentType].push({
+            startRow: minRow,
+            endRow: maxRow,
+            startCol: minCol,
+            endCol: maxCol,
+            content: combinedText
+        });
+
+        saveDataToStorage();
+        updateTable();
+    }
+
+    function unmergeSelectedCells() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('tbody td.cell-selected');
+        if (selectedCells.length === 0) {
+            alert("আনমার্জ করার জন্য সেল সিলেক্ট করুন!");
+            return;
+        }
+
+        saveStateForUndo();
+        if (mergedCellsStore[currentType]) {
+            selectedCells.forEach(cell => {
+                let r = parseInt(cell.getAttribute('data-row'));
+                let c = parseInt(cell.getAttribute('data-col'));
+                
+                mergedCellsStore[currentType] = mergedCellsStore[currentType].filter(m => {
+                    return !(r >= m.startRow && r <= m.endRow && c >= m.startCol && c <= m.endCol);
+                });
+            });
+            saveDataToStorage();
+        }
+        updateTable();
+    }
+
+    function updateFontSizeDisplay() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        const inputElem = document.getElementById('fontSizeInputBox');
+
+        if (selectedCells.length === 0) {
+            inputElem.value = "--";
+            return;
+        }
+
+        let firstSize = window.getComputedStyle(selectedCells[0]).fontSize;
+        inputElem.value = Math.round(parseFloat(firstSize));
+    }
+
+    function updateDimensionDisplay() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        const dimBox = document.getElementById('sizeIndicatorBox');
+
+        if (selectedCells.length === 0) {
+            dimBox.value = 0;
+            return;
+        }
+
+        let firstCell = selectedCells[0];
+        let cIdx = parseInt(firstCell.getAttribute('data-col'));
+        if (cIdx === 0 && firstCell.tagName === 'TH') {
+            dimBox.value = firstCell.offsetHeight;
+        } else if (cIdx === 0 && firstCell.tagName === 'TD') {
+            dimBox.value = firstCell.parentElement.offsetHeight;
+        } else {
+            dimBox.value = firstCell.offsetWidth;
+        }
+    }
+
+    function applyDirectFontSize(val) {
+        let newSize = parseFloat(val);
+        if (isNaN(newSize)) return;
+        if (newSize < 8) newSize = 8;
+        if (newSize > 72) newSize = 72;
+
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) return;
+
+        selectedCells.forEach(cell => {
+            cell.style.fontSize = newSize + 'px';
+        });
+    }
+
+    function applyDirectDimension(val) {
+        let newSize = parseFloat(val);
+        if (isNaN(newSize)) return;
+        if (newSize < 10) newSize = 10;
+
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) return;
+
+        saveStateForUndo();
+        if (!piColumnWidths[currentType]) piColumnWidths[currentType] = {};
+
+        selectedCells.forEach(cell => {
+            let cIdx = parseInt(cell.getAttribute('data-col'));
+            let isHeader = (cell.tagName === 'TH');
+
+            if (!isHeader && cIdx === 0) {
+                // সারির (Row) উচ্চতা পরিবর্তন
+                let rowElem = cell.parentElement;
+                if (rowElem && rowElem.tagName === 'TR') {
+                    rowElem.style.height = newSize + 'px';
+                    Array.from(rowElem.children).forEach((td) => {
+                        td.style.height = newSize + 'px';
+                    });
+                }
+            } else {
+                // কলামের (Column) প্রস্থ পরিবর্তন
+                let colName = "";
+                if (isHeader) {
+                    colName = cell.getAttribute('data-colname');
+                } else {
+                    let colsList = getColumnsForType(currentType);
+                    colName = colsList[cIdx];
+                }
+
+                if (colName) {
+                    piColumnWidths[currentType][colName] = newSize;
+                }
+
+                // সরাসরি DOM আপডেট করা হচ্ছে যাতে সম্পূর্ণ টেবিল পুনরায় তৈরি হয়ে সিলেকশন না হারায়
+                let targetCells = table.querySelectorAll(`th[data-col="${cIdx}"], td[data-col="${cIdx}"]`);
+                targetCells.forEach(tc => {
+                    tc.style.width = newSize + 'px';
+                });
+            }
+        });
+
+        saveDataToStorage();
+    }
+
+    function printPDF() {
+        const piType = document.getElementById('piType').value;
+        const currentTableElem = document.getElementById(`sec-${piType}`);
+        if (!currentTableElem) return;
+
+        const printTemplate = document.getElementById('printTemplate');
+        const isFitToOnePage = document.getElementById('fitToOnePage')?.checked || false;
+        
+        let bar1Font = parseFloat(document.getElementById('bar1HeaderFont')?.value) || 22;
+        let bar2Font = parseFloat(document.getElementById('bar2PiTitleFont')?.value) || 14;
+        let bar3Font = parseFloat(document.getElementById('bar3InfoFont')?.value) || 11;
+        let bar4Font = parseFloat(document.getElementById('bar4TermsFont')?.value) || 11;
+        let bar5Font = parseFloat(document.getElementById('bar5SigFont')?.value) || 11;
+        
+        let userStampWidth = parseFloat(document.getElementById('bar6StampSize')?.value) || 55;
+        
+        let sigGap = isFitToOnePage ? 28 : 50;
+        let stampWidth = isFitToOnePage ? Math.round(userStampWidth * 0.8) : userStampWidth;
+        let stampBottom = isFitToOnePage ? 20 : 25;
+
+        if (isFitToOnePage) {
+            bar1Font = Math.max(14, bar1Font * 0.8);
+            bar2Font = Math.max(11, bar2Font * 0.85);
+            bar3Font = Math.max(9, bar3Font * 0.85);
+            bar4Font = Math.max(7, bar4Font * 0.8);
+            bar5Font = Math.max(9, bar5Font * 0.85);
+        }
+
+        const piNo = document.getElementById('piNo').value;
+        const piDate = document.getElementById('piDate').value;
+        const buyerName = document.getElementById('buyerName').value;
+        const buyerAddress = document.getElementById('buyerAddress').value;
+        const buyerRef = document.getElementById('buyerRef').value;
+        const attn = document.getElementById('attn').value;
+        const hsCodeVal = document.getElementById('hsCodeInput')?.value || '';
+
+        let tableClone = currentTableElem.cloneNode(true);
+        let actionElements = tableClone.querySelectorAll('.no-print');
+        actionElements.forEach(el => el.remove());
+
+        const subHeaderFont = Math.max(8, Math.round(bar1Font * 0.5));
+        const logoHeight = Math.max(16, Math.round(bar1Font * 1.35));
+
+        printTemplate.innerHTML = `
+            <div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; text-align: center; margin-bottom: 3px;">
+                    <img src="${companyLogoUrl}" style="height: ${logoHeight}px; width: auto;" alt="Logo"/>
+                    <h1 style="margin: 0; font-size: ${bar1Font}px; font-weight: bold; color: #000; font-family: 'Broadway', sans-serif; line-height: 1.1;">STERLING ACCESSORIES LIMITED.</h1>
+                </div>
+                <div style="text-align: center; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 3px;">
+                    <div style="font-size: ${subHeaderFont}px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
+                    <div style="font-size: ${subHeaderFont}px; font-weight: bold; margin-top: 1px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 8px; font-size: ${bar3Font}px;">
+                    <div>PI NO: ${piNo}</div>
+                    <div style="text-decoration: underline; font-size: ${bar2Font}px;">PROFORMA INVOICE</div>
+                    <div>DATE: ${piDate}</div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: ${bar3Font}px;">
+                    <div style="width: 48%;">
+                        <div style="font-weight: bold; text-decoration: underline; margin-bottom: 2px;">NAME & ADDRESS OF BUYER:</div>
+                        <div style="font-weight: bold;">${buyerName}</div>
+                        <div style="white-space: pre-line;">${buyerAddress}</div>
+                        <div style="font-weight: bold; margin-top: 3px;">BUYER REF: ${buyerRef}</div>
+                        <div style="font-weight: bold;">Attn: ${attn}</div>
+                    </div>
+                    <div style="width: 48%; text-align: right;">
+                        <div style="font-weight: bold; text-decoration: underline; margin-bottom: 2px;">NAME & ADDRESS OF SELLER:</div>
+                        <div style="font-weight: bold;">STERLING ACCESSORIES LTD.</div>
+                        <div>Holding-375, East Bagbari,</div>
+                        <div>Kashimpur, Gazipur, Bangladesh.</div>
+                        <div>BIN Number: 005634023-1201.</div>
+                    </div>
+                </div>
+
+                <div id="pdfTableWrapper" style="font-size: ${isFitToOnePage ? '10px' : 'inherit'};">
+                    ${tableClone.innerHTML}
+                </div>
+
+                <div style="margin-top: 10px; font-size: ${bar4Font}px;">
+                    <div style="font-weight: bold; text-decoration: underline; margin-bottom: 3px; font-size: ${bar4Font}px;">TERMS & CONDITIONS:</div>
+                    <table style="width: 100%; border-collapse: collapse; border: none; font-size: ${bar4Font}px;">
+                        <tr style="vertical-align: top;">
+                            <td style="width: 20%; border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">1. PAYMENT TERMS</td>
+                            <td style="width: 2%; border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="width: 90%; border: none; padding: 1px 0; font-size: ${bar4Font}px;">A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">C) No LC will be Entertained which value less than US $ 2,000.00</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">2. Delivery Lead Time</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">A) Goods will be ready for delivery within 14 working days (can vary depend on quality & quantity) after received of LC & UD both for customs UP issue.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">B) Utilization Declaration (UD), along with the bank attested copy of LC or Sales Contract has to be in place within 7 working Days of BTB LC.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"><b>D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed.</b></td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"><b>E) Accessories for 100% Export Oriented Readymade Garments Industry.</b></td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">3. Delivery/Inco Term</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">CPT.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">4. Country of origin</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Bangladesh.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">5. Presentation Period</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">30 days from the latest Shipment date in the LC.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">6. Shipment Date</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Should be 60 days minimum from the LC opening Date.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">7. Expiry date of LC</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">LC Expiry date Should be 30 days from the latest Shipment date in the LC.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">8. Validity</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">30 days from the date of P/I issuance.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">9. Advising Bank</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">DHAKA BANK LTD. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">10. Bank Charge</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">All Bank Charges except beneficiary's bank are on Opener's Account.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">11. Overdue Interest</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Payment will be made within the date of Maturity. If failed, overdue interest to be paid by opener at 16%.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">12. Deduction</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Deduction clause for any discrepancies is not acceptable.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">13. Claim/ Complain</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">14.H.S. CODE</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-weight: bold; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px; white-space: pre-line;"><b>${hsCodeVal}</b></td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 3px; font-weight: bold; font-size: ${bar4Font}px;">N.B. This Proforma Invoice deemed to be an integral part of LC.</div>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; font-size: ${bar5Font}px;">
+                    <div style="text-align: center; position: relative;">
+                        <img src="${stampImageUrl}" style="width: ${stampWidth}px; position: absolute; bottom: ${stampBottom}px; left: 50%; transform: translateX(-50%); opacity: 0.85;" alt="Stamp"/>
+                        
+                        <div style="font-weight: bold;">For Sterling Accessories Ltd.</div>
+                        <div style="margin-top: ${sigGap}px;">----------------------------------------</div>
+                        <div style="font-weight: bold; margin-top: 2px;">Authorised Signature</div>
+                    </div>
+
+                    <div style="text-align: center;">
+                        <div style="font-weight: bold;">Buyer Approval</div>
+                        <div style="margin-top: ${sigGap}px;">----------------------------------------</div>
+                        <div style="font-weight: bold; margin-top: 2px;">Signature of Buyer</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        window.print();
+    }
+
+    function exportToExcel() {
+        const piType = document.getElementById('piType').value;
+        const selectedItems = items.filter(item => item.piType === piType);
+
+        if (selectedItems.length === 0) {
+            alert('ডাউনলোড করার জন্য কোনো ডাটা নেই!');
+            return;
+        }
+
+        if (typeof XLSX === 'undefined') {
+            alert('Excel Library লোড হয়নি। দয়া করে ইন্টারনেট কানেকশন চেক করুন।');
+            return;
+        }
+
+        let headerCols = getColumnsForType(piType);
+        let customColWidths = headerCols.map((col) => {
+            if (piColumnWidths[piType] && piColumnWidths[piType][col]) {
+                return { wpx: piColumnWidths[piType][col] };
+            }
+            return { wch: 15 };
+        });
+
+        const customFontSize = parseInt(document.getElementById('bar1HeaderFont')?.value) || 22;
+        const piNo = document.getElementById('piNo').value || '';
+        const piDate = document.getElementById('piDate').value || '';
+        const buyerName = document.getElementById('buyerName').value || '';
+        const buyerAddressInput = document.getElementById('buyerAddress').value || '';
+        const buyerRef = document.getElementById('buyerRef').value || '';
+        const attn = document.getElementById('attn').value || '';
+        const hsCodeVal = document.getElementById('hsCodeInput')?.value || '';
+
+        const buyerAddressLines = buyerAddressInput ? buyerAddressInput.split('\n') : [""];
+        let totalQty = 0, totalAmount = 0;
+
+        const thinBlackBorder = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+        };
+
+        const alignLeft = { vertical: 'center', horizontal: 'left' };
+        const alignCenter = { vertical: 'center', horizontal: 'center' };
+        const alignRight = { vertical: 'center', horizontal: 'right' };
+        const lastColIndex = headerCols.length - 1;
+        const halfCol = Math.floor(lastColIndex / 2);
+
+        const merges = [];
+        merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: lastColIndex } });
+        merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: lastColIndex } });
+        merges.push({ s: { r: 2, c: 0 }, e: { r: 2, c: lastColIndex } });
+
+        let rawData = [
+            [{ v: "STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize }, alignment: alignCenter } }],
+            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { sz: 11 }, alignment: alignCenter } }],
+            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, sz: 11, underline: true }, alignment: alignCenter } }],
+            []
+        ];
+
+        let row4Idx = rawData.length;
+        let midCol = Math.floor(lastColIndex / 2);
+        merges.push({ s: { r: row4Idx, c: 0 }, e: { r: row4Idx, c: midCol - 2 } });
+        merges.push({ s: { r: row4Idx, c: midCol - 1 }, e: { r: row4Idx, c: midCol + 1 } });
+        merges.push({ s: { r: row4Idx, c: midCol + 2 }, e: { r: row4Idx, c: lastColIndex } });
+
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
+            if (i === 0) return { v: `PI No: ${piNo}`, s: { font: { bold: true }, alignment: alignLeft } };
+            if (i === midCol - 1) return { v: "PROFORMA INVOICE", s: { font: { bold: true, underline: true, sz: 12 }, alignment: alignCenter } };
+            if (i === midCol + 2) return { v: `Date: ${piDate}`, s: { font: { bold: true }, alignment: alignRight } };
+            return { v: "" };
+        }));
+
+        rawData.push([]);
+
+        let row6Idx = rawData.length;
+        merges.push({ s: { r: row6Idx, c: 0 }, e: { r: row6Idx, c: halfCol } });
+        merges.push({ s: { r: row6Idx, c: halfCol + 1 }, e: { r: row6Idx, c: lastColIndex } });
+
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
+            if (i === 0) return { v: "NAME & ADDRESS OF BUYER:", s: { font: { bold: true, underline: true }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "NAME & ADDESS OF SELLER:", s: { font: { bold: true, underline: true }, alignment: alignRight } };
+            return { v: "" };
+        }));
+
+        let row7Idx = rawData.length;
+        merges.push({ s: { r: row7Idx, c: 0 }, e: { r: row7Idx, c: halfCol } });
+        merges.push({ s: { r: row7Idx, c: halfCol + 1 }, e: { r: row7Idx, c: lastColIndex } });
+
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
+            if (i === 0) return { v: buyerName, s: { font: { bold: true }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "STERLING ACCESSORIES LTD.", s: { font: { bold: true }, alignment: alignRight } };
+            return { v: "" };
+        }));
+
+        buyerAddressLines.forEach((lineText, idx) => {
+            let currentRowIdx = rawData.length;
+            merges.push({ s: { r: currentRowIdx, c: 0 }, e: { r: currentRowIdx, c: halfCol } });
+            merges.push({ s: { r: currentRowIdx, c: halfCol + 1 }, e: { r: currentRowIdx, c: lastColIndex } });
+
+            let addressRow = Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: lineText, s: { font: { sz: 10 }, alignment: alignLeft } };
+                if (i === halfCol + 1) {
+                    if (idx === 0) return { v: "Holding-375, East Bagbari,", s: { font: { sz: 10 }, alignment: alignRight } };
+                    if (idx === 1) return { v: "Kashimpur, Gazipur, Bangladesh.", s: { font: { sz: 10 }, alignment: alignRight } };
+                    if (idx === 2) return { v: "BIN Number: 005634023-1201.", s: { font: { sz: 10 }, alignment: alignRight } };
+                }
+                return { v: "" };
+            });
+            rawData.push(addressRow);
+        });
+
+        let buyerRefRowIdx = rawData.length;
+        merges.push({ s: { r: buyerRefRowIdx, c: 0 }, e: { r: buyerRefRowIdx, c: lastColIndex } });
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => i === 0 ? { v: `BUYER REF : ${buyerRef}`, s: { font: { bold: true }, alignment: alignLeft } } : { v: "" }));
+
+        let attnRowIdx = rawData.length;
+        merges.push({ s: { r: attnRowIdx, c: 0 }, e: { r: attnRowIdx, c: lastColIndex } });
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => i === 0 ? { v: `Atten: ${attn}`, s: { font: { bold: true }, alignment: alignLeft } } : { v: "" }));
+
+        rawData.push([]);
+        rawData.push(headerCols.map(text => ({ v: text, s: { font: { bold: true }, fill: { fgColor: { rgb: "F2F2F2" } }, border: thinBlackBorder, alignment: alignCenter } })));
+
+        selectedItems.forEach(item => {
+            let qVal = parseFloat(item.qty) || 0;
+            let baseP = parseFloat(item.price) || 0;
+            let oPct = parseFloat(item.othersPercent) || 0;
+            let uPrice = item.effectivePrice !== undefined ? item.effectivePrice : (baseP + (baseP * oPct / 100));
+            let amt = item.amount ? parseFloat(item.amount) : (qVal * uPrice);
+            
+            totalQty += qVal;
+            totalAmount += amt;
+
+            let rowCells = headerCols.map(col => {
+                let val = "";
+                if (col === "SL No.") val = item.slNo;
+                else if (col === "Description of Goods") val = item.desc || "";
+                else if (col === "Measurement") val = item.measurement || "";
+                else if (col === "Color") val = item.color || "";
+                else if (col === "Style/PO No.") val = item.stylepo || "";
+                else if (col === "Unit") val = item.unit || "Pcs";
+                else if (col === "QTY") val = qVal;
+                else if (col === "Unit Price (USD)") val = uPrice;
+                else if (col === "Amount (USD)") val = amt;
+                else if (item.customValues && item.customValues[col]) val = item.customValues[col];
+                
+                return { v: val, s: { border: thinBlackBorder, alignment: alignCenter } };
+            });
+            rawData.push(rowCells);
+        });
+
+        let qtyColIdx = headerCols.findIndex(c => c === "QTY");
+        let totalRowIdx = rawData.length;
+        merges.push({ s: { r: totalRowIdx, c: 0 }, e: { r: totalRowIdx, c: qtyColIdx > 0 ? qtyColIdx - 1 : 0 } });
+        
+        let totalRow = Array.from({ length: lastColIndex + 1 }, (_, i) => {
+            if (i === 0) return { v: "Total =", s: { border: thinBlackBorder, font: { bold: true }, alignment: alignRight } };
+            if (i === qtyColIdx) return { v: totalQty, s: { border: thinBlackBorder, font: { bold: true }, alignment: alignRight } };
+            if (i === lastColIndex) return { v: totalAmount, s: { border: thinBlackBorder, font: { bold: true }, alignment: alignRight } };
+            return { v: "", s: { border: thinBlackBorder } };
+        });
+        rawData.push(totalRow);
+
+        let wordRowIdx = rawData.length;
+        merges.push({ s: { r: wordRowIdx, c: 0 }, e: { r: wordRowIdx, c: lastColIndex } });
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => i === 0 ? { v: `Total Value In Word: ${numberToWords(totalAmount)}`, s: { font: { bold: true }, border: thinBlackBorder, alignment: alignLeft } } : { v: "", s: { border: thinBlackBorder } }));
+
+        let termsStartIdx = rawData.length + 1;
+        rawData.push(
+            [], 
+            [{ v: "TERMS & CONDITIONS:", s: { font: { bold: true, underline: true } } }],
+            [{ v: "1. PAYMENT TERMS : A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." }],
+            [{ v: "                 : B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS." }],
+            [{ v: "                 : C) No LC will be Entertained which value less than US $ 2,000.00" }],
+            [{ v: "                 : D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00" }],
+            [{ v: "2. Delivery Lead Time : A) Goods will be ready for delivery within 14 working days after received of LC & UD both for customs UP issue." }],
+            [{ v: "                     : B) Utilization Declaration (UD) along with bank attested copy has to be in place within 7 working Days." }],
+            [{ v: "                     : C) The beneficiary will not be responsible for delay delivery due to late presentation of LC & UD copy." }],
+            [{ v: "                     : D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed." }],
+            [{ v: "                     : E) Accessories for 100% Export Oriented Readymade Garments Industry." }],
+            [{ v: "3. Delivery/Inco Term : CPT." }],
+            [{ v: "4. Country of origin : Bangladesh." }],
+            [{ v: "5. Presentation Period : 30 days from the latest Shipment date in the LC." }],
+            [{ v: "6. Shipment Date : Should be 60 days minimum from the LC opening Date." }],
+            [{ v: "7. Expiry date of LC : LC Expiry date Should be 30 days from the latest Shipment date in the LC." }],
+            [{ v: "8. Validity : 30 days from the date of P/I issuance." }],
+            [{ v: "9. Advising Bank : DHAKA BANK LTD. Gulshan Branch, USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL." }],
+            [{ v: "10. Bank Charge : All Bank Charges except beneficiary's bank are on Opener's Account." }],
+            [{ v: "11. Overdue Interest : Payment will be made within maturity date. If failed, overdue interest to be paid at 16%." }],
+            [{ v: "12. Deduction : Deduction clause for any discrepancies is not acceptable." }],
+            [{ v: "13. Claim/ Complain : Claim regarding Quantity/Quality must be informed within 3 days after receiving goods." }],
+            [{ v: `14.H.S. CODE        : ${hsCodeVal}`, s: { font: { bold: true } } }],
+            [{ v: "N.B. This Proforma Invoice deemed to be an integral part of LC.", s: { font: { bold: true } } }]
+        );
+
+        for (let r = termsStartIdx; r < rawData.length; r++) {
+            merges.push({ s: { r: r, c: 0 }, e: { r: r, c: lastColIndex } });
+        }
+
+        let sigStart = rawData.length + 2;
+        rawData.push(
+            [], [], 
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: "For Sterling Accessories Ltd.", s: { font: { bold: true } } };
+                if (i === halfCol + 1) return { v: "Buyer Approval", s: { font: { bold: true }, alignment: alignRight } };
+                return { v: "" };
+            }), 
+            [], 
+            Array.from({ length: lastColIndex + 1 }, (_, i) => i === 0 ? { v: "(Seal & Signature)", s: { font: { italic: true, sz: 10 } } } : { v: "" }), 
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: "----------------------------------------", s: { font: { bold: true } } };
+                if (i === halfCol + 1) return { v: "----------------------------------------", s: { font: { bold: true }, alignment: alignRight } };
+                return { v: "" };
+            }), 
+            Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: "Authorised Signature", s: { font: { bold: true } } };
+                if (i === halfCol + 1) return { v: "Signature of Buyer", s: { font: { bold: true }, alignment: alignRight } };
+                return { v: "" };
+            })
+        );
+
+        merges.push({ s: { r: sigStart, c: 0 }, e: { r: sigStart, c: halfCol } });
+        merges.push({ s: { r: sigStart, c: halfCol + 1 }, e: { r: sigStart, c: lastColIndex } });
+        merges.push({ s: { r: sigStart + 2, c: 0 }, e: { r: sigStart + 2, c: halfCol } });
+        merges.push({ s: { r: sigStart + 3, c: 0 }, e: { r: sigStart + 3, c: halfCol } });
+        merges.push({ s: { r: sigStart + 3, c: halfCol + 1 }, e: { r: sigStart + 3, c: lastColIndex } });
+        merges.push({ s: { r: sigStart + 4, c: 0 }, e: { r: sigStart + 4, c: halfCol } });
+        merges.push({ s: { r: sigStart + 4, c: halfCol + 1 }, e: { r: sigStart + 4, c: lastColIndex } });
+
+        const ws = XLSX.utils.aoa_to_sheet(rawData);
+        ws['!cols'] = customColWidths;
+        ws['!merges'] = merges;
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, piType.toUpperCase());
+        XLSX.writeFile(wb, `PI_${piType.toUpperCase()}_${piNo.replace(/\//g, '_')}.xlsx`);
+    }
+</script>
+</body>
+</html>
