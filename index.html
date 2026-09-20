@@ -1077,18 +1077,19 @@
         saveHeaderToStorage();
     }
 
-    function numberToWords(num) {
+function numberToWords(num) {
         num = parseFloat(num);
-        if (isNaN(num) || num === 0) return "Zero US Dollars Only.";
+        if (isNaN(num) || num === 0) return "US Dollars Zero Only.";
         
         const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
         const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
 
+        // 'and' ছাড়া সংখ্যা রূপান্তরের ফাংশন
         function getLessThanThousand(n) {
             if (n === 0) return '';
             if (n < 20) return a[n];
             if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
-            return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' and ' + getLessThanThousand(n % 100) : '');
+            return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + getLessThanThousand(n % 100) : '');
         }
 
         let parts = num.toFixed(2).split('.');
@@ -1112,13 +1113,22 @@
             wordStr += getLessThanThousand(integerPart);
         }
 
-        wordStr = wordStr.trim() + ' US Dollars';
-        if (decimalPart > 0) {
-            wordStr += ' and ' + getLessThanThousand(decimalPart) + ' Cents';
-        }
-        return wordStr + ' Only.';
-    }
+        // শুরুতে 'US Dollars' বসানো হচ্ছে
+        let result = 'US Dollars ' + wordStr.trim();
 
+        // Cent অংশ তৈরি করা
+        if (decimalPart > 0) {
+            let centWords = getLessThanThousand(decimalPart);
+            
+            // Eight থাকলে Eights করার নিয়ম
+            if (centWords.endsWith('Eight')) {
+                centWords += 's';
+            }
+            result += ' and Cent ' + centWords;
+        }
+
+        return result + ' Only.';
+    }
     // অল-ইন-ওয়ান ডাটা ও লেআউট পারসিস্টেন্সি সেভ ফাংশন
     function saveAllPersistentData(showAlert = false) {
         saveHeaderToStorage();
