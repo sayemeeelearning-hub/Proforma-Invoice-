@@ -12,7 +12,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            background-color: #f4f7f6;
+            background-color: #ffffff; /* Pure White Background */
             margin: 0;
             padding-top: 85px;
         }
@@ -33,88 +33,143 @@
             z-index: 10000;
         }
 
-        /* --- রিবন বার ফুল উইডথ ও রেসপন্সিভ লেআউট --- */
+        /* --- রিবন বার ফুল উইডথ ও ফ্ল্যাট ডিজাইন --- */
         .excel-ribbon {
             position: fixed;
             top: 24px;
             left: 0;
             width: 100%;
-            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-            border-bottom: 2px solid #cbd5e1;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #ffffff; 
+            border-bottom: 1px solid #cbd5e1;
+            box-shadow: none;
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            padding: 6px 15px;
-            gap: 6px;
+            padding: 4px 10px;
+            gap: 2px;
         }
 
         .ribbon-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
+            gap: 4px;
             width: 100%;
-        }
-
-        .ribbon-row:first-child {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
+            flex-wrap: nowrap;
         }
 
         .excel-ribbon button {
-            padding: 4px 10px !important;
-            font-size: 11px !important;
+            padding: 4px 8px !important;
+            margin: 0 !important;
+            font-size: 12px !important;
             font-weight: bold;
-            border-radius: 4px !important;
+            border-radius: 0px !important;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             white-space: nowrap;
+            background: #ffffff;
+            border: 1px solid #e1cdcb;
+            color: #334155;
+            cursor: pointer;
+            box-shadow: none !important;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .excel-ribbon button:hover {
+            background-color: #e4d9d8 !important;
+            border-color: #ffffff !important;
+            box-shadow: none !important;
+        }
+
+        .excel-ribbon button:active,
+        .excel-ribbon button:focus {
+            background-color: #e2e8f0 !important;
+            border-color: #64748b !important;
+            outline: none;
+            box-shadow: none !important;
+        }
+
+        .excel-ribbon button.btn-reset {
+            background-color: #e74c3c !important;
+            border-color: #c0392b !important;
+            color: #ffffff !important;
+        }
+        .excel-ribbon button.btn-reset:hover {
+            background-color: #c0392b !important;
         }
 
         .pi-type-container {
-            padding: 2px 6px !important;
-            font-size: 11px !important;
+            padding: 2px 4px !important;
+            margin: 0 !important;
+            font-size: 12px !important;
+            background: transparent !important;
+            border: none !important;
+            position: relative;
         }
 
         .pi-type-container input, 
         .pi-type-container select {
-            font-size: 11px !important;
-            padding: 2px 4px !important;
+            font-size: 12px !important;
+            padding: 3px 6px !important;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 0px;
+            box-shadow: none !important;
+            background: #ffffff;
         }
 
-        .ribbon-row:last-child {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
+        .pi-type-container input:focus, 
+        .pi-type-container select:focus {
+            border-color: #94a3b8;
+            outline: none;
+            box-shadow: none !important;
+        }
+
+        .number-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10001;
             width: 100%;
+            min-width: 60px;
+        }
+        .number-dropdown-list div {
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .number-dropdown-list div:hover {
+            background: #f1f5f9;
         }
 
         .ribbon-group {
             display: flex;
             align-items: center;
-            gap: 6px;
-            background: #ffffff;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid #d1d5db;
-            flex: 1;
-            justify-content: center;
+            gap: 2px;
+            background: transparent;
+            padding: 0px;
+            margin: 0px;
+            border: none;
+            justify-content: flex-start;
         }
 
         .ribbon-title {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            color: #475569;
+            color: #1e293b;
             text-transform: uppercase;
-            border-right: 1px solid #e2e8f0;
+            border-right: 1px solid #cbd5e1;
             padding-right: 6px;
-            margin-right: 2px;
+            margin-right: 4px;
             white-space: nowrap;
         }
 
@@ -124,7 +179,7 @@
             background: #fff;
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
         
         .section-title {
@@ -146,7 +201,6 @@
             grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 12px;
             margin-bottom: 15px;
-            transition: all 0.3s ease;
         }
         #dynamicInputContainer.form-grid {
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -155,6 +209,7 @@
         .form-group {
             display: flex;
             flex-direction: column;
+            position: relative;
         }
         .form-group.full-width {
             grid-column: 1 / -1;
@@ -241,14 +296,35 @@
             background-color: #b3d4fc !important;
             outline: 2px dashed #2980b9;
         }
-        table tbody td, table thead th, table tfoot td {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
 
         #printTemplate { display: none; }
+
+        .auto-suggest-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 140px;
+            overflow-y: auto;
+            z-index: 10005;
+            display: none;
+        }
+        .auto-suggest-item {
+            padding: 6px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            color: #333;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .auto-suggest-item:hover, .auto-suggest-item.active {
+            background-color: #e2e8f0;
+            color: #1e3a8a;
+            font-weight: bold;
+        }
 
         @media print {
             @page {
@@ -259,10 +335,6 @@
             .top-dev-ribbon, .excel-ribbon { display: none !important; }
             .container { display: none !important; }
             #printTemplate { display: block !important; width: 100% !important; }
-            img {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
         }
     </style>
 </head>
@@ -275,49 +347,55 @@
 
     <div class="excel-ribbon no-print">
         <div class="ribbon-row" style="justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
-                <button type="button" class="btn-print" style="padding: 2px 6px; font-size: 9px; background-color: #8e44ad; color: white; border: none; border-radius: 3px; cursor: pointer;" onclick="printPDF()">🖨️ PDF</button>
-                <button type="button" class="btn-export" style="padding: 2px 6px; font-size: 9px; background-color: #2980b9; color: white; border: none; border-radius: 3px; cursor: pointer;" onclick="exportToExcel()">📥 Excel</button>
-                <button type="button" class="btn-export" style="background-color: #16a085; color: white; padding: 2px 6px; font-size: 9px; border: none; border-radius: 3px; cursor: pointer;" onclick="downloadJSON()">💾 Save Tab</button>
-                <button type="button" class="btn-export" style="background-color: #d35400; color: white; padding: 2px 6px; font-size: 9px; border: none; border-radius: 3px; cursor: pointer;" onclick="document.getElementById('jsonFileInput').click()">📂 Load Tab</button>
+            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;">
+                <button type="button" class="btn-print" onclick="printPDF()">🖨️ PDF</button>
+                <button type="button" class="btn-export" onclick="exportToExcel()">📥 Excel</button>
+                <button type="button" class="btn-export" onclick="downloadJSON()">💾 Save</button>
+                <button type="button" class="btn-export" onclick="document.getElementById('jsonFileInput').click()">📂 Load</button>
                 <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
 
-                <div style="display: flex; align-items: center; gap: 3px; background: #fff3e0; border: 1px solid #ffe0b2; padding: 1px 5px; border-radius: 3px;">
+                <div style="display: flex; align-items: center; gap: 2px; padding: 0 4px;">
                     <input type="checkbox" id="fitToOnePage" style="margin: 0; cursor: pointer;">
-                    <label for="fitToOnePage" style="font-size: 9px; font-weight: bold; cursor: pointer; margin: 0; color: #d35400;">📄 Fit to 1 Page</label>
+                    <label for="fitToOnePage" style="font-size: 11px; font-weight: bold; cursor: pointer; margin: 0; color: #d35400;">📄 Fit 1P</label>
                 </div>
 
-                <div class="pi-type-container" style="background: #fff3cd; border: 1px solid #ffeeba; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
-                    <label for="bar1HeaderFont" style="font-size: 9px; margin:0;">HDR:</label>
-                    <input type="number" id="bar1HeaderFont" value="22" min="10" max="42" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                <div class="pi-type-container" style="display: flex; align-items: center; gap: 2px;">
+                    <label for="bar1HeaderFont" style="font-size: 11px; font-weight: bold; margin:0;">HDR:</label>
+                    <input type="number" id="bar1HeaderFont" value="22" min="10" max="42" style="width: 45px; font-size: 11px;" onclick="showNumberDropdown(this, 10, 42, 2)" oninput="updateAllCustomBars()">
+                    <div id="bar1HeaderFont_dropdown" class="number-dropdown-list"></div>
                 </div>
-                <div class="pi-type-container" style="background: #e3f2fd; border: 1px solid #bbdefb; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
-                    <label for="bar2PiTitleFont" style="font-size: 9px; margin:0;">PI:</label>
-                    <input type="number" id="bar2PiTitleFont" value="14" min="8" max="30" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                <div class="pi-type-container" style="display: flex; align-items: center; gap: 2px;">
+                    <label for="bar2PiTitleFont" style="font-size: 11px; font-weight: bold; margin:0;">PI:</label>
+                    <input type="number" id="bar2PiTitleFont" value="14" min="8" max="30" style="width: 45px; font-size: 11px;" onclick="showNumberDropdown(this, 8, 30, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar2PiTitleFont_dropdown" class="number-dropdown-list"></div>
                 </div>
-                <div class="pi-type-container" style="background: #e8f5e9; border: 1px solid #c8e6c9; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
-                    <label for="bar3InfoFont" style="font-size: 9px; margin:0;">INFO:</label>
-                    <input type="number" id="bar3InfoFont" value="11" min="6" max="24" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                <div class="pi-type-container" style="display: flex; align-items: center; gap: 2px;">
+                    <label for="bar3InfoFont" style="font-size: 11px; font-weight: bold; margin:0;">INFO:</label>
+                    <input type="number" id="bar3InfoFont" value="11" min="6" max="24" style="width: 45px; font-size: 11px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar3InfoFont_dropdown" class="number-dropdown-list"></div>
                 </div>
-                <div class="pi-type-container" style="background: #f3e5f5; border: 1px solid #e1bee7; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
-                    <label for="bar4TermsFont" style="font-size: 9px; margin:0;">TERM:</label>
-                    <input type="number" id="bar4TermsFont" value="11" min="6" max="24" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                <div class="pi-type-container" style="display: flex; align-items: center; gap: 2px;">
+                    <label for="bar4TermsFont" style="font-size: 11px; font-weight: bold; margin:0;">TERM:</label>
+                    <input type="number" id="bar4TermsFont" value="11" min="6" max="24" style="width: 45px; font-size: 11px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar4TermsFont_dropdown" class="number-dropdown-list"></div>
                 </div>
-                <div class="pi-type-container" style="background: #fbe9e7; border: 1px solid #ffccbc; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
-                    <label for="bar5SigFont" style="font-size: 9px; margin:0;">SIG:</label>
-                    <input type="number" id="bar5SigFont" value="11" min="6" max="24" style="width: 30px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                <div class="pi-type-container" style="display: flex; align-items: center; gap: 2px;">
+                    <label for="bar5SigFont" style="font-size: 11px; font-weight: bold; margin:0;">SIG:</label>
+                    <input type="number" id="bar5SigFont" value="11" min="6" max="24" style="width: 45px; font-size: 11px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar5SigFont_dropdown" class="number-dropdown-list"></div>
                 </div>
-                <div class="pi-type-container" style="background: #e0f7fa; border: 1px solid #b2ebf2; padding: 1px 4px; border-radius: 3px; display: flex; align-items: center; gap: 3px;">
-                    <label for="bar6StampSize" style="font-size: 9px; margin:0; font-weight: bold; color: #006064;">SEAL:</label>
-                    <input type="number" id="bar6StampSize" value="55" min="20" max="200" style="width: 35px; padding: 1px; text-align: center; font-size: 9px;" oninput="updateAllCustomBars()">
+                <div class="pi-type-container" style="display: flex; align-items: center; gap: 2px;">
+                    <label for="bar6StampSize" style="font-size: 11px; font-weight: bold; margin:0;">SEAL:</label>
+                    <input type="number" id="bar6StampSize" value="55" min="20" max="200" style="width: 50px; font-size: 11px;" onclick="showNumberDropdown(this, 20, 200, 5)" oninput="updateAllCustomBars()">
+                    <div id="bar6StampSize_dropdown" class="number-dropdown-list"></div>
                 </div>
 
-                <button type="button" class="btn-reset" style="padding: 2px 6px; font-size: 9px; background-color: #e74c3c; color: white; border: none; border-radius: 3px; cursor: pointer;" onclick="resetAllData()">🗑️ Reset</button>
+                <button type="button" class="btn-reset" style="background-color: #e74c3c; color: white;" onclick="resetAllData()">🗑️ Reset</button>
             </div>
 
-            <div class="pi-type-container" style="background: #eef2f3; padding: 2px 6px; border-radius: 3px; display: flex; align-items: center; gap: 4px; border: 1px solid #cbd5e1;">
-                <label for="piType" style="font-weight: bold; font-size: 9px; color: #2c3e50; margin:0;">PI Item Select:</label>
-                <select id="piType" onchange="handlePiTypeChange()" style="padding: 1px; font-size: 9px;">
+            <div class="pi-type-container" style="display: flex; align-items: center; gap: 4px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">
+                <label for="piType" style="font-weight: bold; font-size: 11px; color: #1e293b; margin:0;">PI Item:</label>
+                <select id="piType" onchange="handlePiTypeChange()" style="padding: 2px 4px; font-size: 11px;">
                     <option value="allPi" selected>1. All PI</option>
                     <option value="poly">2. Poly</option>
                 </select>
@@ -326,29 +404,35 @@
 
         <div class="ribbon-row">
             <div class="ribbon-group">
-                <span class="ribbon-title">Font Size</span>
-                <div style="display: flex; align-items: center; gap: 2px;">
-                    <input type="number" id="fontSizeInputBox" value="12" min="8" max="72" style="width: 35px; padding: 1px; text-align: center; font-size: 10px; font-weight: bold;" oninput="applyDirectFontSize(this.value)" onchange="applyDirectFontSize(this.value)">
-                    <span style="font-size: 9px; font-weight: bold;">px</span>
+                <span class="ribbon-title">F</span>
+                <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
+                    <input type="number" id="fontSizeInputBox" value="12" min="8" max="72" 
+                           style="width: 45px; text-align: center; font-size: 11px; font-weight: bold;" 
+                           onclick="showNumberDropdown(this, 8, 72, 2)"
+                           oninput="applyDirectFontSize(this.value)" onchange="applyDirectFontSize(this.value)">
+                    <div id="fontSizeInputBox_dropdown" class="number-dropdown-list"></div>
+                    <span style="font-size: 10px; font-weight: bold;">px</span>
                 </div>
             </div>
 
             <div class="ribbon-group">
-                <span class="ribbon-title">Size/Width</span>
-                <div style="display: flex; align-items: center; gap: 2px;">
+                <span class="ribbon-title">C/R</span>
+                <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
                     <input type="number" id="sizeIndicatorBox" value="0" min="10" max="1000" 
-                           style="width: 35px; padding: 1px; text-align: center; font-size: 10px; font-weight: bold;" 
+                           style="width: 50px; text-align: center; font-size: 11px; font-weight: bold;" 
                            onmousedown="event.stopPropagation();"
+                           onclick="showNumberDropdown(this, 20, 300, 10)"
                            oninput="applyDirectDimension(this.value)" 
                            onchange="applyDirectDimension(this.value)">
-                    <span style="font-size: 9px; font-weight: bold;">px</span>
+                    <div id="sizeIndicatorBox_dropdown" class="number-dropdown-list"></div>
+                    <span style="font-size: 10px; font-weight: bold;">px</span>
                 </div>
             </div>
 
             <div class="ribbon-group">
-                <span class="ribbon-title">Style & Align</span>
-                <button type="button" onclick="toggleSelectionBold()" style="padding: 1px 4px; font-size: 9px; font-weight: bold; background: #34495e; color: #fff; border-radius: 2px; border: none; cursor: pointer;">𝐁 Bold</button>
-                <select id="cellAlignmentSelect" onchange="applySelectionAlignment(this.value)" style="padding: 1px; font-size: 9px;">
+                <span class="ribbon-title">B/A</span>
+                <button type="button" onclick="toggleSelectionBold()" style="font-weight: bold;">𝐁 Bold</button>
+                <select id="cellAlignmentSelect" onchange="applySelectionAlignment(this.value)" style="padding: 2px 4px; font-size: 11px;">
                     <option value="" disabled selected>Align</option>
                     <option value="left">Left</option>
                     <option value="center">Center</option>
@@ -357,22 +441,22 @@
             </div>
 
             <div class="ribbon-group">
-                <span class="ribbon-title">Merge</span>
-                <button type="button" class="btn-merge" style="padding: 1px 4px; font-size: 9px; border: none; background: #ddd; border-radius: 2px; cursor: pointer;" onclick="mergeSelectedCells()">🔗 Merge</button>
-                <button type="button" class="btn-unmerge" style="padding: 1px 4px; font-size: 9px; border: none; background: #ddd; border-radius: 2px; cursor: pointer;" onclick="unmergeSelectedCells()">🔓 Split</button>
+                <span class="ribbon-title">M</span>
+                <button type="button" class="btn-merge" onclick="mergeSelectedCells()">🔗 Merge</button>
+                <button type="button" class="btn-unmerge" onclick="unmergeSelectedCells()">🔓 Split</button>
             </div>
 
-            <div class="ribbon-group">
-                <span class="ribbon-title">Columns</span>
-                <input type="text" id="newColTemplateSelect" list="colTemplateList" placeholder="Col name..." style="padding: 1px 3px; font-size: 9px; width: 75px;">
+            <div class="ribbon-group" style="flex: 1; justify-content: flex-end;">
+                <span class="ribbon-title">C.ADD</span>
+                <input type="text" id="newColTemplateSelect" list="colTemplateList" placeholder="Col name..." style="padding: 2px 4px; font-size: 11px; width: 90px;">
                 <datalist id="colTemplateList"></datalist>
-                <select id="targetReferenceCol" style="padding: 1px; font-size: 9px;"></select>
-                <select id="beforeAfterSelect" style="padding: 1px; font-size: 9px;">
+                <select id="targetReferenceCol" style="padding: 2px 4px; font-size: 11px;"></select>
+                <select id="beforeAfterSelect" style="padding: 2px 4px; font-size: 11px;">
                     <option value="after">After</option>
                     <option value="before">Before</option>
                 </select>
-                <button type="button" style="background-color: #27ae60; color: white; padding: 1px 4px; font-size: 9px; border: none; border-radius: 2px;" onclick="addNewCustomColumn()">+Add</button>
-                <button type="button" style="background-color: #e74c3c; color: white; padding: 1px 4px; font-size: 9px; border: none; border-radius: 2px;" onclick="removeCustomColumn()">-Rem</button>
+                <button type="button" style="background-color: #27ae60; color: white;" onclick="addNewCustomColumn()">+Add</button>
+                <button type="button" style="background-color: #e74c3c; color: white;" onclick="removeCustomColumn()">-Rem</button>
             </div>
         </div>
     </div>
@@ -385,11 +469,11 @@
         <div class="form-grid" id="buyerInfoContentGrid">
             <div class="form-group">
                 <label for="piNo">PI NO</label>
-                <input type="text" id="piNo" value="SACL/296/2026">
+                <input type="text" id="piNo" value="SACL/296/2026" oninput="saveHeaderToStorage()">
             </div>
             <div class="form-group">
                 <label for="piDate">DATE</label>
-                <input type="text" id="piDate" value="08.08.2026">
+                <input type="text" id="piDate" value="08.08.2026" oninput="saveHeaderToStorage()">
             </div>
             <div class="form-group">
                 <label for="buyerName">Name of Buyer</label>
@@ -414,7 +498,7 @@
             </div>
             <div class="form-group full-width">
                 <label for="buyerAddress">Address of Buyer</label>
-                <textarea id="buyerAddress" rows="3" placeholder="Enter buyer address...">PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.</textarea>
+                <textarea id="buyerAddress" rows="3" placeholder="Enter buyer address..." oninput="saveHeaderToStorage()">PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.</textarea>
             </div>
         </div>
 
@@ -458,9 +542,229 @@
     const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
     const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
 
+    // হেলপার ফাংশন: ফাইল নেম ডায়নামিক SACL/296/2026 এর জন্য
+    function getSanitizedPiName() {
+        return document.getElementById('piNo')?.value.trim() || 'SACL/296/2026';
+    }
+
     function getSafeId(name) {
         return 'custom_' + name.replace(/[^a-zA-Z0-9_-]/g, '_');
     }
+
+    function showNumberDropdown(inputElem, minVal, maxVal, step = 1) {
+        document.querySelectorAll('.number-dropdown-list').forEach(d => {
+            if(d.id !== inputElem.id + '_dropdown') d.style.display = 'none';
+        });
+
+        const dropdownId = inputElem.id + '_dropdown';
+        let dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+
+        dropdown.innerHTML = '';
+        for (let i = minVal; i <= maxVal; i += step) {
+            let item = document.createElement('div');
+            item.innerText = i;
+            item.onclick = function(e) {
+                e.stopPropagation();
+                inputElem.value = i;
+                inputElem.dispatchEvent(new Event('input'));
+                inputElem.dispatchEvent(new Event('change'));
+                dropdown.style.display = 'none';
+            };
+            dropdown.appendChild(item);
+        }
+
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.pi-type-container')) {
+            document.querySelectorAll('.number-dropdown-list').forEach(d => d.style.display = 'none');
+        }
+        if (!e.target.closest('.form-group')) {
+            document.querySelectorAll('.auto-suggest-box').forEach(b => b.style.display = 'none');
+        }
+    });
+
+    const productAutoSuggestions = {
+        desc: [
+            "CARTON BOX 7-PLY",
+            "POLY BAG (SELF ADHESIVE)",
+            "STICKER LABEL",
+            "HANG TAG",
+            "PRINTED POLY BAG",
+            "BARCODE STICKER",
+            "TISSUE PAPER",
+            "PRICE TAG"
+        ],
+        measurement: [
+            "10 X 12 INCH",
+            "12 X 15 INCH",
+            "20 X 30 INCH",
+            "50 X 40 X 30 CM",
+            "2 X 3 INCH",
+            "1.5 X 2 INCH"
+        ],
+        stylepo: [
+            "PO-2026-001",
+            "PO-GAP-9982",
+            "STYLE-SPRING-26",
+            "STYLE-WINTER-102"
+        ],
+        color: [
+            "WHITE",
+            "TRANSPARENT",
+            "BLACK",
+            "NAVY BLUE",
+            "RED",
+            "NATURAL"
+        ],
+        unit: [
+            "Pcs",
+            "Dzn",
+            "Lbs",
+            "Kgs",
+            "Roll",
+            "Set"
+        ]
+    };
+
+    /* INLINE AUTOCOMPLETE / TYPEAHEAD FEATURE LOGIC */
+    function getSuggestionsForField(fieldId) {
+        let suggestList = [];
+
+        // 1. Invoice & Buyer Info Suggestions
+        if (fieldId === 'buyerName') {
+            suggestList = buyerDatabase.map(b => b.name);
+        } else if (fieldId === 'buyerRef') {
+            suggestList = buyerRefDatabase;
+        } else if (fieldId === 'attn') {
+            const buyerInputVal = document.getElementById('buyerName')?.value.trim() || '';
+            const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+            if (foundBuyer) {
+                suggestList = foundBuyer.merchants;
+            } else {
+                buyerDatabase.forEach(b => suggestList.push(...b.merchants));
+            }
+        }
+        // 2. Product Details Suggestions
+        else if (productAutoSuggestions[fieldId]) {
+            suggestList = [...productAutoSuggestions[fieldId]];
+        }
+
+        // Add dynamic data from previous items
+        items.forEach(item => {
+            let val = '';
+            if (fieldId === 'desc') val = item.desc;
+            else if (fieldId === 'measurement') val = item.measurement;
+            else if (fieldId === 'stylepo') val = item.stylepo;
+            else if (fieldId === 'color') val = item.color;
+            else if (fieldId === 'unit') val = item.unit;
+            else if (item.customValues) {
+                Object.keys(item.customValues).forEach(k => {
+                    if (getSafeId(k) === fieldId && item.customValues[k]) {
+                        val = item.customValues[k];
+                    }
+                });
+            }
+            if (val && !suggestList.includes(val)) {
+                suggestList.push(val);
+            }
+        });
+
+        return Array.from(new Set(suggestList));
+    }
+
+    // Attach Inline Autocomplete Handlers to Input Elements
+    function setupInlineTypeahead(element) {
+        if (!element || element.dataset.typeaheadBound) return;
+        element.dataset.typeaheadBound = "true";
+
+        element.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                element.dataset.isDeleting = "true";
+            } else {
+                element.dataset.isDeleting = "false";
+            }
+
+            // Accept Inline Suggestion on Enter or Tab or Right Arrow
+            if ((e.key === 'Enter' || e.key === 'Tab' || e.key === 'ArrowRight') && element.selectionStart !== element.selectionEnd) {
+                e.preventDefault();
+                element.selectionStart = element.value.length;
+                element.selectionEnd = element.value.length;
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        element.addEventListener('input', function(e) {
+            if (element.dataset.isDeleting === "true") return;
+
+            const inputVal = element.value;
+            const fieldId = element.id;
+            const selStart = element.selectionStart;
+
+            if (!inputVal || selStart < inputVal.length) return;
+
+            const suggestions = getSuggestionsForField(fieldId);
+            const match = suggestions.find(s => s.toLowerCase().startsWith(inputVal.toLowerCase()));
+
+            if (match) {
+                const completedText = inputVal + match.slice(inputVal.length);
+                element.value = completedText;
+                element.setSelectionRange(inputVal.length, completedText.length);
+            }
+        });
+    }
+
+    // Initialize Typeahead for Buyer Info on DOM Load
+    document.addEventListener('DOMContentLoaded', function() {
+        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) setupInlineTypeahead(elem);
+        });
+    });
+
+    document.addEventListener('input', function(e) {
+        const target = e.target;
+        if (!target.closest('#dynamicInputContainer') && target.id !== 'hsCodeInput') return;
+        
+        const parent = target.parentElement;
+        if (!parent || !parent.classList.contains('form-group')) return;
+
+        let box = parent.querySelector('.auto-suggest-box');
+        if (!box) {
+            box = document.createElement('div');
+            box.className = 'auto-suggest-box';
+            parent.appendChild(box);
+        }
+
+        const fieldId = target.id;
+        const inputVal = target.value.trim().toLowerCase();
+
+        let suggestList = getSuggestionsForField(fieldId);
+
+        const filtered = suggestList.filter(item => item.toString().toLowerCase().includes(inputVal));
+
+        if (filtered.length > 0 && inputVal.length > 0) {
+            box.innerHTML = '';
+            filtered.forEach(sugText => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'auto-suggest-item';
+                itemDiv.innerText = sugText;
+                itemDiv.onmousedown = function(evt) {
+                    evt.preventDefault();
+                    target.value = sugText;
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    box.style.display = 'none';
+                };
+                box.appendChild(itemDiv);
+            });
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
+    });
 
     function toggleBuyerInfoSection() {
         const grid = document.getElementById('buyerInfoContentGrid');
@@ -563,56 +867,141 @@
     const MAX_HISTORY = 50;
 
     function saveStateForUndo() {
-        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths }));
+        const headerState = {
+            piNo: document.getElementById('piNo').value,
+            piDate: document.getElementById('piDate').value,
+            buyerName: document.getElementById('buyerName').value,
+            buyerAddress: document.getElementById('buyerAddress').value,
+            buyerRef: document.getElementById('buyerRef').value,
+            attn: document.getElementById('attn').value,
+            hsCode: document.getElementById('hsCodeInput')?.value || ''
+        };
+        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths, headerState }));
         if (undoStack.length > MAX_HISTORY) undoStack.shift();
         redoStack = []; 
     }
 
     function performUndo() {
         if (undoStack.length === 0) return;
-        redoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths }));
+        const currentState = {
+            items,
+            customColumnsStore,
+            mergedCellsStore,
+            piColumnWidths,
+            headerState: {
+                piNo: document.getElementById('piNo').value,
+                piDate: document.getElementById('piDate').value,
+                buyerName: document.getElementById('buyerName').value,
+                buyerAddress: document.getElementById('buyerAddress').value,
+                buyerRef: document.getElementById('buyerRef').value,
+                attn: document.getElementById('attn').value,
+                hsCode: document.getElementById('hsCodeInput')?.value || ''
+            }
+        };
+        redoStack.push(JSON.stringify(currentState));
+        
         const prevState = JSON.parse(undoStack.pop());
         items = prevState.items;
         customColumnsStore = prevState.customColumnsStore || customColumnsStore;
         mergedCellsStore = prevState.mergedCellsStore || mergedCellsStore;
         piColumnWidths = prevState.piColumnWidths || piColumnWidths;
+        
+        if (prevState.headerState) {
+            document.getElementById('piNo').value = prevState.headerState.piNo;
+            document.getElementById('piDate').value = prevState.headerState.piDate;
+            document.getElementById('buyerName').value = prevState.headerState.buyerName;
+            document.getElementById('buyerAddress').value = prevState.headerState.buyerAddress;
+            document.getElementById('buyerRef').value = prevState.headerState.buyerRef;
+            document.getElementById('attn').value = prevState.headerState.attn;
+            if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = prevState.headerState.hsCode;
+        }
+
         saveDataToStorage();
+        saveHeaderToStorage();
         updateTable();
     }
 
     function performRedo() {
         if (redoStack.length === 0) return;
-        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths }));
+        const currentState = {
+            items,
+            customColumnsStore,
+            mergedCellsStore,
+            piColumnWidths,
+            headerState: {
+                piNo: document.getElementById('piNo').value,
+                piDate: document.getElementById('piDate').value,
+                buyerName: document.getElementById('buyerName').value,
+                buyerAddress: document.getElementById('buyerAddress').value,
+                buyerRef: document.getElementById('buyerRef').value,
+                attn: document.getElementById('attn').value,
+                hsCode: document.getElementById('hsCodeInput')?.value || ''
+            }
+        };
+        undoStack.push(JSON.stringify(currentState));
+
         const nextState = JSON.parse(redoStack.pop());
         items = nextState.items;
         customColumnsStore = nextState.customColumnsStore || customColumnsStore;
         mergedCellsStore = nextState.mergedCellsStore || mergedCellsStore;
-        piColumnWidths = nextState.piColumnWidths || nextState.piColumnWidths;
+        piColumnWidths = nextState.piColumnWidths || piColumnWidths;
+
+        if (nextState.headerState) {
+            document.getElementById('piNo').value = nextState.headerState.piNo;
+            document.getElementById('piDate').value = nextState.headerState.piDate;
+            document.getElementById('buyerName').value = nextState.headerState.buyerName;
+            document.getElementById('buyerAddress').value = nextState.headerState.buyerAddress;
+            document.getElementById('buyerRef').value = nextState.headerState.buyerRef;
+            document.getElementById('attn').value = nextState.headerState.attn;
+            if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = nextState.headerState.hsCode;
+        }
+
         saveDataToStorage();
+        saveHeaderToStorage();
         updateTable();
     }
 
     document.addEventListener('keydown', function(e) {
         const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-
         const isCtrl = e.ctrlKey || e.metaKey;
+
         if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
-            if (e.shiftKey) { e.preventDefault(); performRedo(); } 
-            else { e.preventDefault(); performUndo(); }
+            if (activeTag === 'td' || activeTag === 'th') {
+                document.activeElement.blur();
+            }
+            if (e.shiftKey) { 
+                e.preventDefault(); 
+                performRedo(); 
+            } else { 
+                e.preventDefault(); 
+                performUndo(); 
+            }
         } else if (isCtrl && (e.key === 'y' || e.key === 'Y')) {
-            e.preventDefault(); performRedo();
+            e.preventDefault(); 
+            performRedo();
         }
     });
 
-    let piColumnWidths = {
-        allPi: {},
-        poly: {}
-    };
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('table') && !e.target.closest('.excel-ribbon')) {
+            const currentType = document.getElementById('piType').value;
+            const table = document.getElementById(`table-${currentType}`);
+            if (table) {
+                table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+            }
+        }
+    });
+
+    let piColumnWidths = { allPi: {}, poly: {} };
 
     window.onload = function() {
         initBuyerDatalist();
         initBuyerRefDatalist();
+
+        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) setupInlineTypeahead(elem);
+        });
 
         const savedItems = localStorage.getItem('pi_items_data');
         const savedHeader = localStorage.getItem('pi_header_data');
@@ -670,8 +1059,8 @@
     }
 
     function numberToWords(num) {
-        if (isNaN(num)) return "Zero";
-        if (num === 0) return "Zero";
+        num = parseFloat(num);
+        if (isNaN(num) || num === 0) return "Zero US Dollars Only.";
         
         const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
         const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
@@ -711,8 +1100,10 @@
         return wordStr + ' Only.';
     }
 
+    // ডাউনলোড (JSON) সেভ ফাংশন - SACL/296/2026 ফরম্যাটে ফাইল সেভ করার জন্য আপডেট করা হলো
     function downloadJSON() {
         const currentType = document.getElementById('piType').value;
+        const sanitizedPiName = getSanitizedPiName().replace(/[\/\\?%*:|"<>]/g, '_');
         const backupData = {
             piType: currentType,
             items: items.filter(item => item.piType === currentType),
@@ -723,7 +1114,7 @@
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 4));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `PI_${currentType.toUpperCase()}.json`);
+        downloadAnchor.setAttribute("download", `${sanitizedPiName}.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
@@ -871,17 +1262,17 @@
         const currentCounter = slCounters[piType] || 1;
 
         let baseInputs = `
-            <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${currentCounter}" min="1"></div>
-            <div class="form-group"><label for="desc">Description of Goods</label><textarea id="desc" rows="2"></textarea></div>
-            <div class="form-group"><label for="measurement">Measurement</label><textarea id="measurement" rows="2" placeholder="Enter measurement..."></textarea></div>
+            <div class="form-group"><label for="slNo">1. SL No.</label><input type="number" id="slNo" value="${currentCounter}" min="1" oninput="saveStateForUndo()"></div>
+            <div class="form-group"><label for="desc">Description of Goods</label><textarea id="desc" rows="2" oninput="saveStateForUndo()"></textarea></div>
+            <div class="form-group"><label for="measurement">Measurement</label><textarea id="measurement" rows="2" placeholder="Enter measurement..." oninput="saveStateForUndo()"></textarea></div>
         `;
 
         let specificInputs = `
-            ${piType === 'poly' ? '<div class="form-group"><label for="stylepo">Style/PO No.</label><textarea id="stylepo" rows="2" placeholder="Enter Style/PO..."></textarea></div>' : ''}
-            ${piType === 'allPi' ? '<div class="form-group"><label for="color">Color</label><textarea id="color" rows="2" placeholder="Enter color..."></textarea></div>' : ''}
-            <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs"></div>
-            <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0"></div>
-            <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000"></div>
+            ${piType === 'poly' ? '<div class="form-group"><label for="stylepo">Style/PO No.</label><textarea id="stylepo" rows="2" placeholder="Enter Style/PO..." oninput="saveStateForUndo()"></textarea></div>' : ''}
+            ${piType === 'allPi' ? '<div class="form-group"><label for="color">Color</label><textarea id="color" rows="2" placeholder="Enter color..." oninput="saveStateForUndo()"></textarea></div>' : ''}
+            <div class="form-group"><label for="unit">Unit</label><input type="text" id="unit" value="Pcs" oninput="saveStateForUndo()"></div>
+            <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="saveStateForUndo()"></div>
+            <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000" oninput="saveStateForUndo()"></div>
         `;
 
         let customCols = customColumnsStore[piType] || [];
@@ -892,7 +1283,7 @@
                 customInputsHTML += `
                     <div class="form-group" id="input_group_${safeFieldId}">
                         <label for="${safeFieldId}">${c.name}</label>
-                        <textarea id="${safeFieldId}" rows="2" placeholder="Enter ${c.name}..."></textarea>
+                        <textarea id="${safeFieldId}" rows="2" placeholder="Enter ${c.name}..." oninput="saveStateForUndo()"></textarea>
                     </div>
                 `;
             }
@@ -902,7 +1293,11 @@
             <div class="form-group" style="display: flex; flex-direction: row; gap: 8px; align-items: flex-end; grid-column: span 2;">
                 <div style="flex: 1; display: flex; flex-direction: column;">
                     <label for="othersPercent">Others (%)</label>
-                    <input type="number" step="0.01" id="othersPercent" placeholder="0" style="width: 100%;">
+                    <input type="number" step="0.01" id="othersPercent" placeholder="0" style="width: 100%;" oninput="saveStateForUndo()">
+                </div>
+                <div style="display: flex; flex-direction: column; width: 65px;">
+                    <label for="insertAfterInput" style="font-size: 11px;">Ins. After</label>
+                    <input type="number" id="insertAfterInput" placeholder="Pos" style="height: 30px; padding: 4px; text-align: center; font-size: 11px;" oninput="saveStateForUndo()">
                 </div>
                 <button type="button" class="btn-add" onclick="addItem()" style="height: 30px; padding: 0 12px; white-space: nowrap; flex: initial; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px;">+Add Row</button>
             </div>
@@ -910,6 +1305,11 @@
 
         inputContainer.innerHTML = baseInputs + specificInputs + customInputsHTML + buttonHTML;
         
+        // Dynamic Typeahead Binding on Input Boxes
+        inputContainer.querySelectorAll('input[type="text"], textarea').forEach(elem => {
+            setupInlineTypeahead(elem);
+        });
+
         saveHeaderToStorage();
         populateDynamicAddColumnUI();
         updateTable();
@@ -991,7 +1391,25 @@
 
         saveStateForUndo(); 
         if (editIndex === -1) {
-            items.push(itemData);
+            let insertVal = document.getElementById('insertAfterInput')?.value.trim();
+            if (insertVal !== '' && parseInt(insertVal) > 0) {
+                let targetNum = parseInt(insertVal);
+                let piTypeItems = items.filter(i => i.piType === piType);
+                let targetIndexInPiType = piTypeItems.findIndex(i => i.slNo === targetNum);
+                if (targetIndexInPiType === -1 && targetNum <= piTypeItems.length) {
+                    targetIndexInPiType = targetNum - 1;
+                }
+                
+                if (targetIndexInPiType !== -1) {
+                    let globalTargetItem = piTypeItems[targetIndexInPiType];
+                    let globalIndex = items.indexOf(globalTargetItem);
+                    items.splice(globalIndex + 1, 0, itemData);
+                } else {
+                    items.push(itemData);
+                }
+            } else {
+                items.push(itemData);
+            }
             slCounters[piType] = slNo + 1;
         } else {
             items[editIndex] = itemData;
@@ -1101,7 +1519,8 @@
                         alignStyle = "text-align: center;";
                     }
                     else if (col === "SL No.") {
-                        cellVal = item.slNo;
+                        cellVal = rIdx + 1;
+                        item.slNo = rIdx + 1;
                         alignStyle = "text-align: center;";
                     }
                     else if (col === "Description of Goods" || col === "Measurement" || col === "Style/PO No." || col === "Color") {
@@ -1227,12 +1646,11 @@
         makeColumnsResizable();
     }
 
-    /* নতুন কারেকশন: সেলে কসর ঢুকলেই আগের স্টেট আনডু হিস্টোরিতে জমা হবে */
     function onCellFocus(e) {
         saveStateForUndo();
     }
 
-    function updateHeaderContent(e, type, cIdx) {}
+    function updateHeaderContent(event, type, cIdx) {}
     function updateFooterContent(e) {}
 
     function updateCellContent(e, rIdx, cIdx) {
@@ -1287,7 +1705,7 @@
                 e.preventDefault();
                 e.stopPropagation();
 
-                saveStateForUndo(); // কলাম রিসাইজ করার আগে স্টেট সেভ
+                saveStateForUndo(); 
                 const th = e.target.parentElement;
                 const colName = th.getAttribute('data-colname');
                 const startX = e.pageX;
@@ -1332,7 +1750,7 @@
             return;
         }
 
-        saveStateForUndo(); // টেক্সট বোল্ড করার পূর্বে আনডু স্টেট সেভ
+        saveStateForUndo(); 
         let isCurrentlyBold = window.getComputedStyle(selectedCells[0]).fontWeight;
         let makeBold = (isCurrentlyBold === 'normal' || isCurrentlyBold === '400' || !isCurrentlyBold);
 
@@ -1355,7 +1773,7 @@
             return;
         }
 
-        saveStateForUndo(); // অ্যালাইনমেন্ট করার পূর্বে আনডু স্টেট সেভ
+        saveStateForUndo(); 
         selectedCells.forEach(cell => {
             cell.style.textAlign = alignValue;
         });
@@ -1487,7 +1905,7 @@
         const selectedCells = table.querySelectorAll('.cell-selected');
         if (selectedCells.length === 0) return;
 
-        saveStateForUndo(); // ফন্ট সাইজ চেঞ্জ করার পূর্বে স্টেট সেভ
+        saveStateForUndo(); 
         selectedCells.forEach(cell => {
             cell.style.fontSize = newSize + 'px';
         });
@@ -1544,6 +1962,7 @@
         saveDataToStorage();
     }
 
+    // PDF ফাংশন (SACL/296/2026 টাইটেল ডায়নামিক করার জন্য আপডেট করা হলো)
     function printPDF() {
         const piType = document.getElementById('piType').value;
         const currentTableElem = document.getElementById(`sec-${piType}`);
@@ -1579,6 +1998,10 @@
         const buyerRef = document.getElementById('buyerRef').value;
         const attn = document.getElementById('attn').value;
         const hsCodeVal = document.getElementById('hsCodeInput')?.value || '';
+
+        // ডকুমেন্ট টাইটেল ডায়নামিক
+        const originalTitle = document.title;
+        document.title = getSanitizedPiName();
 
         let tableClone = currentTableElem.cloneNode(true);
         let actionElements = tableClone.querySelectorAll('.no-print');
@@ -1756,8 +2179,14 @@
         `;
 
         window.print();
+        
+        // টাইটেল পূর্বের অবস্থায় ফিরিয়ে নেওয়া
+        setTimeout(() => {
+            document.title = originalTitle;
+        }, 1000);
     }
 
+    // Excel এক্সপোর্ট ফাংশন
     function exportToExcel() {
         const piType = document.getElementById('piType').value;
         const selectedItems = items.filter(item => item.piType === piType);
@@ -1993,6 +2422,10 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, piType.toUpperCase());
         XLSX.writeFile(wb, `PI_${piType.toUpperCase()}_${piNo.replace(/\//g, '_')}.xlsx`);
+    
+
+        let excelFileName = `${getSanitizedPiName().replace(/[\/\\?%*:|"<>]/g, '_')}.xlsx`;
+        XLSX.writeFile(wb, excelFileName);
     }
 </script>
 </body>
