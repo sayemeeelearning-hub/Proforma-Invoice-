@@ -90,6 +90,15 @@
             box-shadow: none !important;
         }
 
+        .excel-ribbon button.btn-save-main {
+            background-color: #27ae60 !important;
+            border-color: #219653 !important;
+            color: #ffffff !important;
+        }
+        .excel-ribbon button.btn-save-main:hover {
+            background-color: #219653 !important;
+        }
+
         .excel-ribbon button.btn-reset {
             background-color: #e74c3c !important;
             border-color: #c0392b !important;
@@ -350,7 +359,10 @@
             <div style="display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;">
                 <button type="button" class="btn-print" onclick="printPDF()">🖨️ PDF</button>
                 <button type="button" class="btn-export" onclick="exportToExcel()">📥 Excel</button>
-                <button type="button" class="btn-export" onclick="downloadJSON()">💾 Save</button>
+                <!-- নতুন আলাদা Save বাটন -->
+                <button type="button" class="btn-save-main" onclick="saveAllPersistentData(true)">💾 Save</button>
+                <!-- আগের Save বাটনটি এখন JSON নামে আপডেট করা হলো -->
+                <button type="button" class="btn-export" onclick="downloadJSON()">💾 JSON</button>
                 <button type="button" class="btn-export" onclick="document.getElementById('jsonFileInput').click()">📂 Load</button>
                 <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
 
@@ -861,6 +873,7 @@
     let editIndex = -1;
     let customColumnsStore = { allPi: [], poly: [] };
     let mergedCellsStore = { allPi: [], poly: [] };
+    let cellAlignmentsStore = { allPi: {}, poly: {} };
 
     let undoStack = [];
     let redoStack = [];
@@ -876,7 +889,7 @@
             attn: document.getElementById('attn').value,
             hsCode: document.getElementById('hsCodeInput')?.value || ''
         };
-        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths, headerState }));
+        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths, cellAlignmentsStore, headerState }));
         if (undoStack.length > MAX_HISTORY) undoStack.shift();
         redoStack = []; 
     }
@@ -888,6 +901,7 @@
             customColumnsStore,
             mergedCellsStore,
             piColumnWidths,
+            cellAlignmentsStore,
             headerState: {
                 piNo: document.getElementById('piNo').value,
                 piDate: document.getElementById('piDate').value,
@@ -905,6 +919,7 @@
         customColumnsStore = prevState.customColumnsStore || customColumnsStore;
         mergedCellsStore = prevState.mergedCellsStore || mergedCellsStore;
         piColumnWidths = prevState.piColumnWidths || piColumnWidths;
+        cellAlignmentsStore = prevState.cellAlignmentsStore || cellAlignmentsStore;
         
         if (prevState.headerState) {
             document.getElementById('piNo').value = prevState.headerState.piNo;
@@ -928,6 +943,7 @@
             customColumnsStore,
             mergedCellsStore,
             piColumnWidths,
+            cellAlignmentsStore,
             headerState: {
                 piNo: document.getElementById('piNo').value,
                 piDate: document.getElementById('piDate').value,
@@ -945,6 +961,7 @@
         customColumnsStore = nextState.customColumnsStore || customColumnsStore;
         mergedCellsStore = nextState.mergedCellsStore || mergedCellsStore;
         piColumnWidths = nextState.piColumnWidths || piColumnWidths;
+        cellAlignmentsStore = nextState.cellAlignmentsStore || cellAlignmentsStore;
 
         if (nextState.headerState) {
             document.getElementById('piNo').value = nextState.headerState.piNo;
@@ -1008,10 +1025,12 @@
         const savedColWidths = localStorage.getItem('pi_col_widths_data');
         const savedCustomCols = localStorage.getItem('pi_custom_cols_data');
         const savedMergedCells = localStorage.getItem('pi_merged_cells_data');
+        const savedAlignments = localStorage.getItem('pi_cell_alignments_data');
 
         if (savedColWidths) { try { piColumnWidths = JSON.parse(savedColWidths); } catch(e) {} }
         if (savedCustomCols) { try { customColumnsStore = JSON.parse(savedCustomCols); } catch(e) {} }
         if (savedMergedCells) { try { mergedCellsStore = JSON.parse(savedMergedCells); } catch(e) {} }
+        if (savedAlignments) { try { cellAlignmentsStore = JSON.parse(savedAlignments); } catch(e) {} }
 
         if (savedItems) {
             try {
@@ -1100,7 +1119,16 @@
         return wordStr + ' Only.';
     }
 
-    // ডাউনলোড (JSON) সেভ ফাংশন - SACL/296/2026 ফরম্যাটে ফাইল সেভ করার জন্য আপডেট করা হলো
+    // অল-ইন-ওয়ান ডাটা ও লেআউট পারসিস্টেন্সি সেভ ফাংশন
+    function saveAllPersistentData(showAlert = false) {
+        saveHeaderToStorage();
+        saveDataToStorage();
+        if (showAlert) {
+            alert("সব ডাটা এবং টেবিলের লেআউট সফলভাবে সেভ করা হয়েছে!");
+        }
+    }
+
+    // ডাউনলোড (JSON) সেভ ফাংশন - SACL/296/2026 ফরম্যাটে ফাইল সেভ করার জন্য
     function downloadJSON() {
         const currentType = document.getElementById('piType').value;
         const sanitizedPiName = getSanitizedPiName().replace(/[\/\\?%*:|"<>]/g, '_');
@@ -1109,7 +1137,8 @@
             items: items.filter(item => item.piType === currentType),
             customColumns: customColumnsStore[currentType],
             colWidths: piColumnWidths[currentType],
-            mergedCells: mergedCellsStore[currentType]
+            mergedCells: mergedCellsStore[currentType],
+            cellAlignments: cellAlignmentsStore[currentType] || {}
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 4));
         const downloadAnchor = document.createElement('a');
@@ -1136,10 +1165,9 @@
                     if(content.customColumns) customColumnsStore[targetType] = content.customColumns;
                     if(content.mergedCells) mergedCellsStore[targetType] = content.mergedCells;
                     if(content.colWidths) piColumnWidths[targetType] = content.colWidths;
-                    localStorage.setItem('pi_items_data', JSON.stringify(items));
-                    localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
-                    localStorage.setItem('pi_merged_cells_data', JSON.stringify(mergedCellsStore));
-                    localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+                    if(content.cellAlignments) cellAlignmentsStore[targetType] = content.cellAlignments;
+
+                    saveDataToStorage();
                 }
                 handlePiTypeChange();
                 updateTable();
@@ -1339,6 +1367,8 @@
         localStorage.setItem('pi_items_data', JSON.stringify(items));
         localStorage.setItem('pi_merged_cells_data', JSON.stringify(mergedCellsStore));
         localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+        localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
+        localStorage.setItem('pi_cell_alignments_data', JSON.stringify(cellAlignmentsStore));
     }
 
     function addItem() {
@@ -1467,6 +1497,7 @@
             saveStateForUndo(); 
             items = items.filter(item => item.piType !== piType);
             mergedCellsStore[piType] = [];
+            cellAlignmentsStore[piType] = {};
             slCounters[piType] = 1;
             document.getElementById('slNo').value = 1;
             editIndex = -1;
@@ -1508,7 +1539,18 @@
                 let rowHTML = `<tr data-index="${item.originalIndex}">`;
                 colsList.forEach((col, cIdx) => {
                     let cellVal = "";
-                    let alignStyle = "text-align: center;";
+                    
+                    // ডিফল্ট অ্যালাইনমেন্ট
+                    let alignStyleVal = "center";
+                    if (col === "QTY" || col === "QTY (Dzn)" || col === "Unit Price (USD)" || col === "Amount (USD)") {
+                        alignStyleVal = "right";
+                    }
+
+                    // পূর্বে সংরক্ষিত ইউজার ডায়নামিক অ্যালাইনমেন্ট থাকলে তা লোড করবে
+                    let cellKey = `${rIdx}_${cIdx}`;
+                    if (cellAlignmentsStore[type] && cellAlignmentsStore[type][cellKey]) {
+                        alignStyleVal = cellAlignmentsStore[type][cellKey];
+                    }
 
                     let baseP = item.price || 0;
                     let oPct = item.othersPercent || 0;
@@ -1516,35 +1558,28 @@
 
                     if (item.customValues && item.customValues[col] !== undefined && item.customValues[col] !== '') {
                         cellVal = item.customValues[col];
-                        alignStyle = "text-align: center;";
                     }
                     else if (col === "SL No.") {
                         cellVal = rIdx + 1;
                         item.slNo = rIdx + 1;
-                        alignStyle = "text-align: center;";
                     }
                     else if (col === "Description of Goods" || col === "Measurement" || col === "Style/PO No." || col === "Color") {
                         cellVal = col === "Description of Goods" ? (item.desc || '') :
                                   col === "Measurement" ? (item.measurement || '') :
                                   col === "Style/PO No." ? (item.stylepo || '') : (item.color || '');
-                        alignStyle = "text-align: center;";
                     }
                     else if (col === "Unit") {
                         cellVal = item.unit || '';
-                        alignStyle = "text-align: center;";
                     }
                     else if (col === "QTY") {
                         cellVal = item.qty || 0;
-                        alignStyle = "text-align: right;";
                     }
                     else if (col === "QTY (Dzn)") {
                         let dznVal = (item.qty || 0) / 12;
                         cellVal = dznVal.toFixed(2);
-                        alignStyle = "text-align: right;";
                     }
                     else if (col === "Unit Price (USD)") {
                         cellVal = finalUnitP > 0 ? finalUnitP.toFixed(4) : "0.0000";
-                        alignStyle = "text-align: right;";
                     }
                     else if (col === "Amount (USD)") {
                         let finalAmt = 0;
@@ -1559,12 +1594,10 @@
                         }
                         item.amount = finalAmt;
                         cellVal = `$${finalAmt.toFixed(2)}`;
-                        alignStyle = "text-align: right;";
                     }
                     else {
                         let safeKey = col.toLowerCase().replace(/[^a-z0-9]/g, '');
                         cellVal = item[safeKey] || item[col] || '';
-                        alignStyle = "text-align: center;";
                     }
 
                     let isHidden = false;
@@ -1591,6 +1624,7 @@
                         if (rowspanAttr > 1) spanString += ` rowspan="${rowspanAttr}"`;
                         if (colspanAttr > 1) spanString += ` colspan="${colspanAttr}"`;
                         
+                        let alignStyle = `text-align: ${alignStyleVal};`;
                         if (piColumnWidths[type] && piColumnWidths[type][col]) {
                             alignStyle += ` width: ${piColumnWidths[type][col]}px;`;
                         }
@@ -1760,6 +1794,7 @@
         saveDataToStorage();
     }
 
+    // ডায়নামিক অ্যালাইনমেন্ট ফিল্টারিং ও পারসিস্টেন্সি সহ ফাংশন
     function applySelectionAlignment(alignValue) {
         if (!alignValue) return;
         const currentType = document.getElementById('piType').value;
@@ -1774,8 +1809,15 @@
         }
 
         saveStateForUndo(); 
+        if (!cellAlignmentsStore[currentType]) cellAlignmentsStore[currentType] = {};
+
         selectedCells.forEach(cell => {
             cell.style.textAlign = alignValue;
+            let rIdx = cell.getAttribute('data-row');
+            let cIdx = cell.getAttribute('data-col');
+            if (rIdx !== null && cIdx !== null) {
+                cellAlignmentsStore[currentType][`${rIdx}_${cIdx}`] = alignValue;
+            }
         });
 
         document.getElementById('cellAlignmentSelect').selectedIndex = 0;
@@ -1962,7 +2004,7 @@
         saveDataToStorage();
     }
 
-    // PDF ফাংশন (SACL/296/2026 টাইটেল ডায়নামিক করার জন্য আপডেট করা হলো)
+    // PDF ফাংশন (ডায়নামিক অ্যালাইনমেন্ট সাপোর্ট সহ)
     function printPDF() {
         const piType = document.getElementById('piType').value;
         const currentTableElem = document.getElementById(`sec-${piType}`);
@@ -2021,11 +2063,21 @@
                     <div style="font-size: ${subHeaderFont}px; font-weight: bold; margin-top: 1px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; font-weight: bold; margin-bottom: 8px; font-size: ${bar3Font}px;">
-                    <div>PI NO: ${piNo}</div>
-                    <div style="text-decoration: underline; font-size: ${bar2Font}px;">PROFORMA INVOICE</div>
-                    <div>DATE: ${piDate}</div>
-                </div>
+  <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; font-weight: bold; margin-bottom: 8px; font-size: ${bar3Font}px;">
+    <!-- Left Section: PI NO and DATE stacked vertically -->
+    <div style="text-align: left;">
+        <div>PI NO: ${piNo}</div>
+        <div style="margin-top: 2px;">DATE: ${piDate}</div>
+    </div>
+
+    <!-- Center Section: PROFORMA INVOICE -->
+    <div style="text-decoration: underline; font-size: ${bar2Font}px; text-align: center;">
+        PROFORMA INVOICE
+    </div>
+
+    <!-- Right Section: Empty space to balance grid layout -->
+    <div></div>
+</div>
 
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: ${bar3Font}px;">
                     <div style="width: 48%;">
@@ -2054,7 +2106,7 @@
                         <tr style="vertical-align: top;">
                             <td style="width: 20%; border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">1. PAYMENT TERMS</td>
                             <td style="width: 2%; border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
-                            <td style="width: 90%; border: none; padding: 1px 0; font-size: ${bar4Font}px;">A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery.</td>
+                            <td style="width: 90%; border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery.</td>
                         </tr>
                         <tr style="vertical-align: top;">
                             <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
@@ -2089,12 +2141,12 @@
                         <tr style="vertical-align: top;">
                             <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
                             <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
-                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"><b>D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed.</b></td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;"><b>D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed.</b></td>
                         </tr>
                         <tr style="vertical-align: top;">
                             <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
                             <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
-                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"><b>E) Accessories for 100% Export Oriented Readymade Garments Industry.</b></td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;"><b>E) Accessories for 100% Export Oriented Readymade Garments Industry.</b></td>
                         </tr>
                         <tr style="vertical-align: top;">
                             <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">3. Delivery/Inco Term</td>
@@ -2129,7 +2181,7 @@
                         <tr style="vertical-align: top;">
                             <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">9. Advising Bank</td>
                             <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
-                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">DHAKA BANK LTD. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL.</td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">DHAKA BANK PLC. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL.</td>
                         </tr>
                         <tr style="vertical-align: top;">
                             <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">10. Bank Charge</td>
@@ -2165,13 +2217,13 @@
                         <img src="${stampImageUrl}" style="width: ${stampWidth}px; position: absolute; bottom: ${stampBottom}px; left: 50%; transform: translateX(-50%); opacity: 0.85;" alt="Stamp"/>
                         
                         <div style="font-weight: bold;">For Sterling Accessories Ltd.</div>
-                        <div style="margin-top: ${sigGap}px;">----------------------------------------</div>
+                        <div style="margin-top: ${sigGap}px;"></div>
                         <div style="font-weight: bold; margin-top: 2px;">Authorised Signature</div>
                     </div>
 
                     <div style="text-align: center;">
                         <div style="font-weight: bold;">Buyer Approval</div>
-                        <div style="margin-top: ${sigGap}px;">----------------------------------------</div>
+                        <div style="margin-top: ${sigGap}px;"></div>
                         <div style="font-weight: bold; margin-top: 2px;">Signature of Buyer</div>
                     </div>
                 </div>
@@ -2186,8 +2238,8 @@
         }, 1000);
     }
 
-    // Excel এক্সপোর্ট ফাংশন
-    function exportToExcel() {
+    // আপডেট করা Excel ডাউনলোড ফাংশন (PI NO অনুযায়ী নাম সেট)
+      function exportToExcel() {
         const piType = document.getElementById('piType').value;
         const selectedItems = items.filter(item => item.piType === piType);
 
@@ -2422,10 +2474,10 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, piType.toUpperCase());
         XLSX.writeFile(wb, `PI_${piType.toUpperCase()}_${piNo.replace(/\//g, '_')}.xlsx`);
-    
 
-        let excelFileName = `${getSanitizedPiName().replace(/[\/\\?%*:|"<>]/g, '_')}.xlsx`;
-        XLSX.writeFile(wb, excelFileName);
+        // ডায়নামিক নামে এক্সেল ফাইল ডাউনলোড
+        const sanitizedPiName = getSanitizedPiName();
+        XLSX.writeFile(wb, `PI_${sanitizedPiName}_${piType.toUpperCase()}.xlsx`);
     }
 </script>
 </body>
