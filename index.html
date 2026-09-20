@@ -1,513 +1,2977 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>System OS Update - Version 15.4</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        os: {
-                            bg: '#05070A',
-                            card: '#0D1117',
-                            primary: '#00F0FF',
-                            accent: '#7000FF',
-                            success: '#00FF66',
-                            warning: '#FFB800',
-                            border: 'rgba(255, 255, 255, 0.08)',
-                        }
-                    },
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'spin-slow': 'spin 8s linear infinite',
-                        'spin-reverse': 'spin-reverse 12s linear infinite',
-                        'glow': 'glow 2s ease-in-out infinite alternate',
-                    },
-                    keyframes: {
-                        'spin-reverse': {
-                            '0%': { transform: 'rotate(0deg)' },
-                            '100%': { transform: 'rotate(-360deg)' },
-                        },
-                        'glow': {
-                            '0%': { boxShadow: '0 0 15px rgba(0, 240, 255, 0.3)' },
-                            '100%': { boxShadow: '0 0 35px rgba(0, 240, 255, 0.7)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proforma Invoice (PI) Generator Pro</title>
+    <!-- SheetJS Style CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
-        /* Custom styles for realistic OS environment */
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         body {
-            background-color: #05070A;
-            user-select: none;
-            -webkit-user-select: none;
-            overflow: hidden;
-            touch-action: manipulation;
+            background-color: #f8fafc;
+            margin: 0;
+            padding-top: 85px;
         }
 
-        /* Custom scrollbar for terminal logs */
-        .terminal-scroll::-webkit-scrollbar {
-            width: 4px;
+        .top-dev-ribbon {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 5px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            z-index: 10000;
+            border-bottom: 2px solid #3b82f6;
         }
-        .terminal-scroll::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
+
+        .excel-ribbon {
+            position: fixed;
+            top: 26px;
+            left: 0;
+            width: 100%;
+            background: #ffffff; 
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            padding: 5px 10px;
+            gap: 3px;
         }
-        .terminal-scroll::-webkit-scrollbar-thumb {
-            background: rgba(0, 240, 255, 0.3);
+
+        .ribbon-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+            width: 100%;
+            flex-wrap: nowrap;
+        }
+
+        .excel-ribbon button {
+            padding: 4px 8px !important;
+            margin: 0 !important;
+            font-size: 11px !important;
+            font-weight: 600;
+            border-radius: 4px !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .excel-ribbon button:hover {
+            background-color: #f1f5f9 !important;
+            border-color: #94a3b8 !important;
+            color: #1e293b !important;
+        }
+
+        .excel-ribbon button:active,
+        .excel-ribbon button:focus {
+            background-color: #e2e8f0 !important;
+            border-color: #3b82f6 !important;
+            outline: none;
+        }
+
+        .excel-ribbon button.btn-save-main {
+            background-color: #10b981 !important;
+            border-color: #059669 !important;
+            color: #ffffff !important;
+        }
+        .excel-ribbon button.btn-save-main:hover {
+            background-color: #059669 !important;
+        }
+
+        .excel-ribbon button.btn-reset {
+            background-color: #ef4444 !important;
+            border-color: #dc2626 !important;
+            color: #ffffff !important;
+        }
+        .excel-ribbon button.btn-reset:hover {
+            background-color: #dc2626 !important;
+        }
+
+        .pi-type-container {
+            padding: 2px 4px !important;
+            margin: 0 !important;
+            font-size: 11px !important;
+            background: transparent !important;
+            border: none !important;
+            position: relative;
+        }
+
+        .pi-type-container input, 
+        .pi-type-container select {
+            font-size: 11px !important;
+            padding: 3px 6px !important;
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            background: #f8fafc;
+        }
+
+        .pi-type-container input:focus, 
+        .pi-type-container select:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+
+        .number-dropdown-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 150px;
+            overflow-y: auto;
+            display: none;
+            z-index: 10001;
+            width: 100%;
+            min-width: 60px;
             border-radius: 4px;
         }
-
-        /* Circular progress styling */
-        .progress-ring__circle {
-            transition: stroke-dashoffset 0.35s ease-in-out;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
+        .number-dropdown-list div {
+            padding: 5px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .number-dropdown-list div:hover {
+            background: #f1f5f9;
+            color: #1d4ed8;
+            font-weight: bold;
         }
 
-        .scan-line {
-            background: linear-gradient(to bottom, rgba(0, 240, 255, 0), rgba(0, 240, 255, 0.15) 50%, rgba(0, 240, 255, 0));
-            animation: scan 4s linear infinite;
+        .ribbon-group {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: #f8fafc;
+            padding: 2px 5px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            justify-content: flex-start;
         }
 
-        @keyframes scan {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(1000%); }
+        .ribbon-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #475569;
+            text-transform: uppercase;
+            border-right: 1px solid #cbd5e1;
+            padding-right: 5px;
+            margin-right: 2px;
+            white-space: nowrap;
+        }
+
+        /* ইউনিক এবং ছোট প্রফেশনাল ফর্ম কার্ড লেআউট */
+        .container {
+            max-width: 1400px;
+            margin: 10px auto 30px auto;
+            background: #ffffff;
+            padding: 20px 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 6px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        #dynamicInputContainer.form-grid {
+            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+            gap: 8px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 3px;
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        input, select, textarea {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            outline: none;
+            font-size: 11px;
+            background-color: #fafafa;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+            background-color: #fff;
+        }
+        textarea {
+            resize: vertical;
+            white-space: pre-line;
+            min-height: 50px;
+        }
+        
+        #tablesContainer {
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 15px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            table-layout: fixed;
+            width: auto;
+        }
+        th, td {
+            border: 1px solid #94a3b8;
+            padding: 4px 6px;
+            font-size: 11px;
+            vertical-align: middle;
+            overflow: hidden;
+            word-wrap: break-word;
+            white-space: pre-line;
+            position: relative;
+            box-sizing: border-box;
+            line-height: 1.15;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            font-weight: 700;
+            text-align: center;
+        }
+        .resizer {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 6px;
+            cursor: col-resize;
+            user-select: none;
+            height: 100%;
+            z-index: 30;
+        }
+        .resizer:hover {
+            background-color: #3b82f6;
+        }
+        .row-resizer {
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 6px;
+            cursor: row-resize;
+            user-select: none;
+            z-index: 30;
+        }
+        .row-resizer:hover {
+            background-color: #3b82f6;
+        }
+        .total-row {
+            font-weight: bold;
+            background-color: #ffffff !important;
+        }
+        .action-btn {
+            background-color: #ef4444;
+            color: white;
+            padding: 2px 6px;
+            font-size: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .action-btn:hover { background-color: #dc2626; }
+        .btn-edit {
+            background-color: #f59e0b;
+            color: white;
+            padding: 2px 6px;
+            font-size: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 3px;
+            transition: background-color 0.2s;
+        }
+        .btn-edit:hover { background-color: #d97706; }
+
+        td.cell-selected, th.cell-selected {
+            background-color: #bfdbfe !important;
+            outline: 2px dashed #2563eb;
+        }
+
+        #printTemplate { display: none; }
+
+        #printTemplate table.pi-main-table {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+            margin-top: 5px !important;
+            margin-bottom: 5px !important;
+            border: 1px solid #000 !important;
+        }
+        #printTemplate table.pi-main-table th {
+            border: 1px solid #000 !important;
+            border-top: 1.5px solid #000 !important;
+            background-color: #f2f2f2 !important;
+            background-clip: padding-box !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        #printTemplate table.pi-main-table td {
+            border: 1px solid #000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            line-height: 1.15 !important;
+        }
+
+        #printTemplate table.terms-table,
+        #printTemplate table.terms-table tr,
+        #printTemplate table.terms-table td {
+            border: none !important;
+            border-collapse: collapse !important;
+            line-height: 1.15 !important;
+        }
+
+        .auto-suggest-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 10005;
+            display: none;
+        }
+        .auto-suggest-item {
+            padding: 6px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            color: #334155;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .auto-suggest-item:hover, .auto-suggest-item.active {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 4mm 10mm 8mm 10mm;
+            }
+            body { 
+                background-color: #fff !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .top-dev-ribbon, .excel-ribbon { display: none !important; }
+            .container { display: none !important; }
+            #printTemplate { display: block !important; width: 100% !important; }
+
+            #printTemplate table.pi-main-table {
+                border-collapse: separate !important;
+                border-spacing: 0 !important;
+                border: 1px solid #000 !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+            }
+            #printTemplate table.pi-main-table thead tr th {
+                border-top: 1.5px solid #000 !important;
+                border-bottom: 1px solid #000 !important;
+                border-left: 1px solid #000 !important;
+                border-right: 1px solid #000 !important;
+                background-color: #f2f2f2 !important;
+                background-clip: padding-box !important;
+            }
+            #printTemplate table.pi-main-table tbody tr td,
+            #printTemplate table.pi-main-table tfoot tr td {
+                border: 1px solid #000 !important;
+                line-height: 1.15 !important;
+            }
+
+            #printTemplate table.terms-table,
+            #printTemplate table.terms-table tr,
+            #printTemplate table.terms-table td {
+                border: none !important;
+                line-height: 1.15 !important;
+            }
         }
     </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col justify-between font-sans relative antialiased">
+<body>
 
-    <!-- Background Futuristic Grid and Overlay Effect -->
-    <div class="fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(13,17,23,0.8)_0%,rgba(5,7,10,1)_100%)] pointer-events-none z-0"></div>
-    <div class="fixed inset-0 opacity-10 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:2rem_2rem] pointer-events-none z-0"></div>
-    <div class="fixed inset-0 scan-line pointer-events-none z-0"></div>
+    <div class="top-dev-ribbon">
+        <span>Proforma Invoice (PI) Generator Pro</span>
+        <span>Developer: ENGR. MINHAZ ALAM</span>
+    </div>
 
-    <!-- Native OS Top Status Bar -->
-    <header class="w-full px-6 py-3 flex justify-between items-center text-xs text-slate-400 border-b border-os-border/40 backdrop-blur-md relative z-10 bg-os-card/40">
-        <div class="flex items-center space-x-3">
-            <span class="font-mono text-os-primary flex items-center gap-1.5 font-medium">
-                <span class="w-2 h-2 rounded-full bg-os-primary animate-ping inline-block"></span>
-                SYSTEM_OS v15.4
-            </span>
-            <span class="text-slate-600">|</span>
-            <span id="device-model" class="text-slate-400 hidden sm:inline">UltraPhone OS Alpha</span>
+    <div class="excel-ribbon no-print">
+        <div class="ribbon-row" style="justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;">
+                <button type="button" class="btn-print" onclick="printPDF()">🖨️ PDF Print</button>
+                <button type="button" class="btn-export" onclick="exportToExcel()">📥 Excel Export</button>
+                <button type="button" class="btn-save-main" onclick="saveAllPersistentData(true)">💾 Save Data</button>
+                <button type="button" class="btn-export" onclick="downloadJSON()">💾 Backup JSON</button>
+                <button type="button" class="btn-export" onclick="document.getElementById('jsonFileInput').click()">📂 Load JSON</button>
+                <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
+
+                <div style="display: flex; align-items: center; gap: 2px; padding: 0 4px; background: #f1f5f9; border-radius: 4px; border: 1px solid #cbd5e1;">
+                    <input type="checkbox" id="fitToOnePage" style="margin: 0; cursor: pointer;">
+                    <label for="fitToOnePage" style="font-size: 10px; font-weight: 700; cursor: pointer; margin: 0; color: #c2410c;">Fit 1P</label>
+                </div>
+
+                <div class="ribbon-group">
+                    <span class="ribbon-title">HDR</span>
+                    <input type="number" id="bar1HeaderFont" value="22" min="10" max="42" style="width: 38px;" onclick="showNumberDropdown(this, 10, 42, 2)" oninput="updateAllCustomBars()">
+                    <div id="bar1HeaderFont_dropdown" class="number-dropdown-list"></div>
+                </div>
+                <div class="ribbon-group">
+                    <span class="ribbon-title">PI</span>
+                    <input type="number" id="bar2PiTitleFont" value="14" min="8" max="30" style="width: 38px;" onclick="showNumberDropdown(this, 8, 30, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar2PiTitleFont_dropdown" class="number-dropdown-list"></div>
+                </div>
+                <div class="ribbon-group">
+                    <span class="ribbon-title">INFO</span>
+                    <input type="number" id="bar3InfoFont" value="11" min="6" max="24" style="width: 38px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar3InfoFont_dropdown" class="number-dropdown-list"></div>
+                </div>
+                <div class="ribbon-group">
+                    <span class="ribbon-title">TERM</span>
+                    <input type="number" id="bar4TermsFont" value="11" min="6" max="24" style="width: 38px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar4TermsFont_dropdown" class="number-dropdown-list"></div>
+                </div>
+                <div class="ribbon-group">
+                    <span class="ribbon-title">SIG</span>
+                    <input type="number" id="bar5SigFont" value="11" min="6" max="24" style="width: 38px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                    <div id="bar5SigFont_dropdown" class="number-dropdown-list"></div>
+                </div>
+                <div class="ribbon-group">
+                    <span class="ribbon-title">SEAL</span>
+                    <input type="number" id="bar6StampSize" value="55" min="20" max="200" style="width: 42px;" onclick="showNumberDropdown(this, 20, 200, 5)" oninput="updateAllCustomBars()">
+                    <div id="bar6StampSize_dropdown" class="number-dropdown-list"></div>
+                </div>
+
+                <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ Reset</button>
+            </div>
+
+            <div class="pi-type-container" style="display: flex; align-items: center; gap: 4px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">
+                <label for="piType" style="font-weight: 700; font-size: 10px; color: #1e293b; margin:0;">Model:</label>
+                <select id="piType" onchange="handlePiTypeChange()" style="padding: 2px 4px; font-size: 10px;">
+                    <option value="allPi" selected>1. All PI (Color)</option>
+                    <option value="poly">2. Poly (Style/PO)</option>
+                </select>
+            </div>
         </div>
 
-        <div class="flex items-center space-x-4 font-mono">
-            <!-- Temperature Indicator -->
-            <div class="flex items-center space-x-1" title="Device Temperature">
-                <i class="fa-solid fa-microchip text-slate-500"></i>
-                <span id="temp-display" class="text-slate-300">38°C</span>
-            </div>
-            
-            <!-- Network Indicator -->
-            <div class="flex items-center space-x-1" title="5G Signal Strength">
-                <i class="fa-solid fa-wifi text-os-primary"></i>
-                <span class="hidden md:inline text-slate-400">5G</span>
-            </div>
-
-            <!-- Battery Indicator -->
-            <div class="flex items-center space-x-1.5" title="Battery Status">
-                <span id="battery-level" class="text-slate-200">88%</span>
-                <div class="w-5 h-2.5 border border-slate-400 rounded-sm p-0.5 flex items-center relative">
-                    <div id="battery-bar" class="h-full bg-os-success rounded-xs" style="width: 88%;"></div>
-                    <div class="w-0.5 h-1 bg-slate-400 absolute -right-1 rounded-r-xs"></div>
+        <div class="ribbon-row">
+            <div class="ribbon-group">
+                <span class="ribbon-title">Font (F)</span>
+                <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
+                    <input type="number" id="fontSizeInputBox" value="12" min="8" max="72" 
+                           style="width: 42px; text-align: center; font-size: 11px; font-weight: bold;" 
+                           onclick="showNumberDropdown(this, 8, 72, 2)"
+                           oninput="applyDirectFontSize(this.value)" onchange="applyDirectFontSize(this.value)">
+                    <div id="fontSizeInputBox_dropdown" class="number-dropdown-list"></div>
+                    <span style="font-size: 10px; font-weight: bold;">px</span>
                 </div>
             </div>
 
-            <!-- Fullscreen Trigger -->
-            <button id="fullscreen-btn" onclick="toggleFullScreen()" class="hover:text-os-primary transition-colors p-1" title="Toggle Fullscreen">
-                <i class="fa-solid fa-expand"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Interactive OS Update Area -->
-    <main class="flex-1 flex flex-col justify-center items-center px-4 py-6 max-w-4xl mx-auto w-full relative z-10">
-        
-        <!-- OS Branding Header -->
-        <div class="text-center mb-6">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-os-primary/10 border border-os-primary/20 text-os-primary text-xs font-mono uppercase tracking-wider mb-2">
-                <i class="fa-solid fa-shield-halved"></i> Critical Firmware Update
+            <div class="ribbon-group">
+                <span class="ribbon-title">Size (C/R)</span>
+                <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
+                    <input type="number" id="sizeIndicatorBox" value="0" min="10" max="1000" 
+                           style="width: 45px; text-align: center; font-size: 11px; font-weight: bold;" 
+                           onmousedown="event.stopPropagation();"
+                           onclick="showNumberDropdown(this, 20, 300, 10)"
+                           oninput="applyDirectDimension(this.value)" 
+                           onchange="applyDirectDimension(this.value)">
+                    <div id="sizeIndicatorBox_dropdown" class="number-dropdown-list"></div>
+                    <span style="font-size: 10px; font-weight: bold;">px</span>
+                </div>
             </div>
-            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                সিস্টেম আপডেট চলমান...
-            </h1>
-            <p class="text-slate-400 text-sm mt-1">অনুগ্রহ করে ডিভাইসটি বন্ধ করবেন না বা রিবুট করবেন না।</p>
+
+            <div class="ribbon-group">
+                <span class="ribbon-title">Style (B/A)</span>
+                <button type="button" onclick="toggleSelectionBold()" style="font-weight: bold;">𝐁 Bold</button>
+                <select id="cellAlignmentSelect" onchange="applySelectionAlignment(this.value)" style="padding: 2px 4px; font-size: 10px;">
+                    <option value="" disabled selected>Align</option>
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
+
+            <div class="ribbon-group">
+                <span class="ribbon-title">Cell (M)</span>
+                <button type="button" class="btn-merge" onclick="mergeSelectedCells()">🔗 Merge</button>
+                <button type="button" class="btn-unmerge" onclick="unmergeSelectedCells()">🔓 Split</button>
+            </div>
+
+            <div class="ribbon-group" style="flex: 1; justify-content: flex-end;">
+                <span class="ribbon-title">Add Col</span>
+                <input type="text" id="newColTemplateSelect" list="colTemplateList" placeholder="Col name..." style="padding: 2px 6px; font-size: 10px; width: 100px;">
+                <datalist id="colTemplateList"></datalist>
+                <select id="targetReferenceCol" style="padding: 2px 4px; font-size: 10px;"></select>
+                <select id="beforeAfterSelect" style="padding: 2px 4px; font-size: 10px;">
+                    <option value="after">After</option>
+                    <option value="before">Before</option>
+                </select>
+                <button type="button" style="background-color: #2563eb; color: white;" onclick="addNewCustomColumn()">+ Add</button>
+                <button type="button" style="background-color: #dc2626; color: white;" onclick="removeCustomColumn()">- Remove</button>
+            </div>
+        </div>
+    </div>
+      
+    <div class="container">
+        <div class="section-title" onclick="toggleBuyerInfoSection()">
+            <span>Invoice & Buyer Information</span>
+            <span id="buyerInfoToggleArrow" style="font-size: 14px;">▲</span>
+        </div>
+        <div class="form-grid" id="buyerInfoContentGrid">
+            <div class="form-group">
+                <label for="piNo">PI No</label>
+                <input type="text" id="piNo" value="SACL/296/2026" oninput="saveHeaderToStorage()">
+            </div>
+            <div class="form-group">
+                <label for="piDate">Date</label>
+                <input type="text" id="piDate" value="08.08.2026" oninput="saveHeaderToStorage()">
+            </div>
+            <div class="form-group">
+                <label for="buyerName">Name of Buyer</label>
+                <input type="text" id="buyerName" list="buyerList" placeholder="Select or type Buyer Name..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="onBuyerChange()" oninput="onBuyerChange()" value="BANDO DESIGN LTD.">
+                <datalist id="buyerList"></datalist>
+            </div>
+            <div class="form-group">
+                <label for="buyerRef">Buyer Ref</label>
+                <input type="text" id="buyerRef" list="buyerRefList" placeholder="Select or type Ref..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="GAP SPR'26.">
+                <datalist id="buyerRefList"></datalist>
+            </div>
+            <div class="form-group">
+                <label for="attn">Attn</label>
+                <input type="text" id="attn" list="attnList" placeholder="Merchant name..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="onAttnChange()" oninput="onAttnChange()" value="Mr. Rion">
+                <datalist id="attnList"></datalist>
+            </div>
+            <div class="form-group full-width">
+                <label for="buyerAddress">Address of Buyer</label>
+                <textarea id="buyerAddress" rows="2" placeholder="Enter buyer address..." oninput="saveHeaderToStorage()">PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.</textarea>
+            </div>
         </div>
 
-        <!-- Central Animated Progress Ring & Core Graphic -->
-        <div class="relative flex items-center justify-center my-4">
-            <!-- Dynamic Glowing Ring -->
-            <svg class="w-64 h-64 md:w-72 md:h-72 drop-shadow-[0_0_25px_rgba(0,240,255,0.25)]" viewBox="0 0 120 120">
-                <!-- Background track -->
-                <circle
-                    class="text-slate-800/80"
-                    stroke-width="6"
-                    stroke="currentColor"
-                    fill="transparent"
-                    r="52"
-                    cx="60"
-                    cy="60"
-                />
-                <!-- Animated Progress Circle -->
-                <circle
-                    id="progress-circle"
-                    class="progress-ring__circle text-os-primary transition-all duration-300"
-                    stroke-width="6"
-                    stroke-dasharray="326.72"
-                    stroke-dashoffset="326.72"
-                    stroke-linecap="round"
-                    stroke="currentColor"
-                    fill="transparent"
-                    r="52"
-                    cx="60"
-                    cy="60"
-                />
-            </svg>
+        <div class="section-title" style="cursor: default;">Product Details & Item Builder</div>
+        <div class="form-grid" id="hsCodeContainer" style="margin-bottom: 10px;">
+            <div class="form-group full-width">
+                <label for="hsCodeInput">H.S Code</label>
+                <textarea id="hsCodeInput" rows="2" placeholder="Enter H.S CODE..." onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()"></textarea>
+            </div>
+        </div>
+        <div class="form-grid" id="dynamicInputContainer"></div>
 
-            <!-- Inner Graphic / CPU Core Vector Animation -->
-            <div class="absolute flex flex-col items-center justify-center text-center inset-0">
-                <!-- Rotating Gear / Vector graphic -->
-                <div class="relative mb-2">
-                    <div class="w-16 h-16 rounded-full border-2 border-dashed border-os-primary/40 animate-spin-slow absolute inset-0"></div>
-                    <div class="w-16 h-16 rounded-full border-2 border-dashed border-os-accent/40 animate-spin-reverse absolute inset-0"></div>
-                    <div class="w-16 h-16 flex items-center justify-center text-os-primary text-2xl">
-                        <i id="status-icon" class="fa-solid fa-microchip animate-pulse"></i>
+        <div id="tablesContainer">
+            <div id="sec-allPi" style="display: none;">
+                <table id="table-allPi">
+                    <colgroup></colgroup>
+                    <thead></thead>
+                    <tbody id="tbody-allPi"></tbody>
+                    <tfoot id="tfoot-allPi"></tfoot>
+                </table>
+                <div id="totalInWord-allPi" style="font-weight: bold; font-size: 12px; margin-top: 5px; margin-bottom: 15px; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    Total Value In Word: 
+                </div>
+            </div>
+
+            <div id="sec-poly" style="display: none;">
+                <table id="table-poly">
+                    <colgroup></colgroup>
+                    <thead></thead>
+                    <tbody id="tbody-poly"></tbody>
+                    <tfoot id="tfoot-poly"></tfoot>
+                </table>
+                <div id="totalInWord-poly" style="font-weight: bold; font-size: 12px; margin-top: 5px; margin-bottom: 15px; padding: 6px 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
+                    Total Value In Word: 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="printTemplate"></div>
+
+<script>
+    const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
+    const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
+
+    function preloadImage(url) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+        });
+    }
+
+    async function fetchImageAsBase64(url) {
+        try {
+            const res = await fetch(url, { mode: 'cors' });
+            const blob = await res.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getSanitizedPiName() {
+        return document.getElementById('piNo')?.value.trim() || 'SACL/296/2026';
+    }
+
+    function getSafeId(name) {
+        return 'custom_' + name.replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    function showNumberDropdown(inputElem, minVal, maxVal, step = 1) {
+        document.querySelectorAll('.number-dropdown-list').forEach(d => {
+            if(d.id !== inputElem.id + '_dropdown') d.style.display = 'none';
+        });
+
+        const dropdownId = inputElem.id + '_dropdown';
+        let dropdown = document.getElementById(dropdownId);
+        if (!dropdown) return;
+
+        dropdown.innerHTML = '';
+        for (let i = minVal; i <= maxVal; i += step) {
+            let item = document.createElement('div');
+            item.innerText = i;
+            item.onclick = function(e) {
+                e.stopPropagation();
+                inputElem.value = i;
+                inputElem.dispatchEvent(new Event('input'));
+                inputElem.dispatchEvent(new Event('change'));
+                dropdown.style.display = 'none';
+            };
+            dropdown.appendChild(item);
+        }
+
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.pi-type-container')) {
+            document.querySelectorAll('.number-dropdown-list').forEach(d => d.style.display = 'none');
+        }
+        if (!e.target.closest('.form-group')) {
+            document.querySelectorAll('.auto-suggest-box').forEach(b => b.style.display = 'none');
+        }
+    });
+
+    const productAutoSuggestions = {
+        desc: [
+            "CARTON BOX 7-PLY",
+            "POLY BAG (SELF ADHESIVE)",
+            "STICKER LABEL",
+            "HANG TAG",
+            "PRINTED POLY BAG",
+            "BARCODE STICKER",
+            "TISSUE PAPER",
+            "PRICE TAG"
+        ],
+        measurement: [
+            "10 X 12 INCH",
+            "12 X 15 INCH",
+            "20 X 30 INCH",
+            "50 X 40 X 30 CM",
+            "2 X 3 INCH",
+            "1.5 X 2 INCH"
+        ],
+        stylepo: [
+            "PO-2026-001",
+            "PO-GAP-9982",
+            "STYLE-SPRING-26",
+            "STYLE-WINTER-102"
+        ],
+        color: [
+            "WHITE",
+            "TRANSPARENT",
+            "BLACK",
+            "NAVY BLUE",
+            "RED",
+            "NATURAL"
+        ],
+        unit: [
+            "Pcs",
+            "Dzn",
+            "Roll",
+            "Ltr",
+            "Lbs",
+            "Kgs",
+            "Yds",
+            "Cone",
+            "Mtr",
+            "Set",
+            "Box",
+            "Pack"
+        ]
+    };
+
+    function getSuggestionsForField(fieldId) {
+        let suggestList = [];
+        if (fieldId === 'buyerName') {
+            suggestList = buyerDatabase.map(b => b.name);
+        } else if (fieldId === 'buyerRef') {
+            suggestList = buyerRefDatabase;
+        } else if (fieldId === 'attn') {
+            const buyerInputVal = document.getElementById('buyerName')?.value.trim() || '';
+            const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+            if (foundBuyer) {
+                suggestList = foundBuyer.merchants;
+            } else {
+                buyerDatabase.forEach(b => suggestList.push(...b.merchants));
+            }
+        } else if (fieldId === 'unit') {
+            suggestList = [...productAutoSuggestions.unit];
+        } else if (productAutoSuggestions[fieldId]) {
+            suggestList = [...productAutoSuggestions[fieldId]];
+        }
+
+        items.forEach(item => {
+            let val = '';
+            if (fieldId === 'desc') val = item.desc;
+            else if (fieldId === 'measurement') val = item.measurement;
+            else if (fieldId === 'stylepo') val = item.stylepo;
+            else if (fieldId === 'color') val = item.color;
+            else if (fieldId === 'unit') val = item.unit;
+            else if (item.customValues) {
+                Object.keys(item.customValues).forEach(k => {
+                    if (getSafeId(k) === fieldId && item.customValues[k]) {
+                        val = item.customValues[k];
+                    }
+                });
+            }
+            if (val && !suggestList.includes(val)) {
+                suggestList.push(val);
+            }
+        });
+
+        return Array.from(new Set(suggestList));
+    }
+
+    function setupInlineTypeahead(element) {
+        if (!element || element.dataset.typeaheadBound) return;
+        element.dataset.typeaheadBound = "true";
+
+        element.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                element.dataset.isDeleting = "true";
+            } else {
+                element.dataset.isDeleting = "false";
+            }
+
+            if ((e.key === 'Enter' || e.key === 'Tab' || e.key === 'ArrowRight') && element.selectionStart !== element.selectionEnd) {
+                e.preventDefault();
+                element.selectionStart = element.value.length;
+                element.selectionEnd = element.value.length;
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        element.addEventListener('input', function(e) {
+            if (element.dataset.isDeleting === "true") return;
+
+            const inputVal = element.value;
+            const fieldId = element.id;
+            const selStart = element.selectionStart;
+
+            if (!inputVal || selStart < inputVal.length) return;
+
+            const suggestions = getSuggestionsForField(fieldId);
+            const match = suggestions.find(s => s.toLowerCase().startsWith(inputVal.toLowerCase()));
+
+            if (match) {
+                const completedText = inputVal + match.slice(inputVal.length);
+                element.value = completedText;
+                element.setSelectionRange(inputVal.length, completedText.length);
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) setupInlineTypeahead(elem);
+        });
+    });
+
+    document.addEventListener('input', function(e) {
+        const target = e.target;
+        if (!target.closest('#dynamicInputContainer') && target.id !== 'hsCodeInput') return;
+        
+        const parent = target.parentElement;
+        if (!parent || !parent.classList.contains('form-group')) return;
+
+        let box = parent.querySelector('.auto-suggest-box');
+        if (!box) {
+            box = document.createElement('div');
+            box.className = 'auto-suggest-box';
+            parent.appendChild(box);
+        }
+
+        const fieldId = target.id;
+        const inputVal = target.value.trim().toLowerCase();
+
+        let suggestList = getSuggestionsForField(fieldId);
+        const filtered = suggestList.filter(item => item.toString().toLowerCase().includes(inputVal));
+
+        if (filtered.length > 0 && inputVal.length > 0) {
+            box.innerHTML = '';
+            filtered.forEach(sugText => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'auto-suggest-item';
+                itemDiv.innerText = sugText;
+                itemDiv.onmousedown = function(evt) {
+                    evt.preventDefault();
+                    target.value = sugText;
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    box.style.display = 'none';
+                };
+                box.appendChild(itemDiv);
+            });
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
+    });
+
+    function toggleBuyerInfoSection() {
+        const grid = document.getElementById('buyerInfoContentGrid');
+        const arrow = document.getElementById('buyerInfoToggleArrow');
+        if (grid.style.display === 'none') {
+            grid.style.display = 'grid';
+            arrow.innerText = '▲';
+        } else {
+            grid.style.display = 'none';
+            arrow.innerText = '▼';
+        }
+    }
+
+    let tempInputValueStore = {};
+
+    function handleInputFocus(inputElement) {
+        tempInputValueStore[inputElement.id] = inputElement.value;
+        inputElement.value = '';
+    }
+
+    function handleInputBlur(inputElement) {
+        if (inputElement.value.trim() === '' && tempInputValueStore[inputElement.id] !== undefined) {
+            inputElement.value = tempInputValueStore[inputElement.id];
+        }
+    }
+
+    const buyerRefDatabase = [
+        "GAP SPR",
+        "Buyer: H&M AUTUMN'26.",
+        "Buyer: ZARA WINTER'26.",
+        "Buyer: PULL&BEAR 2026.",
+        "Buyer: TARGET CORP."
+    ];
+
+    function initBuyerRefDatalist() {
+        const refListElem = document.getElementById('buyerRefList');
+        if(!refListElem) return;
+        refListElem.innerHTML = '';
+        buyerRefDatabase.forEach(ref => {
+            const opt = document.createElement('option');
+            opt.value = ref;
+            refListElem.appendChild(opt);
+        });
+    }
+
+    const buyerDatabase = [
+        { name: "Green Orion INDUSTRIES LTD.", address: "716, MOTIJHEEL C/A, DHAKA-1073, BANGLADESH.", merchants: ["Ms. Sathi", "Mr. Kamal", "Ms. Rina", "Mr. Tanvir"] },
+        { name: "Orion M Meghna ENTERPRISES", address: "785, AGARGAON, DHAKA-1023, BANGLADESH.", merchants: ["Mr. Kamal", "Mr. Kabir", "Ms. Sathi", "Mr. Tanvir"] },
+        { name: "BANDO DESIGN LTD.", address: "PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.", merchants: ["Mr. Rion", "Ms. Sathi", "Mr. Kamal"] }
+    ];
+
+    function initBuyerDatalist() {
+        const buyerListElem = document.getElementById('buyerList');
+        if(!buyerListElem) return;
+        buyerListElem.innerHTML = '';
+        buyerDatabase.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.name;
+            buyerListElem.appendChild(opt);
+        });
+    }
+
+    function onBuyerChange() {
+        const buyerInputVal = document.getElementById('buyerName').value.trim();
+        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+        const attnListElem = document.getElementById('attnList');
+        attnListElem.innerHTML = '';
+
+        if (foundBuyer) {
+            foundBuyer.merchants.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                attnListElem.appendChild(opt);
+            });
+        }
+        saveHeaderToStorage();
+    }
+
+    function onAttnChange() {
+        const buyerInputVal = document.getElementById('buyerName').value.trim();
+        const attnInputVal = document.getElementById('attn').value.trim();
+        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
+
+        if (foundBuyer) {
+            if (foundBuyer.merchants.some(m => m.toLowerCase() === attnInputVal.toLowerCase())) {
+                document.getElementById('buyerAddress').value = foundBuyer.address;
+            }
+        }
+        saveHeaderToStorage();
+    }
+
+    let items = [];
+    let slCounters = { allPi: 1, poly: 1 };
+    let editIndex = -1;
+    let customColumnsStore = { allPi: [], poly: [] };
+    let mergedCellsStore = { allPi: [], poly: [] };
+    let cellAlignmentsStore = { allPi: {}, poly: {} };
+    let piColumnWidths = { allPi: {}, poly: {} };
+    let piRowHeights = { allPi: {}, poly: {} };
+
+    let undoStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 50;
+
+    function saveStateForUndo() {
+        const headerState = {
+            piType: document.getElementById('piType').value,
+            piNo: document.getElementById('piNo').value,
+            piDate: document.getElementById('piDate').value,
+            buyerName: document.getElementById('buyerName').value,
+            buyerAddress: document.getElementById('buyerAddress').value,
+            buyerRef: document.getElementById('buyerRef').value,
+            attn: document.getElementById('attn').value,
+            hsCode: document.getElementById('hsCodeInput')?.value || ''
+        };
+        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths, piRowHeights, cellAlignmentsStore, headerState }));
+        if (undoStack.length > MAX_HISTORY) undoStack.shift();
+        redoStack = []; 
+    }
+
+    function performUndo() {
+        if (undoStack.length === 0) return;
+        const currentState = {
+            items,
+            customColumnsStore,
+            mergedCellsStore,
+            piColumnWidths,
+            piRowHeights,
+            cellAlignmentsStore,
+            headerState: {
+                piType: document.getElementById('piType').value,
+                piNo: document.getElementById('piNo').value,
+                piDate: document.getElementById('piDate').value,
+                buyerName: document.getElementById('buyerName').value,
+                buyerAddress: document.getElementById('buyerAddress').value,
+                buyerRef: document.getElementById('buyerRef').value,
+                attn: document.getElementById('attn').value,
+                hsCode: document.getElementById('hsCodeInput')?.value || ''
+            }
+        };
+        redoStack.push(JSON.stringify(currentState));
+        
+        const prevState = JSON.parse(undoStack.pop());
+        items = prevState.items;
+        customColumnsStore = prevState.customColumnsStore || customColumnsStore;
+        mergedCellsStore = prevState.mergedCellsStore || mergedCellsStore;
+        piColumnWidths = prevState.piColumnWidths || piColumnWidths;
+        piRowHeights = prevState.piRowHeights || piRowHeights;
+        cellAlignmentsStore = prevState.cellAlignmentsStore || cellAlignmentsStore;
+        
+        if (prevState.headerState) {
+            if (prevState.headerState.piType) document.getElementById('piType').value = prevState.headerState.piType;
+            document.getElementById('piNo').value = prevState.headerState.piNo;
+            document.getElementById('piDate').value = prevState.headerState.piDate;
+            document.getElementById('buyerName').value = prevState.headerState.buyerName;
+            document.getElementById('buyerAddress').value = prevState.headerState.buyerAddress;
+            document.getElementById('buyerRef').value = prevState.headerState.buyerRef;
+            document.getElementById('attn').value = prevState.headerState.attn;
+            if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = prevState.headerState.hsCode;
+        }
+
+        saveDataToStorage();
+        saveHeaderToStorage();
+        updateTable();
+    }
+
+    function performRedo() {
+        if (redoStack.length === 0) return;
+        const currentState = {
+            items,
+            customColumnsStore,
+            mergedCellsStore,
+            piColumnWidths,
+            piRowHeights,
+            cellAlignmentsStore,
+            headerState: {
+                piType: document.getElementById('piType').value,
+                piNo: document.getElementById('piNo').value,
+                piDate: document.getElementById('piDate').value,
+                buyerName: document.getElementById('buyerName').value,
+                buyerAddress: document.getElementById('buyerAddress').value,
+                buyerRef: document.getElementById('buyerRef').value,
+                attn: document.getElementById('attn').value,
+                hsCode: document.getElementById('hsCodeInput')?.value || ''
+            }
+        };
+        undoStack.push(JSON.stringify(currentState));
+
+        const nextState = JSON.parse(redoStack.pop());
+        items = nextState.items;
+        customColumnsStore = nextState.customColumnsStore || customColumnsStore;
+        mergedCellsStore = nextState.mergedCellsStore || mergedCellsStore;
+        piColumnWidths = nextState.piColumnWidths || piColumnWidths;
+        piRowHeights = nextState.piRowHeights || piRowHeights;
+        cellAlignmentsStore = nextState.cellAlignmentsStore || cellAlignmentsStore;
+
+        if (nextState.headerState) {
+            if (nextState.headerState.piType) document.getElementById('piType').value = nextState.headerState.piType;
+            document.getElementById('piNo').value = nextState.headerState.piNo;
+            document.getElementById('piDate').value = nextState.headerState.piDate;
+            document.getElementById('buyerName').value = nextState.headerState.buyerName;
+            document.getElementById('buyerAddress').value = nextState.headerState.buyerAddress;
+            document.getElementById('buyerRef').value = nextState.headerState.buyerRef;
+            document.getElementById('attn').value = nextState.headerState.attn;
+            if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = nextState.headerState.hsCode;
+        }
+
+        saveDataToStorage();
+        saveHeaderToStorage();
+        updateTable();
+    }
+
+    document.addEventListener('keydown', function(e) {
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        const isCtrl = e.ctrlKey || e.metaKey;
+
+        if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
+            if (activeTag === 'td' || activeTag === 'th') {
+                document.activeElement.blur();
+            }
+            if (e.shiftKey) { 
+                e.preventDefault(); 
+                performRedo(); 
+            } else { 
+                e.preventDefault(); 
+                performUndo(); 
+            }
+        } else if (isCtrl && (e.key === 'y' || e.key === 'Y')) {
+            e.preventDefault(); 
+            performRedo();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('table') && !e.target.closest('.excel-ribbon')) {
+            const currentType = document.getElementById('piType').value;
+            const table = document.getElementById(`table-${currentType}`);
+            if (table) {
+                table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+            }
+        }
+    });
+
+    window.onload = function() {
+        initBuyerDatalist();
+        initBuyerRefDatalist();
+
+        preloadImage(companyLogoUrl);
+        preloadImage(stampImageUrl);
+
+        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) setupInlineTypeahead(elem);
+        });
+
+        const savedItems = localStorage.getItem('pi_items_data');
+        const savedHeader = localStorage.getItem('pi_header_data');
+        const savedColWidths = localStorage.getItem('pi_col_widths_data');
+        const savedRowHeights = localStorage.getItem('pi_row_heights_data');
+        const savedCustomCols = localStorage.getItem('pi_custom_cols_data');
+        const savedMergedCells = localStorage.getItem('pi_merged_cells_data');
+        const savedAlignments = localStorage.getItem('pi_cell_alignments_data');
+
+        if (savedColWidths) { try { piColumnWidths = JSON.parse(savedColWidths); } catch(e) {} }
+        if (savedRowHeights) { try { piRowHeights = JSON.parse(savedRowHeights); } catch(e) {} }
+        if (savedCustomCols) { try { customColumnsStore = JSON.parse(savedCustomCols); } catch(e) {} }
+        if (savedMergedCells) { try { mergedCellsStore = JSON.parse(savedMergedCells); } catch(e) {} }
+        if (savedAlignments) { try { cellAlignmentsStore = JSON.parse(savedAlignments); } catch(e) {} }
+
+        if (savedItems) {
+            try {
+                items = JSON.parse(savedItems);
+                items.forEach(i => { if(i.piType !== 'poly') i.piType = 'allPi'; });
+                ['allPi', 'poly'].forEach(type => {
+                    const typeItems = items.filter(i => i.piType === type);
+                    if (typeItems.length > 0) {
+                        const maxSl = Math.max(...typeItems.map(i => i.slNo || 0));
+                        slCounters[type] = maxSl + 1;
+                    }
+                });
+            } catch (e) { items = []; }
+        }
+
+        if (savedHeader) {
+            try {
+                const headerObj = JSON.parse(savedHeader);
+                if (headerObj.piType && headerObj.piType !== 'poly') document.getElementById('piType').value = 'allPi';
+                else if (headerObj.piType) document.getElementById('piType').value = headerObj.piType;
+                document.getElementById('piNo').value = headerObj.piNo || 'SACL/296/2026';
+                document.getElementById('piDate').value = headerObj.piDate || '08.08.2026';
+                document.getElementById('buyerName').value = headerObj.buyerName || 'BANDO DESIGN LTD.';
+                document.getElementById('buyerAddress').value = headerObj.buyerAddress || '';
+                document.getElementById('buyerRef').value = headerObj.buyerRef || '';
+                document.getElementById('attn').value = headerObj.attn || '';
+                if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = headerObj.hsCode || '';
+                if (headerObj.bar1HeaderFont) document.getElementById('bar1HeaderFont').value = headerObj.bar1HeaderFont;
+                if (headerObj.bar2PiTitleFont) document.getElementById('bar2PiTitleFont').value = headerObj.bar2PiTitleFont;
+                if (headerObj.bar3InfoFont) document.getElementById('bar3InfoFont').value = headerObj.bar3InfoFont;
+                if (headerObj.bar4TermsFont) document.getElementById('bar4TermsFont').value = headerObj.bar4TermsFont;
+                if (headerObj.bar5SigFont) document.getElementById('bar5SigFont').value = headerObj.bar5SigFont;
+                if (headerObj.bar6StampSize) document.getElementById('bar6StampSize').value = headerObj.bar6StampSize;
+            } catch (e) {}
+        }
+
+        onBuyerChange();
+        handlePiTypeChange(); 
+        updateAllCustomBars();
+        updateTable();
+    };
+
+    function updateAllCustomBars() {
+        saveHeaderToStorage();
+    }
+
+    function numberToWords(num) {
+        num = parseFloat(num);
+        if (isNaN(num) || num === 0) return "US Dollars Zero Only.";
+        
+        const a = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+        function getLessThanThousand(n) {
+            if (n === 0) return '';
+            if (n < 20) return a[n];
+            if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+            return a[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + getLessThanThousand(n % 100) : '');
+        }
+
+        let parts = num.toFixed(2).split('.');
+        let integerPart = parseInt(parts[0], 10);
+        let decimalPart = parseInt(parts[1], 10);
+
+        let wordStr = '';
+        if (integerPart >= 10000000) {
+            wordStr += getLessThanThousand(Math.floor(integerPart / 10000000)) + ' Crore ';
+            integerPart %= 10000000;
+        }
+        if (integerPart >= 100000) {
+            wordStr += getLessThanThousand(Math.floor(integerPart / 100000)) + ' Lakh ';
+            integerPart %= 100000;
+        }
+        if (integerPart >= 1000) {
+            wordStr += getLessThanThousand(Math.floor(integerPart / 1000)) + ' Thousand ';
+            integerPart %= 1000;
+        }
+        if (integerPart > 0) {
+            wordStr += getLessThanThousand(integerPart);
+        }
+
+        let result = 'US Dollars ' + wordStr.trim();
+
+        if (decimalPart > 0) {
+            let centWords = getLessThanThousand(decimalPart);
+            if (centWords.endsWith('Eight')) {
+                centWords += 's';
+            }
+            result += ' and Cent ' + centWords;
+        }
+
+        return result + ' Only.';
+    }
+
+    function saveAllPersistentData(showAlert = false) {
+        saveHeaderToStorage();
+        saveDataToStorage();
+        if (showAlert) {
+            alert("All data and table layouts have been saved successfully!");
+        }
+    }
+
+    function downloadJSON() {
+        const currentType = document.getElementById('piType').value;
+        const sanitizedPiName = getSanitizedPiName().replace(/[\/\\?%*:|"<>]/g, '_');
+        const backupData = {
+            piType: currentType,
+            items: items.filter(item => item.piType === currentType),
+            customColumns: customColumnsStore[currentType],
+            colWidths: piColumnWidths[currentType],
+            rowHeights: piRowHeights[currentType],
+            mergedCells: mergedCellsStore[currentType],
+            cellAlignments: cellAlignmentsStore[currentType] || {}
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 4));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `${sanitizedPiName}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function uploadJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = JSON.parse(e.target.result);
+                const currentType = document.getElementById('piType').value;
+                const targetType = content.piType || currentType;
+                if (content.items) {
+                    saveStateForUndo(); 
+                    items = items.filter(item => item.piType !== targetType);
+                    items = items.concat(content.items);
+                    if(content.customColumns) customColumnsStore[targetType] = content.customColumns;
+                    if(content.mergedCells) mergedCellsStore[targetType] = content.mergedCells;
+                    if(content.colWidths) piColumnWidths[targetType] = content.colWidths;
+                    if(content.rowHeights) piRowHeights[targetType] = content.rowHeights;
+                    if(content.cellAlignments) cellAlignmentsStore[targetType] = content.cellAlignments;
+
+                    saveDataToStorage();
+                }
+                handlePiTypeChange();
+                updateTable();
+                alert('Data loaded successfully!');
+            } catch (err) {
+                alert('Invalid JSON file format!');
+            }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function getBaseColumnsForType(type) {
+        if (type === 'poly') return ["SL No.", "Description of Goods", "Measurement", "Style/PO No.", "Unit", "QTY", "Unit Price (USD)", "Amount (USD)"];
+        return ["SL No.", "Description of Goods", "Measurement", "Color", "Unit", "QTY", "Unit Price (USD)", "Amount (USD)"];
+    }
+
+    function getColumnsForType(type) {
+        let base = [...getBaseColumnsForType(type)];
+        let customList = customColumnsStore[type] || [];
+        customList.forEach(c => {
+            if (!base.includes(c.name)) {
+                if (c.position === 'before') {
+                    let idx = base.indexOf(c.refCol);
+                    if (idx !== -1) base.splice(idx, 0, c.name);
+                    else base.push(c.name);
+                } else {
+                    let idx = base.indexOf(c.refCol);
+                    if (idx !== -1) base.splice(idx + 1, 0, c.name);
+                    else base.push(c.name);
+                }
+            }
+        });
+        return base;
+    }
+
+    function populateDynamicAddColumnUI() {
+        const piType = document.getElementById('piType').value;
+        const currentCols = getColumnsForType(piType);
+        
+        let uniqueHeaders = [];
+        ['allPi', 'poly'].forEach(t => {
+            getBaseColumnsForType(t).forEach(h => {
+                if (!uniqueHeaders.includes(h) && !currentCols.includes(h)) uniqueHeaders.push(h);
+            });
+        });
+        
+        ["Bleach/ Non Bleach", "Project No.", "Article No.", "Others", "QTY (Dzn)", "Remarks", "Brand", "Season", "PO Ref", "Buyer Style", "Shipment Mode"].forEach(h => {
+            if (!uniqueHeaders.includes(h) && !currentCols.includes(h)) uniqueHeaders.push(h);
+        });
+
+        const templateList = document.getElementById('colTemplateList');
+        templateList.innerHTML = '';
+        uniqueHeaders.forEach(h => {
+            let opt = document.createElement('option');
+            opt.value = h;
+            templateList.appendChild(opt);
+        });
+
+        const refSelect = document.getElementById('targetReferenceCol');
+        refSelect.innerHTML = '';
+        currentCols.forEach(col => {
+            let opt = document.createElement('option');
+            opt.value = col;
+            opt.innerText = col;
+            refSelect.appendChild(opt);
+        });
+    }
+
+    function addNewCustomColumn() {
+        const piType = document.getElementById('piType').value;
+        const colNameInput = document.getElementById('newColTemplateSelect');
+        const colName = colNameInput.value.trim();
+        const refCol = document.getElementById('targetReferenceCol').value;
+        const position = document.getElementById('beforeAfterSelect').value;
+
+        if (!colName) {
+            alert("Please enter or select a column name!");
+            return;
+        }
+        if (!customColumnsStore[piType]) customColumnsStore[piType] = [];
+
+        if (customColumnsStore[piType].some(c => c.name === colName)) {
+            alert("This column has already been added!");
+            return;
+        }
+
+        saveStateForUndo();
+        customColumnsStore[piType].push({ name: colName, refCol: refCol, position: position });
+        localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
+        
+        colNameInput.value = '';
+        handlePiTypeChange();
+        updateTable();
+    }
+
+    function removeCustomColumn() {
+        const piType = document.getElementById('piType').value;
+        const colName = document.getElementById('targetReferenceCol').value;
+        const baseCols = getBaseColumnsForType(piType);
+
+        if (baseCols.includes(colName)) {
+            alert("Base columns cannot be deleted. Only custom added columns can be removed!");
+            return;
+        }
+
+        saveStateForUndo();
+        if (customColumnsStore[piType]) {
+            customColumnsStore[piType] = customColumnsStore[piType].filter(c => c.name !== colName);
+            localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
+        }
+
+        handlePiTypeChange();
+        updateTable();
+    }
+
+    function handlePiTypeChange() {
+        const piType = document.getElementById('piType').value;
+        const inputContainer = document.getElementById('dynamicInputContainer');
+        const currentCounter = slCounters[piType] || 1;
+
+        let baseInputs = `
+            <div class="form-group"><label for="slNo">SL No</label><input type="number" id="slNo" value="${currentCounter}" min="1" oninput="saveStateForUndo()"></div>
+            <div class="form-group"><label for="desc">Description of Goods</label><textarea id="desc" rows="2" oninput="saveStateForUndo()"></textarea></div>
+            <div class="form-group"><label for="measurement">Measurement</label><textarea id="measurement" rows="2" placeholder="Measurement..." oninput="saveStateForUndo()"></textarea></div>
+        `;
+
+        let specificInputs = `
+            ${piType === 'poly' ? '<div class="form-group"><label for="stylepo">Style/PO No</label><textarea id="stylepo" rows="2" placeholder="Style/PO..." oninput="saveStateForUndo()"></textarea></div>' : ''}
+            ${piType === 'allPi' ? '<div class="form-group"><label for="color">Color</label><textarea id="color" rows="2" placeholder="Color..." oninput="saveStateForUndo()"></textarea></div>' : ''}
+            <div class="form-group">
+                <label for="unit">Unit</label>
+                <input type="text" id="unit" list="unitList" value="Pcs" placeholder="Select/type unit..." onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)" oninput="saveStateForUndo()">
+                <datalist id="unitList">
+                    <option value="Pcs">
+                    <option value="Dzn">
+                    <option value="Roll">
+                    <option value="Ltr">
+                    <option value="Lbs">
+                    <option value="Kgs">
+                    <option value="Yds">
+                    <option value="Cone">
+                    <option value="Mtr">
+                    <option value="Set">
+                    <option value="Box">
+                    <option value="Pack">
+                </datalist>
+            </div>
+            <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="saveStateForUndo()"></div>
+            <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000" oninput="saveStateForUndo()"></div>
+        `;
+
+        let customCols = customColumnsStore[piType] || [];
+        let customInputsHTML = '';
+        customCols.forEach(c => {
+            if (c.name !== "Amount (USD)" && c.name !== "QTY (Dzn)") {
+                let safeFieldId = getSafeId(c.name);
+                customInputsHTML += `
+                    <div class="form-group" id="input_group_${safeFieldId}">
+                        <label for="${safeFieldId}">${c.name}</label>
+                        <textarea id="${safeFieldId}" rows="2" placeholder="Enter ${c.name}..." oninput="saveStateForUndo()"></textarea>
+                    </div>
+                `;
+            }
+        });
+
+        let buttonHTML = `
+            <div class="form-group" style="display: flex; flex-direction: row; gap: 4px; align-items: flex-end; grid-column: span 3;">
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <label for="othersPercent">Others (%)</label>
+                    <input type="number" step="0.01" id="othersPercent" placeholder="0" style="width: 100%;" oninput="saveStateForUndo()">
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <label for="totalPercent">Total (%)</label>
+                    <input type="number" step="0.01" id="totalPercent" placeholder="0" style="width: 100%;" oninput="saveStateForUndo()">
+                </div>
+                <div style="display: flex; flex-direction: column; width: 45px;">
+                    <label for="insertAfterInput" style="font-size: 10px;">Pos</label>
+                    <input type="number" id="insertAfterInput" placeholder="Pos" style="height: 31px; padding: 4px; text-align: center; font-size: 11px;" oninput="saveStateForUndo()">
+                </div>
+                <button type="button" class="btn-add" onclick="addItem()" style="height: 31px; padding: 0 10px; white-space: nowrap; flex: initial; background-color: #10b981; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px;">+ Add</button>
+            </div>
+        `;
+
+        inputContainer.innerHTML = baseInputs + specificInputs + customInputsHTML + buttonHTML;
+        
+        inputContainer.querySelectorAll('input[type="text"], textarea').forEach(elem => {
+            setupInlineTypeahead(elem);
+        });
+
+        saveHeaderToStorage();
+        populateDynamicAddColumnUI();
+        updateTable();
+    }
+
+    function saveHeaderToStorage() {
+        const headerObj = {
+            piType: document.getElementById('piType').value,
+            piNo: document.getElementById('piNo').value,
+            piDate: document.getElementById('piDate').value,
+            buyerName: document.getElementById('buyerName').value,
+            buyerAddress: document.getElementById('buyerAddress').value,
+            buyerRef: document.getElementById('buyerRef').value,
+            attn: document.getElementById('attn').value,
+            hsCode: document.getElementById('hsCodeInput')?.value || '',
+            bar1HeaderFont: document.getElementById('bar1HeaderFont').value,
+            bar2PiTitleFont: document.getElementById('bar2PiTitleFont').value,
+            bar3InfoFont: document.getElementById('bar3InfoFont').value,
+            bar4TermsFont: document.getElementById('bar4TermsFont').value,
+            bar5SigFont: document.getElementById('bar5SigFont').value,
+            bar6StampSize: document.getElementById('bar6StampSize').value
+        };
+        localStorage.setItem('pi_header_data', JSON.stringify(headerObj));
+    }
+
+    function saveDataToStorage() {
+        localStorage.setItem('pi_items_data', JSON.stringify(items));
+        localStorage.setItem('pi_merged_cells_data', JSON.stringify(mergedCellsStore));
+        localStorage.setItem('pi_col_widths_data', JSON.stringify(piColumnWidths));
+        localStorage.setItem('pi_row_heights_data', JSON.stringify(piRowHeights));
+        localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
+        localStorage.setItem('pi_cell_alignments_data', JSON.stringify(cellAlignmentsStore));
+    }
+
+    function addItem() {
+        const piType = document.getElementById('piType').value;
+        const slNo = parseInt(document.getElementById('slNo').value) || slCounters[piType];
+        
+        let qty = parseFloat(document.getElementById('qty')?.value) || 0;
+        let basePrice = parseFloat(document.getElementById('price')?.value) || 0;
+        let othersVal = parseFloat(document.getElementById('othersPercent')?.value) || 0;
+        let totalVal = parseFloat(document.getElementById('totalPercent')?.value) || 0;
+        
+        // Others (%) এবং Total (%) উভয় পার্সেন্টেজ একসাথে Unit Price-এর সাথে যোগ করা হবে
+        let effectivePrice = basePrice + (basePrice * othersVal / 100) + (basePrice * totalVal / 100);
+        
+        let customCols = customColumnsStore[piType] || [];
+        let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
+
+        let calculatedAmount = 0;
+
+        if (hasQtyDzn) {
+            let calculatedDzn = qty / 12;
+            calculatedAmount = calculatedDzn * effectivePrice;
+        } else {
+            calculatedAmount = qty * effectivePrice;
+        }
+
+        let itemData = { 
+            piType, 
+            slNo, 
+            qty, 
+            price: basePrice, 
+            othersPercent: othersVal,
+            totalPercent: totalVal,
+            effectivePrice: parseFloat(effectivePrice.toFixed(4)),
+            amount: parseFloat(calculatedAmount.toFixed(4)), 
+            customValues: {} 
+        };
+
+        let colsList = getColumnsForType(piType);
+        colsList.forEach(col => {
+            let safeFieldId = getSafeId(col);
+            let customElem = document.getElementById(safeFieldId);
+            if (customElem) {
+                itemData.customValues[col] = customElem.value;
+            }
+        });
+
+        if (document.getElementById('desc')) itemData.desc = document.getElementById('desc').value || '';
+        if (document.getElementById('measurement')) itemData.measurement = document.getElementById('measurement').value || '';
+        if (document.getElementById('color')) itemData.color = document.getElementById('color').value || '';
+        if (document.getElementById('stylepo')) itemData.stylepo = document.getElementById('stylepo').value || '';
+        if (document.getElementById('unit')) itemData.unit = document.getElementById('unit').value || 'Pcs';
+
+        saveStateForUndo(); 
+        if (editIndex === -1) {
+            let insertVal = document.getElementById('insertAfterInput')?.value.trim();
+            if (insertVal !== '' && parseInt(insertVal) > 0) {
+                let targetNum = parseInt(insertVal);
+                let piTypeItems = items.filter(i => i.piType === piType);
+                let targetIndexInPiType = piTypeItems.findIndex(i => i.slNo === targetNum);
+                if (targetIndexInPiType === -1 && targetNum <= piTypeItems.length) {
+                    targetIndexInPiType = targetNum - 1;
+                }
+                
+                if (targetIndexInPiType !== -1) {
+                    let globalTargetItem = piTypeItems[targetIndexInPiType];
+                    let globalIndex = items.indexOf(globalTargetItem);
+                    items.splice(globalIndex + 1, 0, itemData);
+                } else {
+                    items.push(itemData);
+                }
+            } else {
+                items.push(itemData);
+            }
+            slCounters[piType] = slNo + 1;
+        } else {
+            items[editIndex] = itemData;
+            editIndex = -1;
+            const addBtn = document.querySelector('.form-group button.btn-add');
+            if (addBtn) addBtn.innerText = '+ Add';
+        }
+
+        saveDataToStorage();
+        updateTable();
+
+        document.getElementById('slNo').value = slCounters[piType];
+    }
+
+    function editItem(index) {
+        const item = items[index];
+        if(item.piType) {
+            document.getElementById('piType').value = item.piType;
+            handlePiTypeChange();
+        }
+        document.getElementById('slNo').value = item.slNo;
+        if(document.getElementById('qty')) document.getElementById('qty').value = item.qty || '';
+        if(document.getElementById('price')) document.getElementById('price').value = item.price || '';
+        if(document.getElementById('othersPercent')) document.getElementById('othersPercent').value = item.othersPercent || '';
+        if(document.getElementById('totalPercent')) document.getElementById('totalPercent').value = item.totalPercent || '';
+        if(document.getElementById('desc')) document.getElementById('desc').value = item.desc || '';
+        if(document.getElementById('measurement')) document.getElementById('measurement').value = item.measurement || '';
+        if(document.getElementById('color')) document.getElementById('color').value = item.color || '';
+        if(document.getElementById('stylepo')) document.getElementById('stylepo').value = item.stylepo || '';
+        if(document.getElementById('unit')) document.getElementById('unit').value = item.unit || 'Pcs';
+
+        let colsList = getColumnsForType(item.piType || 'allPi');
+        colsList.forEach(col => {
+            let safeFieldId = getSafeId(col);
+            let elem = document.getElementById(safeFieldId);
+            if (elem && item.customValues && item.customValues[col] !== undefined) {
+                elem.value = item.customValues[col];
+            }
+        });
+
+        editIndex = index;
+        const addBtn = document.querySelector('.form-group button.btn-add');
+        if (addBtn) addBtn.innerText = '💾 Update';
+    }
+
+    function deleteItem(index) {
+        saveStateForUndo(); 
+        items.splice(index, 1);
+        saveDataToStorage();
+        updateTable();
+    }
+
+    function resetAllData() {
+        const piType = document.getElementById('piType').value;
+        if (confirm(`Are you sure you want to reset all data for "${piType.toUpperCase()}"?`)) {
+            saveStateForUndo(); 
+            items = items.filter(item => item.piType !== piType);
+            mergedCellsStore[piType] = [];
+            cellAlignmentsStore[piType] = {};
+            piRowHeights[piType] = {};
+            slCounters[piType] = 1;
+            document.getElementById('slNo').value = 1;
+            editIndex = -1;
+            const addBtn = document.querySelector('.form-group button.btn-add');
+            if (addBtn) addBtn.innerText = '+ Add';
+            saveDataToStorage();
+            updateTable();
+        }
+    }
+
+    function getDefaultColWidth(col) {
+        if (col === "SL No.") return 50;
+        if (col === "Description of Goods") return 220;
+        if (col === "Measurement") return 120;
+        if (col === "Color" || col === "Style/PO No.") return 110;
+        if (col === "Unit") return 60;
+        if (col === "QTY" || col === "QTY (Dzn)") return 80;
+        if (col === "Unit Price (USD)") return 100;
+        if (col === "Amount (USD)") return 110;
+        if (col === "Action") return 90;
+        return 100;
+    }
+
+    function updateTable() {
+        const types = ['allPi', 'poly'];
+        const currentSelectedType = document.getElementById('piType').value;
+        
+        types.forEach(type => {
+            const sec = document.getElementById(`sec-${type}`);
+            if(!sec) return;
+
+            let table = sec.querySelector('table');
+            let colsList = getColumnsForType(type);
+
+            let totalTableWidth = 0;
+            let colgroup = table.querySelector('colgroup');
+            if (!colgroup) {
+                colgroup = document.createElement('colgroup');
+                table.insertBefore(colgroup, table.firstChild);
+            }
+            let colgroupHTML = '';
+            colsList.forEach(col => {
+                let w = (piColumnWidths[type] && piColumnWidths[type][col]) ? piColumnWidths[type][col] : getDefaultColWidth(col);
+                totalTableWidth += w;
+                colgroupHTML += `<col data-colname="${col}" style="width: ${w}px;">`;
+            });
+            let actW = (piColumnWidths[type] && piColumnWidths[type]['Action']) ? piColumnWidths[type]['Action'] : 90;
+            totalTableWidth += actW;
+            colgroupHTML += `<col class="no-print" data-colname="Action" style="width: ${actW}px;">`;
+            colgroup.innerHTML = colgroupHTML;
+
+            table.style.width = totalTableWidth + 'px';
+
+            let savedHeaderH = (piRowHeights[type] && piRowHeights[type]['header']) ? `height: ${piRowHeights[type]['header']}px;` : '';
+            let theadHTML = `<tr data-rowidx="header" style="${savedHeaderH}">`;
+            colsList.forEach((col, cIdx) => { 
+                let w = (piColumnWidths[type] && piColumnWidths[type][col]) ? piColumnWidths[type][col] : getDefaultColWidth(col);
+                let rowResizerHeaderHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
+                theadHTML += `<th data-col="${cIdx}" data-colname="${col}" contenteditable="true" style="width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateHeaderContent(event, '${type}', ${cIdx})">${col}<div class="resizer"></div>${rowResizerHeaderHtml}</th>`; 
+            });
+            theadHTML += `<th class="no-print" data-col="${colsList.length}" data-colname="Action" style="width: ${actW}px; text-align:center;">Action<div class="resizer"></div></th></tr>`;
+            table.querySelector('thead').innerHTML = theadHTML;
+
+            let tbody = table.querySelector('tbody');
+            tbody.innerHTML = '';
+
+            const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === type);
+
+            if (type === currentSelectedType) sec.style.display = 'block';
+            else sec.style.display = 'none';
+
+            filteredItems.forEach((item, rIdx) => {
+                let savedRowH = (piRowHeights[type] && piRowHeights[type][rIdx]) ? `height: ${piRowHeights[type][rIdx]}px;` : '';
+                let rowHTML = `<tr data-index="${item.originalIndex}" data-rowidx="${rIdx}" style="${savedRowH}">`;
+                
+                colsList.forEach((col, cIdx) => {
+                    let cellVal = "";
+                    
+                    let alignStyleVal = "center";
+                    if (col === "QTY" || col === "QTY (Dzn)" || col === "Unit Price (USD)" || col === "Amount (USD)") {
+                        alignStyleVal = "right";
+                    }
+
+                    let cellKey = `${rIdx}_${cIdx}`;
+                    if (cellAlignmentsStore[type] && cellAlignmentsStore[type][cellKey]) {
+                        alignStyleVal = cellAlignmentsStore[type][cellKey];
+                    }
+
+                    let baseP = item.price || 0;
+                    let oPct = item.othersPercent || 0;
+                    let tPct = item.totalPercent || 0;
+                    let finalUnitP = item.effectivePrice !== undefined ? item.effectivePrice : (baseP + (baseP * oPct / 100) + (baseP * tPct / 100));
+
+                    if (item.customValues && item.customValues[col] !== undefined && item.customValues[col] !== '') {
+                        cellVal = item.customValues[col];
+                    }
+                    else if (col === "SL No.") {
+                        cellVal = rIdx + 1;
+                        item.slNo = rIdx + 1;
+                    }
+                    else if (col === "Description of Goods" || col === "Measurement" || col === "Style/PO No." || col === "Color") {
+                        cellVal = col === "Description of Goods" ? (item.desc || '') :
+                                  col === "Measurement" ? (item.measurement || '') :
+                                  col === "Style/PO No." ? (item.stylepo || '') : (item.color || '');
+                    }
+                    else if (col === "Unit") {
+                        cellVal = item.unit || '';
+                    }
+                    else if (col === "QTY") {
+                        cellVal = item.qty || 0;
+                    }
+                    else if (col === "QTY (Dzn)") {
+                        let dznVal = (item.qty || 0) / 12;
+                        cellVal = dznVal.toFixed(2);
+                    }
+                    else if (col === "Unit Price (USD)") {
+                        cellVal = finalUnitP > 0 ? `$${finalUnitP.toFixed(4)}` : "$0.0000";
+                    }
+                    else if (col === "Amount (USD)") {
+                        let finalAmt = 0;
+                        let customCols = customColumnsStore[type] || [];
+                        let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
+                        
+                        if (hasQtyDzn) {
+                            let dznVal = (item.qty || 0) / 12;
+                            finalAmt = dznVal * finalUnitP;
+                        } else {
+                            finalAmt = (item.qty || 0) * finalUnitP;
+                        }
+                        item.amount = finalAmt;
+                        cellVal = `$${finalAmt.toFixed(2)}`;
+                    }
+                    else {
+                        let safeKey = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        cellVal = item[safeKey] || item[col] || '';
+                    }
+
+                    let isHidden = false;
+                    let rowspanAttr = 1;
+                    let colspanAttr = 1;
+                    let customContent = cellVal;
+
+                    if (mergedCellsStore[type]) {
+                        mergedCellsStore[type].forEach(m => {
+                            if (rIdx >= m.startRow && rIdx <= m.endRow && cIdx >= m.startCol && cIdx <= m.endCol) {
+                                if (rIdx === m.startRow && cIdx === m.startCol) {
+                                    rowspanAttr = (m.endRow - m.startRow) + 1;
+                                    colspanAttr = (m.endCol - m.startCol) + 1;
+                                    customContent = m.content !== undefined ? m.content : cellVal;
+                                } else {
+                                    isHidden = true;
+                                }
+                            }
+                        });
+                    }
+
+                    if (!isHidden) {
+                        let spanString = "";
+                        if (rowspanAttr > 1) spanString += ` rowspan="${rowspanAttr}"`;
+                        if (colspanAttr > 1) spanString += ` colspan="${colspanAttr}"`;
+                        
+                        let w = (piColumnWidths[type] && piColumnWidths[type][col]) ? piColumnWidths[type][col] : getDefaultColWidth(col);
+                        let alignStyle = `text-align: ${alignStyleVal}; width: ${w}px;`;
+
+                        let rowResizerHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
+                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})">${customContent}${rowResizerHtml}</td>`;
+                    }
+                });
+
+                rowHTML += `
+                    <td style="white-space: nowrap; text-align:center; width: ${actW}px;" class="no-print" data-col="${colsList.length}">
+                        <button class="btn-edit" onclick="editItem(${item.originalIndex})">Edit</button>
+                        <button class="action-btn" onclick="deleteItem(${item.originalIndex})">Del</button>
+                    </td>
+                </tr>`;
+                tbody.innerHTML += rowHTML;
+            });
+
+            let totalQtySum = filteredItems.reduce((acc, curr) => acc + (curr.qty || 0), 0);
+            let totalAmountSum = filteredItems.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+            let totalDznSum = (totalQtySum / 12).toFixed(2);
+
+            let tfoot = table.querySelector('tfoot');
+            let savedTotalRowH = (piRowHeights[type] && piRowHeights[type]['total']) ? `height: ${piRowHeights[type]['total']}px;` : '';
+            let tfootHTML = `<tr class="total-row" data-rowidx="total" style="${savedTotalRowH}">`;
+            
+            let firstQtyIdx = colsList.findIndex(c => c === "QTY");
+
+            colsList.forEach((col, idx) => {
+                let w = (piColumnWidths[type] && piColumnWidths[type][col]) ? piColumnWidths[type][col] : getDefaultColWidth(col);
+                if (idx === 0) {
+                    let colspanCount = firstQtyIdx > 0 ? firstQtyIdx : 1;
+                    tfootHTML += `<td colspan="${colspanCount}" contenteditable="true" style="text-align: right; font-weight: bold; padding-right: 10px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">Total =<div class="row-resizer"></div></td>`;
+                } else if (idx > 0 && idx < firstQtyIdx) {
+                } else if (col === "QTY") {
+                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">${totalQtySum}</td>`;
+                } else if (col === "QTY (Dzn)") {
+                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">${totalDznSum}</td>`;
+                } else if (col === "Amount (USD)") {
+                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">$${totalAmountSum.toFixed(2)}</td>`;
+                } else {
+                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">-</td>`;
+                }
+            });
+
+            tfootHTML += `<td class="no-print" style="width: ${actW}px;">-</td></tr>`;
+            tfoot.innerHTML = tfootHTML;
+
+            let wordDiv = document.getElementById(`totalInWord-${type}`);
+            if (wordDiv) {
+                wordDiv.innerText = `Total Value In Word: ${numberToWords(totalAmountSum)}`;
+            }
+        });
+        initCellSelection();
+        makeColumnsResizable();
+        makeRowsResizable();
+    }
+
+    function onCellFocus(e) {
+        saveStateForUndo();
+    }
+
+    function updateHeaderContent(event, type, cIdx) {}
+    function updateFooterContent(e) {}
+
+    function updateCellContent(e, rIdx, cIdx) {
+        const currentType = document.getElementById('piType').value;
+        const newText = e.target.innerText;
+        if (mergedCellsStore[currentType]) {
+            mergedCellsStore[currentType].forEach(m => {
+                if (m.startRow === rIdx && m.startCol === cIdx) {
+                    m.content = newText;
+                }
+            });
+            saveDataToStorage();
+        }
+    }
+
+    let isMouseDown = false;
+    function initCellSelection() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const allElements = table.querySelectorAll('thead th, tbody td, tfoot td');
+        allElements.forEach(el => {
+            el.onmousedown = function(e) {
+                if (e.target.classList.contains('resizer') || e.target.classList.contains('row-resizer')) return;
+                isMouseDown = true;
+                if (!e.shiftKey) {
+                    table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+                }
+                this.classList.toggle('cell-selected');
+                updateFontSizeDisplay();
+                updateDimensionDisplay();
+            };
+            el.onmouseover = function() {
+                if (isMouseDown) {
+                    this.classList.add('cell-selected');
+                    updateFontSizeDisplay();
+                    updateDimensionDisplay();
+                }
+            };
+        });
+    }
+
+    // নিখুঁত স্বতন্ত্র কলাম রিসাইজার (অন্যান্য কলাম অপরিবর্তিত রেখে ডান পাশের টেবিল প্রসারিত করবে)
+    function makeColumnsResizable() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const resizers = table.querySelectorAll('.resizer');
+        resizers.forEach(resizer => {
+            resizer.onmousedown = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                saveStateForUndo(); 
+                const th = e.target.parentElement;
+                const colName = th.getAttribute('data-colname');
+                const startX = e.pageX;
+                const startWidth = th.offsetWidth;
+                const cIdx = parseInt(th.getAttribute('data-col'));
+
+                const colElem = table.querySelector(`colgroup col:nth-child(${cIdx + 1})`);
+                const tableStartWidth = table.offsetWidth;
+
+                function onMouseMove(e) {
+                    const diff = e.pageX - startX;
+                    const newWidth = Math.max(30, startWidth + diff);
+                    const widthDelta = newWidth - startWidth;
+
+                    if (colElem) {
+                        colElem.style.width = newWidth + 'px';
+                    }
+                    th.style.width = newWidth + 'px';
+
+                    let targetCells = table.querySelectorAll(`td[data-col="${cIdx}"]`);
+                    targetCells.forEach(tc => {
+                        tc.style.width = newWidth + 'px';
+                    });
+
+                    // Update specific column in tfoot
+                    let tfootCells = table.querySelectorAll(`tfoot tr.total-row td`);
+                    let currCellIdx = 0;
+                    tfootCells.forEach((tc) => {
+                        let span = parseInt(tc.getAttribute('colspan')) || 1;
+                        if (currCellIdx === cIdx) {
+                            tc.style.width = newWidth + 'px';
+                        }
+                        currCellIdx += span;
+                    });
+
+                    table.style.width = (tableStartWidth + widthDelta) + 'px';
+
+                    if (!piColumnWidths[currentType]) piColumnWidths[currentType] = {};
+                    piColumnWidths[currentType][colName] = newWidth;
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    saveDataToStorage();
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            };
+        });
+    }
+
+    function makeRowsResizable() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const rowResizers = table.querySelectorAll('.row-resizer');
+        rowResizers.forEach(resizer => {
+            resizer.onmousedown = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                saveStateForUndo();
+                const tr = e.target.closest('tr');
+                const rIdx = tr.getAttribute('data-rowidx');
+                const startY = e.pageY;
+                const startHeight = tr.offsetHeight;
+
+                function onMouseMove(e) {
+                    const newHeight = Math.max(18, startHeight + (e.pageY - startY));
+                    tr.style.height = newHeight + 'px';
+                    
+                    if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
+                    piRowHeights[currentType][rIdx] = newHeight;
+                }
+
+                function onMouseUp() {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    saveDataToStorage();
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            };
+        });
+    }
+
+    document.onmouseup = function() {
+        isMouseDown = false;
+    };
+
+    function toggleSelectionBold() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) {
+            alert("Please select cells from the table to toggle bold!");
+            return;
+        }
+
+        saveStateForUndo(); 
+        let isCurrentlyBold = window.getComputedStyle(selectedCells[0]).fontWeight;
+        let makeBold = (isCurrentlyBold === 'normal' || isCurrentlyBold === '400' || !isCurrentlyBold);
+
+        selectedCells.forEach(cell => {
+            cell.style.fontWeight = makeBold ? 'bold' : 'normal';
+        });
+        saveDataToStorage();
+    }
+
+    function applySelectionAlignment(alignValue) {
+        if (!alignValue) return;
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) {
+            alert("Please select cells from the table to change alignment!");
+            document.getElementById('cellAlignmentSelect').selectedIndex = 0;
+            return;
+        }
+
+        saveStateForUndo(); 
+        if (!cellAlignmentsStore[currentType]) cellAlignmentsStore[currentType] = {};
+
+        selectedCells.forEach(cell => {
+            cell.style.textAlign = alignValue;
+            let rIdx = cell.getAttribute('data-row');
+            let cIdx = cell.getAttribute('data-col');
+            if (rIdx !== null && cIdx !== null) {
+                cellAlignmentsStore[currentType][`${rIdx}_${cIdx}`] = alignValue;
+            }
+        });
+
+        document.getElementById('cellAlignmentSelect').selectedIndex = 0;
+        saveDataToStorage();
+    }
+
+    function mergeSelectedCells() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('tbody td.cell-selected');
+        if (selectedCells.length < 2) {
+            alert("Please select at least two cells from the table body to merge!");
+            return;
+        }
+
+        let minRow = 9999, maxRow = -1, minCol = 9999, maxCol = -1;
+        let combinedText = "";
+
+        selectedCells.forEach(cell => {
+            let r = parseInt(cell.getAttribute('data-row'));
+            let c = parseInt(cell.getAttribute('data-col'));
+            if (!isNaN(r) && !isNaN(c)) {
+                if (r < minRow) minRow = r;
+                if (r > maxRow) maxRow = r;
+                if (c < minCol) minCol = c;
+                if (c > maxCol) maxCol = c;
+                if (cell.innerText.trim() !== "" && !combinedText) {
+                    combinedText = cell.innerText.trim();
+                }
+            }
+        });
+
+        saveStateForUndo();
+        if (!mergedCellsStore[currentType]) mergedCellsStore[currentType] = [];
+
+        mergedCellsStore[currentType].push({
+            startRow: minRow,
+            endRow: maxRow,
+            startCol: minCol,
+            endCol: maxCol,
+            content: combinedText
+        });
+
+        saveDataToStorage();
+        updateTable();
+    }
+
+    function unmergeSelectedCells() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('tbody td.cell-selected');
+        if (selectedCells.length === 0) {
+            alert("Please select cells to unmerge!");
+            return;
+        }
+
+        saveStateForUndo();
+        if (mergedCellsStore[currentType]) {
+            selectedCells.forEach(cell => {
+                let r = parseInt(cell.getAttribute('data-row'));
+                let c = parseInt(cell.getAttribute('data-col'));
+                
+                mergedCellsStore[currentType] = mergedCellsStore[currentType].filter(m => {
+                    return !(r >= m.startRow && r <= m.endRow && c >= m.startCol && c <= m.endCol);
+                });
+            });
+            saveDataToStorage();
+        }
+        updateTable();
+    }
+
+    function updateFontSizeDisplay() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        const inputElem = document.getElementById('fontSizeInputBox');
+
+        if (selectedCells.length === 0) {
+            inputElem.value = "--";
+            return;
+        }
+
+        let firstSize = window.getComputedStyle(selectedCells[0]).fontSize;
+        inputElem.value = Math.round(parseFloat(firstSize));
+    }
+
+    function updateDimensionDisplay() {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        const dimBox = document.getElementById('sizeIndicatorBox');
+
+        if (selectedCells.length === 0) {
+            dimBox.value = 0;
+            return;
+        }
+
+        let firstCell = selectedCells[0];
+        let cIdx = parseInt(firstCell.getAttribute('data-col'));
+        if (firstCell.tagName === 'TH') {
+            dimBox.value = firstCell.parentElement.offsetHeight;
+        } else if (cIdx === 0 && firstCell.tagName === 'TD') {
+            dimBox.value = firstCell.parentElement.offsetHeight;
+        } else {
+            dimBox.value = firstCell.offsetWidth;
+        }
+    }
+
+    function applyDirectFontSize(val) {
+        let newSize = parseFloat(val);
+        if (isNaN(newSize)) return;
+        if (newSize < 8) newSize = 8;
+        if (newSize > 72) newSize = 72;
+
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) return;
+
+        saveStateForUndo(); 
+        selectedCells.forEach(cell => {
+            cell.style.fontSize = newSize + 'px';
+        });
+        saveDataToStorage();
+    }
+
+    function applyDirectDimension(val) {
+        let newSize = parseFloat(val);
+        if (isNaN(newSize)) return;
+        if (newSize < 10) newSize = 10;
+
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) return;
+
+        saveStateForUndo();
+
+        selectedCells.forEach(cell => {
+            let cIdx = parseInt(cell.getAttribute('data-col'));
+            let isHeader = (cell.tagName === 'TH');
+
+            if (isHeader) {
+                let rowElem = cell.parentElement;
+                if (rowElem) {
+                    rowElem.style.height = newSize + 'px';
+                    if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
+                    piRowHeights[currentType]['header'] = newSize;
+                }
+            } else if (cell.parentElement && cell.parentElement.getAttribute('data-rowidx') === 'total') {
+                let rowElem = cell.parentElement;
+                rowElem.style.height = newSize + 'px';
+                if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
+                piRowHeights[currentType]['total'] = newSize;
+            } else if (cIdx === 0) {
+                let rowElem = cell.parentElement;
+                if (rowElem && (rowElem.tagName === 'TR')) {
+                    rowElem.style.height = newSize + 'px';
+                    let rIdx = rowElem.getAttribute('data-rowidx');
+                    if (rIdx !== null) {
+                        if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
+                        piRowHeights[currentType][rIdx] = newSize;
+                    }
+                }
+            } else {
+                let colsList = getColumnsForType(currentType);
+                let colName = cell.getAttribute('data-colname') || colsList[cIdx] || (cIdx === colsList.length ? 'Action' : '');
+
+                if (colName) {
+                    let oldW = (piColumnWidths[currentType] && piColumnWidths[currentType][colName]) ? piColumnWidths[currentType][colName] : cell.offsetWidth;
+                    let delta = newSize - oldW;
+
+                    if (!piColumnWidths[currentType]) piColumnWidths[currentType] = {};
+                    piColumnWidths[currentType][colName] = newSize;
+
+                    let colElem = table.querySelector(`colgroup col:nth-child(${cIdx + 1})`);
+                    if (colElem) {
+                        colElem.style.width = newSize + 'px';
+                    }
+                    table.style.width = (table.offsetWidth + delta) + 'px';
+                }
+            }
+        });
+
+        saveDataToStorage();
+    }
+
+    async function printPDF() {
+        const piType = document.getElementById('piType').value;
+        const currentTableElem = document.getElementById(`sec-${piType}`);
+        if (!currentTableElem) return;
+
+        await Promise.all([
+            preloadImage(companyLogoUrl),
+            preloadImage(stampImageUrl)
+        ]);
+
+        const printTemplate = document.getElementById('printTemplate');
+        const isFitToOnePage = document.getElementById('fitToOnePage')?.checked || false;
+        
+        let bar1Font = parseFloat(document.getElementById('bar1HeaderFont')?.value) || 22;
+        let bar2Font = parseFloat(document.getElementById('bar2PiTitleFont')?.value) || 14;
+        let bar3Font = parseFloat(document.getElementById('bar3InfoFont')?.value) || 11;
+        let bar4Font = parseFloat(document.getElementById('bar4TermsFont')?.value) || 11;
+        let bar5Font = parseFloat(document.getElementById('bar5SigFont')?.value) || 11;
+        
+        let userStampWidth = parseFloat(document.getElementById('bar6StampSize')?.value) || 55;
+        
+        let sigGap = isFitToOnePage ? 32 : 55;
+        let stampWidth = isFitToOnePage ? Math.round(userStampWidth * 0.8) : userStampWidth;
+
+        if (isFitToOnePage) {
+            bar1Font = Math.max(14, bar1Font * 0.8);
+            bar2Font = Math.max(11, bar2Font * 0.85);
+            bar3Font = Math.max(9, bar3Font * 0.85);
+            bar4Font = Math.max(7, bar4Font * 0.8);
+            bar5Font = Math.max(9, bar5Font * 0.85);
+        }
+        
+        const piNo = document.getElementById('piNo').value;
+        const piDate = document.getElementById('piDate').value;
+        const buyerName = document.getElementById('buyerName').value;
+        const buyerAddress = document.getElementById('buyerAddress').value;
+        const buyerRef = document.getElementById('buyerRef').value;
+        const attn = document.getElementById('attn').value;
+        const hsCodeVal = document.getElementById('hsCodeInput')?.value || '';
+
+        const originalTitle = document.title;
+        document.title = getSanitizedPiName();
+
+        let tableClone = currentTableElem.cloneNode(true);
+        let actionElements = tableClone.querySelectorAll('.no-print, .row-resizer');
+        actionElements.forEach(el => el.remove());
+
+        let tableInsideClone = tableClone.querySelector('table');
+        if (tableInsideClone) {
+            tableInsideClone.classList.add('pi-main-table');
+            let cg = tableInsideClone.querySelector('colgroup');
+            if (cg) cg.remove();
+            tableInsideClone.style.width = '100%';
+        }
+
+        const subHeaderFont = Math.max(8, Math.round(bar1Font * 0.5));
+        const logoHeight = Math.max(16, Math.round(bar1Font * 1.35));
+
+        printTemplate.innerHTML = `
+            <div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; text-align: center; margin-bottom: 3px;">
+                    <img src="${companyLogoUrl}" style="height: ${logoHeight}px; width: auto;" alt="Logo"/>
+                    <h1 style="margin: 0; font-size: ${bar1Font}px; font-weight: bold; color: #000; font-family: 'Broadway', sans-serif; line-height: 1.1;">STERLING ACCESSORIES LIMITED.</h1>
+                </div>
+                <div style="text-align: center; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 3px;">
+                    <div style="font-size: ${subHeaderFont}px;">(100% Export Oriented Garments Accessories Manufacturing Industries.)</div>
+                    <div style="font-size: ${subHeaderFont}px; font-weight: bold; margin-top: 1px;">FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; font-weight: bold; margin-bottom: 8px; font-size: ${bar3Font}px;">
+                    <div style="text-align: left;">
+                        <div>PI NO: ${piNo}</div>
+                        <div style="margin-top: 2px;">DATE: ${piDate}</div>
+                    </div>
+                    <div style="text-decoration: underline; font-size: ${bar2Font}px; text-align: center;">
+                        PROFORMA INVOICE
+                    </div>
+                    <div></div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: ${bar3Font}px;">
+                    <div style="width: 48%;">
+                        <div style="font-weight: bold; text-decoration: underline; margin-bottom: 2px;">NAME & ADDRESS OF BUYER:</div>
+                        <div style="font-weight: bold;">${buyerName}</div>
+                        <div style="white-space: pre-line;">${buyerAddress}</div>
+                        <div style="font-weight: bold; margin-top: 3px;">BUYER REF: ${buyerRef}</div>
+                        <div style="font-weight: bold;">Attn: ${attn}</div>
+                    </div>
+                    <div style="width: 48%; text-align: right;">
+                        <div style="font-weight: bold; text-decoration: underline; margin-bottom: 2px;">NAME & ADDRESS OF SELLER:</div>
+                        <div style="font-weight: bold;">STERLING ACCESSORIES LTD.</div>
+                        <div>Holding-375, East Bagbari,</div>
+                        <div>Kashimpur, Gazipur, Bangladesh.</div>
+                        <div>BIN Number: 005634023-1201.</div>
                     </div>
                 </div>
 
-                <!-- Live Percentage Counter -->
-                <span id="percentage-text" class="text-3xl md:text-4xl font-extrabold font-mono text-white tracking-wider">0%</span>
-                <span id="speed-indicator" class="text-[10px] font-mono text-slate-400 mt-0.5">48.2 MB/s</span>
-            </div>
-        </div>
+                <div id="pdfTableWrapper" style="font-size: ${isFitToOnePage ? '10px' : 'inherit'};">
+                    ${tableClone.innerHTML}
+                </div>
 
-        <!-- Step Indicator & Status message -->
-        <div class="w-full max-w-md bg-os-card/70 border border-os-border p-4 rounded-xl shadow-2xl backdrop-blur-md mb-6">
-            <div class="flex justify-between items-center text-xs font-mono mb-2">
-                <span class="text-slate-400">ধাপ / STEP <span id="current-step-num" class="text-os-primary">1</span>/5</span>
-                <span id="step-percentage" class="text-os-primary font-semibold">0%</span>
-            </div>
-            
-            <div class="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mb-3">
-                <div id="step-progress-bar" class="bg-gradient-to-r from-os-primary to-os-accent h-full w-0 transition-all duration-300"></div>
-            </div>
+                <div style="margin-top: 10px; font-size: ${bar4Font}px;">
+                    <div style="font-weight: bold; text-decoration: underline; margin-bottom: 3px; font-size: ${bar4Font}px;">TERMS & CONDITIONS:</div>
+                    <table class="terms-table" style="width: 100%; border-collapse: collapse; border: none; font-size: ${bar4Font}px;">
+                        <tr style="vertical-align: top;">
+                            <td style="width: 25%; border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">1. PAYMENT TERMS</td>
+                            <td style="width: 3%; border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="width: 72%; border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">C) No LC will be Entertained which value less than US $ 2,000.00</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">2. Delivery Lead Time</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">A) Goods will be ready for delivery within 14 working days (can vary depend on quality & quantity) after received of LC & UD both for customs UP issue.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">B) Utilization Declaration (UD), along with the bank attested copy of LC or Sales Contract has to be in place within 7 working Days of BTB LC.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;"><b>D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed.</b></td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;"></td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;"><b>E) Accessories for 100% Export Oriented Readymade Garments Industry.</b></td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">3. Delivery/Inco Term</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">CPT.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">4. Country of origin</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Bangladesh.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">5. Presentation Period</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">30 days from the latest Shipment date in the LC.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">6. Shipment Date</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Should be 60 days minimum from the LC opening Date.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">7. Expiry date of LC</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">LC Expiry date Should be 30 days from the latest Shipment date in the LC.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">8. Validity</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">30 days from the date of P/I issuance.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">9. Advising Bank</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">DHAKA BANK PLC. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">10. Bank Charge</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">All Bank Charges except beneficiary's bank are on Opener's Account.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">11. Overdue Interest</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Payment will be made within the date of Maturity. If failed, overdue interest to be paid by opener at 16%.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">12. Deduction</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Deduction clause for any discrepancies is not acceptable.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">13. Claim/ Complain</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change.</td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">14.H.S. CODE</td>
+                            <td style="border: none; padding: 1px 0; text-align: center; font-weight: bold; font-size: ${bar4Font}px;">:</td>
+                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px; white-space: pre-line;"><b>${hsCodeVal}</b></td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 3px; font-weight: bold; font-size: ${bar4Font}px;">N.B. This Proforma Invoice deemed to be an integral part of LC.</div>
+                </div>
 
-            <div class="flex items-center space-x-3">
-                <div id="step-spinner" class="w-4 h-4 border-2 border-os-primary border-t-transparent rounded-full animate-spin"></div>
-                <div class="flex-1 overflow-hidden">
-                    <h3 id="current-step-title" class="text-sm font-semibold text-white truncate">প্যাকেজ ডাউনলোড করা হচ্ছে...</h3>
-                    <p id="current-step-desc" class="text-xs text-slate-400 truncate">Downloading system kernel core files...</p>
+                <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: flex-end; font-size: ${bar5Font}px;">
+                    <div style="text-align: center; width: 220px;">
+                        <div style="font-weight: bold;">For Sterling Accessories Ltd.</div>
+                        <div style="position: relative; height: ${sigGap}px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                            <img src="${stampImageUrl}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: ${stampWidth}px; max-height: 100%; max-width: 100%; object-fit: contain; opacity: 0.85; pointer-events: none;" alt="Stamp"/>
+                        </div>
+                        <div style="font-weight: bold; margin-top: 2px;">Authorised Signature</div>
+                    </div>
+
+                    <div style="text-align: center; width: 220px;">
+                        <div style="font-weight: bold;">Buyer Approval</div>
+                        <div style="height: ${sigGap}px;"></div>
+                        <div style="font-weight: bold; margin-top: 2px;">Signature of Buyer</div>
+                    </div>
                 </div>
             </div>
-        </div>
+        `;
 
-        <!-- System Controls & Reboot Panel -->
-        <div class="flex flex-wrap items-center justify-center gap-3 w-full max-w-md">
-            <button id="reboot-btn" disabled onclick="simulateReboot()" class="w-full py-3 px-6 rounded-lg bg-slate-800 text-slate-500 font-semibold text-sm transition-all duration-300 flex items-center justify-center space-x-2 cursor-not-allowed border border-slate-700">
-                <i class="fa-solid fa-power-off"></i>
-                <span>সিস্টেম রিবুট করুন (Reboot System)</span>
-            </button>
-            
-            <div class="flex justify-between items-center w-full px-1 text-xs text-slate-400 font-mono">
-                <label class="flex items-center space-x-2 cursor-pointer hover:text-slate-200">
-                    <input type="checkbox" id="haptic-toggle" checked class="rounded bg-slate-800 border-slate-700 text-os-primary focus:ring-0">
-                    <span>শব্দ এবং হ্যাপ্টিক ফিডব্যাক</span>
-                </label>
-                <button onclick="toggleLang()" class="hover:text-os-primary underline transition-colors">
-                    <i class="fa-solid fa-globe mr-1"></i><span id="lang-btn-text">English Version</span>
-                </button>
-            </div>
-        </div>
+        setTimeout(() => {
+            window.print();
+        }, 150);
+        
+        setTimeout(() => {
+            document.title = originalTitle;
+        }, 1000);
+    }
 
-    </main>
+    async function exportToExcel() {
+        const piType = document.getElementById('piType').value;
+        const selectedItems = items.filter(item => item.piType === piType);
 
-    <!-- Matrix Terminal Logs Console Section -->
-    <footer class="w-full px-4 py-3 bg-os-card/90 border-t border-os-border/60 relative z-10 backdrop-blur-lg">
-        <div class="max-w-4xl mx-auto">
-            <div class="flex justify-between items-center mb-1.5 text-xs font-mono text-slate-400">
-                <span class="flex items-center gap-2">
-                    <i class="fa-solid fa-terminal text-os-primary"></i> 
-                    লাইভ সিস্টেম কনসোল / DIAGNOSTIC LOGS
-                </span>
-                <span class="text-[10px] text-slate-500">AUTO-SCROLL ENABLED</span>
-            </div>
-            
-            <!-- Terminal Output Window -->
-            <div id="terminal-logs" class="terminal-scroll h-24 bg-black/60 rounded-lg p-2.5 font-mono text-xs overflow-y-auto border border-white/5 space-y-1 text-slate-300">
-                <div class="text-os-primary">[SYSTEM] Firmware update pipeline initialized.</div>
-                <div class="text-slate-400">[INIT] Mounting virtual partition /dev/block/bootdevice/by-name/system...</div>
-            </div>
-        </div>
-    </footer>
+        if (selectedItems.length === 0) {
+            alert('No data available to export!');
+            return;
+        }
 
-    <script>
-        // Multilingual step texts
-        const updateSteps = [
-            {
-                bnTitle: "১. সিস্টেম প্যাকেজ ডাউনলোড হচ্ছে...",
-                enTitle: "1. Downloading system package...",
-                bnDesc: "সর্বশেষ সিকিউরিটি ও OS কার্নেল নামানো হচ্ছে...",
-                enDesc: "Fetching latest security & OS kernel files...",
-                icon: "fa-download"
-            },
-            {
-                bnTitle: "২. ফাইলের সততা যাচাই করা হচ্ছে...",
-                enTitle: "2. Verifying checksum & integrity...",
-                bnDesc: "SHA-256 প্যাকেজ হ্যাশ ভ্যালিডেশন সফল হয়েছে...",
-                enDesc: "Validating SHA-256 package hash integrity...",
-                icon: "fa-shield-check"
-            },
-            {
-                bnTitle: "৩. সিকিউরিটি প্যাচ ইনস্টল করা হচ্ছে...",
-                enTitle: "3. Installing security patches...",
-                bnDesc: "কার্নেল লেভেল ফায়ারওয়াল ও প্রাইভেসি আপডেট প্যাচিং...",
-                enDesc: "Patching kernel level firewall & privacy mods...",
-                icon: "fa-lock"
-            },
-            {
-                bnTitle: "৪. ব্যাকগ্রাউন্ড সার্ভিস অপটিমাইজেশন...",
-                enTitle: "4. Optimizing background services...",
-                bnDesc: "অ্যাপ্লিকেশন ক্যাশে ও প্রসেস ম্যানেজার টিউন করা হচ্ছে...",
-                enDesc: "Compiling system apps & tuning process manager...",
-                icon: "fa-gears"
-            },
-            {
-                bnTitle: "৫. ইনস্টলেশন চূড়ান্তকরণ...",
-                enTitle: "5. Finalizing system update...",
-                bnDesc: "সিস্টেম রিবুটের জন্য প্রস্তুত। ফাইল রিকভারি পয়েন্ট তৈরি সম্পন্ন।",
-                enDesc: "Ready for system reboot. Recovery point created.",
-                icon: "fa-circle-check"
+        if (typeof XLSX === 'undefined') {
+            alert('Excel Library not loaded. Please check your internet connection.');
+            return;
+        }
+
+        let [logoBase64, stampBase64] = await Promise.all([
+            fetchImageAsBase64(companyLogoUrl),
+            fetchImageAsBase64(stampImageUrl)
+        ]);
+
+        let headerCols = getColumnsForType(piType);
+        let customColWidths = headerCols.map((col) => {
+            if (piColumnWidths[piType] && piColumnWidths[piType][col]) {
+                return { wpx: Math.round(piColumnWidths[piType][col] * 0.95) };
             }
-        ];
+            if (col === "Description of Goods") return { wch: 30 };
+            if (col === "Measurement") return { wch: 18 };
+            return { wch: 14 };
+        });
 
-        // Terminal Log Samples
-        const fakeLogPool = [
-            "[OK] Verified block /dev/block/platform/soc/11120000.ufs",
-            "[SUCCESS] Unpacking kernel-v15.4.0-arm64.img",
-            "[INFO] Checking encryption keys against hardware TPM",
-            "[PATCH] Applied security fix CVE-2026-8910 to neural engine",
-            "[OPTIMIZE] Pre-compiling bytecode for System UI framework",
-            "[SYSTEM] Allocating 2048MB virtual memory buffer",
-            "[SUCCESS] Thermal throttling check passed (38°C optimal)",
-            "[OK] Updated graphics pipeline driver for Vulkan API",
-            "[SUCCESS] Storage trim completed on /system partition",
-            "[OK] Synced configuration settings to NVRAM"
-        ];
+        const customFontSize = parseInt(document.getElementById('bar1HeaderFont')?.value) || 20;
+        const piNo = document.getElementById('piNo').value || '';
+        const piDate = document.getElementById('piDate').value || '';
+        const buyerName = document.getElementById('buyerName').value || '';
+        const buyerAddressInput = document.getElementById('buyerAddress').value || '';
+        const buyerRef = document.getElementById('buyerRef').value || '';
+        const attn = document.getElementById('attn').value || '';
+        const hsCodeVal = document.getElementById('hsCodeInput')?.value || '';
 
-        let currentOverallProgress = 0;
-        let currentStepIndex = 0;
-        let isBengali = true;
-        let soundEnabled = true;
+        const buyerAddressLines = buyerAddressInput ? buyerAddressInput.split('\n') : [""];
+        let totalQty = 0, totalAmount = 0;
 
-        // HTML Elements
-        const progressCircle = document.getElementById('progress-circle');
-        const percentageText = document.getElementById('percentage-text');
-        const stepProgressBar = document.getElementById('step-progress-bar');
-        const stepPercentage = document.getElementById('step-percentage');
-        const currentStepNum = document.getElementById('current-step-num');
-        const currentStepTitle = document.getElementById('current-step-title');
-        const currentStepDesc = document.getElementById('current-step-desc');
-        const statusIcon = document.getElementById('status-icon');
-        const rebootBtn = document.getElementById('reboot-btn');
-        const terminalLogs = document.getElementById('terminal-logs');
-        const tempDisplay = document.getElementById('temp-display');
-
-        // Circle Circumference Calculation
-        const radius = progressCircle.r.baseVal.value;
-        const circumference = 2 * Math.PI * radius;
-        progressCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-
-        // Web Audio API Audio Synthesizer (No external sound files required)
-        let audioCtx = null;
-        function playBeep(freq = 440, type = 'sine', duration = 0.08) {
-            const hapticToggle = document.getElementById('haptic-toggle');
-            if(!hapticToggle || !hapticToggle.checked) return;
-
-            try {
-                if (!audioCtx) {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch(e) {
-                // Audio failure silent fallback
-            }
-        }
-
-        // Set Radial Progress
-        function setProgress(percent) {
-            const offset = circumference - (percent / 100) * circumference;
-            progressCircle.style.strokeDashoffset = offset;
-            percentageText.innerText = `${Math.floor(percent)}%`;
-        }
-
-        // Add fake console line
-        function appendLog(message, type = 'info') {
-            const logEntry = document.createElement('div');
-            const now = new Date();
-            const timeStr = now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
-            
-            if (type === 'success') {
-                logEntry.className = 'text-os-success font-medium';
-            } else if (type === 'warn') {
-                logEntry.className = 'text-os-warning';
-            } else {
-                logEntry.className = 'text-slate-300';
-            }
-
-            logEntry.innerHTML = `<span class="text-slate-500">[${timeStr}]</span> ${message}`;
-            terminalLogs.appendChild(logEntry);
-            terminalLogs.scrollTop = terminalLogs.scrollHeight;
-        }
-
-        // Update Step Info UI
-        function updateStepUI() {
-            const step = updateSteps[currentStepIndex];
-            currentStepNum.innerText = currentStepIndex + 1;
-            currentStepTitle.innerText = isBengali ? step.bnTitle : step.enTitle;
-            currentStepDesc.innerText = isBengali ? step.bnDesc : step.enDesc;
-            statusIcon.className = `fa-solid ${step.icon} animate-pulse`;
-        }
-
-        // Core Update Simulation Loop
-        function runUpdateEngine() {
-            const interval = setInterval(() => {
-                if (currentOverallProgress >= 100) {
-                    currentOverallProgress = 100;
-                    setProgress(100);
-                    stepProgressBar.style.width = '100%';
-                    stepPercentage.innerText = '100%';
-                    clearInterval(interval);
-                    onUpdateComplete();
-                    return;
-                }
-
-                // Increment overall progress smoothly
-                currentOverallProgress += Math.random() * 0.4 + 0.1;
-                if (currentOverallProgress > 100) currentOverallProgress = 100;
-                
-                setProgress(currentOverallProgress);
-
-                // Calculate current step based on percentage (5 steps, 20% each)
-                const calculatedStep = Math.min(Math.floor(currentOverallProgress / 20), 4);
-                
-                if (calculatedStep !== currentStepIndex) {
-                    currentStepIndex = calculatedStep;
-                    updateStepUI();
-                    playBeep(600, 'triangle', 0.12);
-                    appendLog(`[STEP] Switched to update phase: ${updateSteps[currentStepIndex].enTitle}`, 'warn');
-                }
-
-                // Step specific percentage
-                const stepProg = ((currentOverallProgress % 20) / 20) * 100;
-                stepProgressBar.style.width = `${stepProg}%`;
-                stepPercentage.innerText = `${Math.floor(stepProg)}%`;
-
-                // Randomly add system log
-                if (Math.random() < 0.2) {
-                    const randomLog = fakeLogPool[Math.floor(Math.random() * fakeLogPool.length)];
-                    appendLog(randomLog, Math.random() > 0.5 ? 'success' : 'info');
-                    playBeep(300, 'sine', 0.04);
-                }
-
-                // Random temperature variation
-                if (Math.random() < 0.05) {
-                    const fakeTemp = (37 + Math.random() * 3).toFixed(1);
-                    tempDisplay.innerText = `${fakeTemp}°C`;
-                }
-
-            }, 250);
-        }
-
-        // Completion Handler
-        function onUpdateComplete() {
-            document.getElementById('step-spinner').classList.remove('animate-spin', 'border-os-primary');
-            document.getElementById('step-spinner').classList.add('fa-solid', 'fa-circle-check', 'text-os-success');
-            
-            rebootBtn.disabled = false;
-            rebootBtn.classList.remove('bg-slate-800', 'text-slate-500', 'cursor-not-allowed', 'border-slate-700');
-            rebootBtn.classList.add('bg-gradient-to-r', 'from-os-primary', 'to-blue-600', 'text-black', 'hover:opacity-90', 'shadow-[0_0_20px_rgba(0,240,255,0.4)]', 'cursor-pointer', 'border-transparent');
-            
-            appendLog('[COMPLETE] System update installation successful. System ready for reboot.', 'success');
-            playBeep(880, 'sine', 0.3);
-        }
-
-        // Reboot Action Simulation
-        function simulateReboot() {
-            playBeep(523.25, 'square', 0.2);
-            document.body.innerHTML = `
-                <div class="min-h-screen bg-black flex flex-col items-center justify-center text-center p-4">
-                    <div class="w-12 h-12 rounded-full border-2 border-slate-700 border-t-white animate-spin mb-6"></div>
-                    <h2 class="text-white text-xl font-mono tracking-widest uppercase">Restarting OS...</h2>
-                    <p class="text-slate-500 text-xs mt-2 font-mono">Applying kernel configurations. Please wait.</p>
-                </div>
-            `;
-            setTimeout(() => {
-                window.location.reload();
-            }, 3500);
-        }
-
-        // Toggle Language
-        function toggleLang() {
-            isBengali = !isBengali;
-            document.getElementById('lang-btn-text').innerText = isBengali ? "English Version" : "বাংলা সংস্করণ";
-            updateStepUI();
-        }
-
-        // Toggle Fullscreen Function
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    // Fullscreen request denied or not supported
-                });
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        }
-
-        // Auto trigger full screen on first touch/click
-        window.addEventListener('click', () => {
-            if (audioCtx && audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }, { once: true });
-
-        // Initialize on Load
-        window.onload = function() {
-            updateStepUI();
-            runUpdateEngine();
+        const thinBlackBorder = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
         };
-    </script>
+
+        const alignLeft = { vertical: 'center', horizontal: 'left', wrapText: true };
+        const alignCenter = { vertical: 'center', horizontal: 'center', wrapText: true };
+        const alignRight = { vertical: 'center', horizontal: 'right', wrapText: true };
+        const lastColIndex = headerCols.length - 1;
+        const halfCol = Math.floor(lastColIndex / 2);
+
+        const merges = [];
+        const rowHeights = [];
+
+        merges.push({ s: { r: 0, c: 0 }, e: { r: 0, c: lastColIndex } });
+        merges.push({ s: { r: 1, c: 0 }, e: { r: 1, c: lastColIndex } });
+        merges.push({ s: { r: 2, c: 0 }, e: { r: 2, c: lastColIndex } });
+        
+        rowHeights.push({ hpt: 38 });
+        rowHeights.push({ hpt: 18 });
+        rowHeights.push({ hpt: 18 });
+        rowHeights.push({ hpt: 8  });
+
+        let rawData = [
+            [{ v: "       STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize, name: 'Broadway' }, alignment: alignCenter } }],
+            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { sz: 9.5 }, alignment: alignCenter } }],
+            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, sz: 9.5, underline: true }, alignment: alignCenter } }],
+            []
+        ];
+
+        let row4Idx = rawData.length;
+        let midCol = Math.floor(lastColIndex / 2);
+        let leftEnd = Math.max(0, midCol - 2);
+        let centerStart = Math.min(leftEnd + 1, midCol - 1);
+        let centerEnd = Math.max(centerStart, Math.min(lastColIndex - 1, midCol + 1));
+
+        if (leftEnd >= 0) merges.push({ s: { r: row4Idx, c: 0 }, e: { r: row4Idx, c: leftEnd } });
+        if (centerEnd >= centerStart) merges.push({ s: { r: row4Idx, c: centerStart }, e: { r: row4Idx, c: centerEnd } });
+        rowHeights.push({ hpt: 20 });
+
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
+            if (i === 0) return { v: `PI NO: ${piNo}`, s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
+            if (i === centerStart) return { v: "PROFORMA INVOICE", s: { font: { bold: true, underline: true, sz: 13 }, alignment: alignCenter } };
+            return { v: "" };
+        }));
+
+        let row5Idx = rawData.length;
+        if (leftEnd >= 0) merges.push({ s: { r: row5Idx, c: 0 }, e: { r: row5Idx, c: leftEnd } });
+        rowHeights.push({ hpt: 20 });
+
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
+            if (i === 0) return { v: `DATE: ${piDate}`, s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
+            return { v: "" };
+        }));
+
+        rowHeights.push({ hpt: 10 });
+        rawData.push([]);
+
+        let rowBuyerHeaderIdx = rawData.length;
+        merges.push({ s: { r: rowBuyerHeaderIdx, c: 0 }, e: { r: rowBuyerHeaderIdx, c: halfCol } });
+        merges.push({ s: { r: rowBuyerHeaderIdx, c: halfCol + 1 }, e: { r: rowBuyerHeaderIdx, c: lastColIndex } });
+        rowHeights.push({ hpt: 20 });
+
+        rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
+            if (i === 0) return { v: "NAME & ADDRESS OF BUYER:", s: { font: { bold: true, underline: true, sz: 10 }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "NAME & ADDRESS OF SELLER:", s: { font: { bold: true, underline: true, sz: 10 }, alignment: alignRight } };
+            return { v: "" };
+        }));
+
+        const sellerDetails = [
+            "STERLING ACCESSORIES LTD.",
+            "Holding-375, East Bagbari,",
+            "Kashimpur, Gazipur, Bangladesh.",
+            "BIN Number: 005634023-1201."
+        ];
+
+        let buyerInfoFormatted = [
+            buyerName,
+            ...buyerAddressLines,
+            `BUYER REF: ${buyerRef}`,
+            `Attn: ${attn}`
+        ];
+
+        let maxHeaderRows = Math.max(buyerInfoFormatted.length, sellerDetails.length);
+        for (let r = 0; r < maxHeaderRows; r++) {
+            let bText = buyerInfoFormatted[r] || "";
+            let sText = sellerDetails[r] || "";
+
+            let currentRowIdx = rawData.length;
+            merges.push({ s: { r: currentRowIdx, c: 0 }, e: { r: currentRowIdx, c: halfCol } });
+            merges.push({ s: { r: currentRowIdx, c: halfCol + 1 }, e: { r: currentRowIdx, c: lastColIndex } });
+            rowHeights.push({ hpt: bText.length > 50 ? 28 : 18 });
+
+            rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
+                if (i === 0) return { v: bText, s: { font: { bold: r === 0 || bText.startsWith("BUYER REF:"), sz: 9.5 }, alignment: alignLeft } };
+                if (i === halfCol + 1) return { v: sText, s: { font: { bold: r === 0, sz: 9.5 }, alignment: alignRight } };
+                return { v: "" };
+            }));
+        }
+
+        rowHeights.push({ hpt: 12 });
+        rawData.push([]);
+
+        let headerRowIdx = rawData.length;
+        let headerCustomH = (piRowHeights[piType] && piRowHeights[piType]['header']) ? Math.round(piRowHeights[piType]['header'] * 0.75) : 24;
+        rowHeights.push({ hpt: headerCustomH });
+
+        rawData.push(headerCols.map(col => ({
+            v: col,
+            s: {
+                font: { bold: true, sz: 10 },
+                alignment: alignCenter,
+                fill: { fgColor: { rgb: "F2F2F2" } },
+                border: thinBlackBorder
+            }
+        })));
+
+        selectedItems.forEach((item, idx) => {
+            let row = [];
+            let baseP = item.price || 0;
+            let oPct = item.othersPercent || 0;
+            let tPct = item.totalPercent || 0;
+            let finalUnitP = item.effectivePrice !== undefined ? item.effectivePrice : (baseP + (baseP * oPct / 100) + (baseP * tPct / 100));
+            
+            let customRowH = (piRowHeights[piType] && piRowHeights[piType][idx]) ? Math.round(piRowHeights[piType][idx] * 0.75) : 22;
+            rowHeights.push({ hpt: customRowH });
+
+            headerCols.forEach(col => {
+                let cellVal = "";
+                let align = alignCenter;
+
+                if (item.customValues && item.customValues[col] !== undefined && item.customValues[col] !== '') {
+                    cellVal = item.customValues[col];
+                }
+                else if (col === "SL No.") {
+                    cellVal = idx + 1;
+                }
+                else if (col === "Description of Goods") {
+                    cellVal = item.desc || "";
+                    align = alignLeft;
+                }
+                else if (col === "Measurement") {
+                    cellVal = item.measurement || "";
+                }
+                else if (col === "Style/PO No.") {
+                    cellVal = item.stylepo || "";
+                }
+                else if (col === "Color") {
+                    cellVal = item.color || "";
+                }
+                else if (col === "Unit") {
+                    cellVal = item.unit || "";
+                }
+                else if (col === "QTY") {
+                    cellVal = item.qty || 0;
+                    totalQty += item.qty || 0;
+                    align = alignRight;
+                }
+                else if (col === "QTY (Dzn)") {
+                    let dznVal = ((item.qty || 0) / 12);
+                    cellVal = parseFloat(dznVal.toFixed(2));
+                    align = alignRight;
+                }
+                else if (col === "Unit Price (USD)") {
+                    cellVal = finalUnitP;
+                    align = alignRight;
+                }
+                else if (col === "Amount (USD)") {
+                    let finalAmt = 0;
+                    let customCols = customColumnsStore[piType] || [];
+                    let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
+                    if (hasQtyDzn) {
+                        let dznVal = (item.qty || 0) / 12;
+                        finalAmt = dznVal * finalUnitP;
+                    } else {
+                        finalAmt = (item.qty || 0) * finalUnitP;
+                    }
+                    cellVal = parseFloat(finalAmt.toFixed(2));
+                    totalAmount += finalAmt;
+                    align = alignRight;
+                }
+                else {
+                    let safeKey = col.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    cellVal = item[safeKey] || item[col] || "";
+                }
+
+                let numFmt = undefined;
+                if (col === "Unit Price (USD)") numFmt = "0.0000";
+                if (col === "Amount (USD)") numFmt = "$#,##0.00";
+
+                row.push({
+                    v: cellVal,
+                    s: {
+                        alignment: align,
+                        border: thinBlackBorder,
+                        ...(numFmt ? { numberFormat: numFmt } : {})
+                    }
+                });
+            });
+            rawData.push(row);
+        });
+
+        let totalRowIdx = rawData.length;
+        let firstQtyIdx = headerCols.findIndex(c => c === "QTY");
+        let colspanCount = firstQtyIdx > 0 ? firstQtyIdx : 1;
+
+        merges.push({ s: { r: totalRowIdx, c: 0 }, e: { r: totalRowIdx, c: colspanCount - 1 } });
+        let totalRowH = (piRowHeights[piType] && piRowHeights[piType]['total']) ? Math.round(piRowHeights[piType]['total'] * 0.75) : 24;
+        rowHeights.push({ hpt: totalRowH });
+
+        let totalRowData = Array.from({ length: headerCols.length }, (_, i) => {
+            let colName = headerCols[i];
+            if (i === 0) {
+                return { v: "Total =", s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder } };
+            } else if (i < colspanCount) {
+                return { v: "", s: { border: thinBlackBorder } };
+            } else if (colName === "QTY") {
+                return { v: totalQty, s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder } };
+            } else if (colName === "QTY (Dzn)") {
+                return { v: parseFloat((totalQty / 12).toFixed(2)), s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder } };
+            } else if (colName === "Amount (USD)") {
+                return { v: parseFloat(totalAmount.toFixed(2)), s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder, numberFormat: "$#,##0.00" } };
+            } else {
+                return { v: "-", s: { alignment: alignCenter, border: thinBlackBorder } };
+            }
+        });
+        rawData.push(totalRowData);
+
+        let inWordRowIdx = rawData.length;
+        merges.push({ s: { r: inWordRowIdx, c: 0 }, e: { r: inWordRowIdx, c: lastColIndex } });
+        rowHeights.push({ hpt: 20 });
+
+        rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
+            if (i === 0) return { v: `Total Value In Word: ${numberToWords(totalAmount)}`, s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
+            return { v: "" };
+        }));
+
+        rowHeights.push({ hpt: 10 });
+        rawData.push([]);
+
+        let termsHeaderIdx = rawData.length;
+        merges.push({ s: { r: termsHeaderIdx, c: 0 }, e: { r: termsHeaderIdx, c: lastColIndex } });
+        rowHeights.push({ hpt: 18 });
+
+        rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
+            if (i === 0) return { v: "TERMS & CONDITIONS:", s: { font: { bold: true, underline: true, sz: 10 }, alignment: alignLeft } };
+            return { v: "" };
+        }));
+
+        const termsList = [
+            ["1. PAYMENT TERMS", ": A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery."],
+            ["", ": B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS."],
+            ["", ": C) No LC will be Entertained which value less than US $ 2,000.00"],
+            ["", ": D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00"],
+            ["2. Delivery Lead Time", ": A) Goods will be ready for delivery within 14 working days (can vary depend on quality & quantity) after received of LC & UD both for customs UP issue."],
+            ["", ": B) Utilization Declaration (UD), along with the bank attested copy of LC or Sales Contract has to be in place within 7 working Days of BTB LC."],
+            ["", ": C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant."],
+            ["", ": D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed."],
+            ["", ": E) Accessories for 100% Export Oriented Readymade Garments Industry."],
+            ["3. Delivery/Inco Term", ": CPT."],
+            ["4. Country of origin", ": Bangladesh."],
+            ["5. Presentation Period", ": 30 days from the latest Shipment date in the LC."],
+            ["6. Shipment Date", ": Should be 60 days minimum from the LC opening Date."],
+            ["7. Expiry date of LC", ": LC Expiry date Should be 30 days from the latest Shipment date in the LC."],
+            ["8. Validity", ": 30 days from the date of P/I issuance."],
+            ["9. Advising Bank", ": DHAKA BANK PLC. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL."],
+            ["10. Bank Charge", ": All Bank Charges except beneficiary's bank are on Opener's Account."],
+            ["11. Overdue Interest", ": Payment will be made within the date of Maturity. If failed, overdue interest to be paid by opener at 16%."],
+            ["12. Deduction", ": Deduction clause for any discrepancies is not acceptable."],
+            ["13. Claim/ Complain", ": Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change."],
+            ["14. H.S. CODE", `: ${hsCodeVal}`],
+            ["N.B.", ": This Proforma Invoice deemed to be an integral part of LC."]
+        ];
+
+        termsList.forEach(([label, value]) => {
+            let rowIdx = rawData.length;
+            if (lastColIndex >= 2) {
+                merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: 1 } });
+                merges.push({ s: { r: rowIdx, c: 2 }, e: { r: rowIdx, c: lastColIndex } });
+            } else {
+                merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: lastColIndex } });
+            }
+
+            let termH = 17;
+            if (value.length > 200) termH = 34;
+            else if (value.length > 120) termH = 25;
+            else if (value.length > 60) termH = 19;
+            rowHeights.push({ hpt: termH });
+
+            rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
+                if (i === 0) return { v: label, s: { font: { bold: label !== "", sz: 8.5 }, alignment: alignLeft } };
+                if (i === (lastColIndex >= 2 ? 2 : 1)) return { v: value, s: { font: { sz: 8.5 }, alignment: { ...alignLeft, wrapText: true } } };
+                return { v: "" };
+            }));
+        });
+
+        rowHeights.push({ hpt: 12 });
+        rawData.push([]);
+
+        let sigIdx = rawData.length;
+        merges.push({ s: { r: sigIdx, c: 0 }, e: { r: sigIdx, c: halfCol } });
+        merges.push({ s: { r: sigIdx, c: halfCol + 1 }, e: { r: sigIdx, c: lastColIndex } });
+        rowHeights.push({ hpt: 20 });
+
+        rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
+            if (i === 0) return { v: "For Sterling Accessories Ltd.", s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "Buyer Approval", s: { font: { bold: true, sz: 10 }, alignment: alignRight } };
+            return { v: "" };
+        }));
+
+        let sigSpaceIdx = rawData.length;
+        rowHeights.push({ hpt: 20 });
+        rowHeights.push({ hpt: 20 });
+        rowHeights.push({ hpt: 20 });
+        rawData.push([]);
+        rawData.push([]);
+        rawData.push([]);
+
+        let sigTitleIdx = rawData.length;
+        merges.push({ s: { r: sigTitleIdx, c: 0 }, e: { r: sigTitleIdx, c: halfCol } });
+        merges.push({ s: { r: sigTitleIdx, c: halfCol + 1 }, e: { r: sigTitleIdx, c: lastColIndex } });
+        rowHeights.push({ hpt: 20 });
+
+        rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
+            if (i === 0) return { v: "Authorised Signature", s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "Signature of Buyer", s: { font: { bold: true, sz: 10 }, alignment: alignRight } };
+            return { v: "" };
+        }));
+
+        const wb = XLSX.utils.book_new();
+        const ws = {};
+
+        rawData.forEach((rowArr, r) => {
+            rowArr.forEach((cellObj, c) => {
+                if (!cellObj) return;
+                const cellRef = XLSX.utils.encode_cell({ r, c });
+                ws[cellRef] = cellObj;
+            });
+        });
+
+        ws['!ref'] = XLSX.utils.encode_range({
+            s: { r: 0, c: 0 },
+            e: { r: rawData.length - 1, c: lastColIndex }
+        });
+
+        ws['!cols'] = customColWidths;
+        ws['!rows'] = rowHeights;
+        ws['!merges'] = merges;
+
+        ws['!pageSetup'] = {
+            paperSize: 9,
+            orientation: 'portrait',
+            fitToWidth: 1,
+            fitToHeight: 0,
+            scale: 100
+        };
+
+        ws['!margins'] = {
+            left: 0.35, right: 0.35,
+            top: 0.4, bottom: 0.4,
+            header: 0.2, footer: 0.2
+        };
+
+        let imagesList = [];
+        if (logoBase64) {
+            imagesList.push({
+                name: 'CompanyLogo.png',
+                data: logoBase64,
+                opts: { base64: true },
+                type: 'png',
+                position: {
+                    type: 'twoCellAnchor',
+                    from: { col: 0, row: 0 },
+                    to: { col: 1, row: 2 }
+                }
+            });
+        }
+
+        if (stampBase64) {
+            imagesList.push({
+                name: 'SealStamp.png',
+                data: stampBase64,
+                opts: { base64: true },
+                type: 'png',
+                position: {
+                    type: 'twoCellAnchor',
+                    from: { col: 0, row: sigSpaceIdx },
+                    to: { col: 2, row: sigTitleIdx }
+                }
+            });
+        }
+
+        if (imagesList.length > 0) {
+            ws['!images'] = imagesList;
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, "Proforma Invoice");
+        
+        const sanitizedPiName = getSanitizedPiName().replace(/[\/\\?%*:|"<>]/g, '_');
+        XLSX.writeFile(wb, `${sanitizedPiName}.xlsx`);
+    }
+</script>
 </body>
 </html>
