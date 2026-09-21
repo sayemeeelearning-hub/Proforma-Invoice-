@@ -555,6 +555,17 @@
                 </select>
             </div>
 
+            <!-- কেস চেঞ্জ করার ড্রপডাউন অপশন -->
+            <div class="ribbon-group">
+                <span class="ribbon-title">Case</span>
+                <select id="textCaseSelect" onchange="applyTextCase(this.value)" style="padding: 2px 4px; font-size: 10px;">
+                    <option value="" disabled selected>Change Case</option>
+                    <option value="upper">UPPERCASE</option>
+                    <option value="lower">lowercase</option>
+                    <option value="sentence">Sentence case</option>
+                </select>
+            </div>
+
             <div class="ribbon-group">
                 <span class="ribbon-title">Cell (M)</span>
                 <button type="button" class="btn-merge" onclick="mergeSelectedCells()">🔗 Merge</button>
@@ -735,6 +746,7 @@
         }
     });
 
+    // --- ডিলিট এবং আনডু/রিডু হ্যান্ডলিং (পুরো ইন্টারফেসে ডিলিট বাটন কাজ করার জন্য) ---
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const currentType = document.getElementById('piType').value;
@@ -747,12 +759,40 @@
             }
         }
 
-        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        const activeElem = document.activeElement;
+        const activeTag = activeElem ? activeElem.tagName.toLowerCase() : '';
         const isCtrl = e.ctrlKey || e.metaKey;
 
+        // কিবোর্ডের Delete বা Backspace চাপলে সিলেক্টেড সেল বা ইনপুটের ডেটা মুছে ফেলা এবং আনডু তে যুক্ত করা
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (activeTag === 'input' || activeTag === 'textarea') {
+                // ইনপুট বা টেক্সটএরিয়ায় টাইপ করার সময় ডিলিট কাজ করতে দিলে সমস্যা হতে পারে, তাই ব্ল্যাংক হলে বা ফুল সিলেক্টেড থাকলে হ্যান্ডেল হবে
+                return;
+            }
+
+            const currentType = document.getElementById('piType').value;
+            const table = document.getElementById(`table-${currentType}`);
+            if (table) {
+                const selectedCells = table.querySelectorAll('td.cell-selected');
+                if (selectedCells.length > 0) {
+                    e.preventDefault();
+                    saveStateForUndo();
+                    selectedCells.forEach(cell => {
+                        cell.innerText = '';
+                        let rIdx = parseInt(cell.getAttribute('data-row'));
+                        let cIdx = parseInt(cell.getAttribute('data-col'));
+                        if (!isNaN(rIdx) && !isNaN(cIdx)) {
+                            updateCellContent({ target: cell }, rIdx, cIdx);
+                        }
+                    });
+                    saveDataToStorage();
+                }
+            }
+        }
+
         if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
-            if (activeTag === 'td' || activeTag === 'th') {
-                document.activeElement.blur();
+            if (activeTag === 'td' || activeTag === 'th' || activeTag === 'input' || activeTag === 'textarea') {
+                activeElem.blur();
             }
             if (e.shiftKey) { 
                 e.preventDefault(); 
@@ -1389,7 +1429,7 @@
             });
         });
         
-        ["Bleach/ Non Bleach", "Project No.", "Article No.", "Others", "QTY (Dzn)", "Remarks", "Brand", "Season", "PO Ref", "Buyer Style", "Shipment Mode"].forEach(h => {
+        ["Bleach/ Non Bleach", "Project No.", "Article No.", "Others", "QTY (Dzn)", "Remarks", "Brand", "Style No.", "PO No.", "Buyer Style", "Shipment Mode"].forEach(h => {
             if (!uniqueHeaders.includes(h) && !currentCols.includes(h)) uniqueHeaders.push(h);
         });
 
@@ -1900,7 +1940,7 @@
                         let alignStyle = `text-align: ${alignStyleVal}; width: ${w}px;`;
 
                         let rowResizerHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
-                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
+                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')" onpaste="handleTablePaste(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
                     }
                 });
 
@@ -1959,6 +1999,126 @@
         makeRowsResizable();
     }
 
+    function applyTextCase(caseType) {
+        if (!caseType) return;
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('.cell-selected');
+        if (selectedCells.length === 0) {
+            alert("Please select table cells first!");
+            document.getElementById('textCaseSelect').selectedIndex = 0;
+            return;
+        }
+
+        saveStateForUndo();
+
+        selectedCells.forEach(cell => {
+            let text = cell.innerText.trim();
+            if (!text) return;
+
+            if (caseType === 'upper') {
+                text = text.toUpperCase();
+            } else if (caseType === 'lower') {
+                text = text.toLowerCase();
+            } else if (caseType === 'sentence') {
+                text = text.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, c => c.toUpperCase());
+            }
+
+            cell.innerText = text;
+            let rIdx = parseInt(cell.getAttribute('data-row'));
+            let cIdx = parseInt(cell.getAttribute('data-col'));
+            if (!isNaN(rIdx) && !isNaN(cIdx)) {
+                updateCellContent({ target: cell }, rIdx, cIdx);
+            }
+        });
+
+        document.getElementById('textCaseSelect').selectedIndex = 0;
+        saveDataToStorage();
+    }
+
+    function handleTablePaste(e, startRIdx, startCIdx, type) {
+        e.preventDefault();
+        const clipboardData = e.clipboardData || window.clipboardData;
+        if (!clipboardData) return;
+        const pastedText = clipboardData.getData('text');
+        if (!pastedText) return;
+
+        saveStateForUndo();
+
+        const rows = pastedText.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
+        const gridData = rows.map(row => row.split('\t'));
+
+        const colsList = getColumnsForType(type);
+        const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === type);
+
+        gridData.forEach((rowCells, rOffset) => {
+            let targetRIdx = startRIdx + rOffset;
+            let actualItemIndex = -1;
+
+            if (targetRIdx < filteredItems.length) {
+                actualItemIndex = filteredItems[targetRIdx].originalIndex;
+            } else {
+                let newSlNo = items.length > 0 ? Math.max(...items.map(i => i.slNo || 0)) + 1 : 1;
+                let newItem = { piType: type, slNo: newSlNo, qty: 0, price: 0, effectivePrice: 0, amount: 0, unit: 'Pcs', customValues: {} };
+                items.push(newItem);
+                actualItemIndex = items.length - 1;
+                filteredItems.push({ ...newItem, originalIndex: actualItemIndex });
+            }
+
+            rowCells.forEach((cellVal, cOffset) => {
+                let targetCIdx = startCIdx + cOffset;
+                if (targetCIdx < colsList.length) {
+                    let colName = colsList[targetCIdx];
+                    let cleanVal = cellVal.trim();
+
+                    if (colName === "Description of Goods") items[actualItemIndex].desc = cleanVal;
+                    else if (colName === "Measurement") items[actualItemIndex].measurement = cleanVal;
+                    else if (colName === "Style/PO No.") items[actualItemIndex].stylepo = cleanVal;
+                    else if (colName === "Color") items[actualItemIndex].color = cleanVal;
+                    else if (colName === "Unit") items[actualItemIndex].unit = cleanVal;
+                    else if (colName === "QTY") {
+                        let q = parseFloat(cleanVal) || 0;
+                        items[actualItemIndex].qty = q;
+                        recalculateItemAmount(actualItemIndex, type);
+                    }
+                    else if (colName === "Unit Price (USD)") {
+                        let p = parseFloat(cleanVal.replace(/[^0-9.]/g, '')) || 0;
+                        items[actualItemIndex].price = p;
+                        items[actualItemIndex].effectivePrice = p;
+                        recalculateItemAmount(actualItemIndex, type);
+                    }
+                    else {
+                        if (!items[actualItemIndex].customValues) items[actualItemIndex].customValues = {};
+                        items[actualItemIndex].customValues[colName] = cleanVal;
+                    }
+                }
+            });
+        });
+
+        saveDataToStorage();
+        updateTable();
+    }
+
+    function recalculateItemAmount(actualIndex, type) {
+        let item = items[actualIndex];
+        let baseP = item.price || 0;
+        let oPct = item.othersPercent || 0;
+        let tPct = item.totalPercent || 0;
+        let effectivePrice = baseP + (baseP * oPct / 100) + (baseP * tPct / 100);
+        item.effectivePrice = parseFloat(effectivePrice.toFixed(4));
+
+        let customCols = customColumnsStore[type] || [];
+        let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
+        if (hasQtyDzn) {
+            let dznVal = (item.qty || 0) / 12;
+            item.amount = parseFloat((dznVal * effectivePrice).toFixed(4));
+        } else {
+            item.amount = parseFloat(((item.qty || 0) * effectivePrice).toFixed(4));
+        }
+    }
+
     function onCellFocus(e) {
         saveStateForUndo();
     }
@@ -1997,7 +2157,7 @@
     }
 
     function updateFooterContent(event, type, idx) {
-        if (!customFootersStore[type]) customFootersStore[type] = {};
+        if (!customHeadersStore[type]) customHeadersStore[type] = {};
         customFootersStore[type][idx] = event.target.innerText.replace(/[\r\n]+/gm, "").trim();
         saveDataToStorage();
     }
@@ -2689,7 +2849,7 @@
         const buyerAddressInput = document.getElementById('buyerAddress').value || '';
         const buyerRef = document.getElementById('buyerRef').value || '';
         const attn = document.getElementById('attn').value || '';
-        const hsCodeVal = document.getElementById('hsCodeInput')?.value || '';
+        const hsCodeVal = document.getElementById('hsCodeInput')?.value.trim() || '';
 
         const buyerAddressLines = buyerAddressInput ? buyerAddressInput.split('\n') : [""];
         let totalQty = 0, totalAmount = 0;
@@ -2721,8 +2881,8 @@
 
         let rawData = [
             [{ v: "       STERLING ACCESSORIES LIMITED.", s: { font: { bold: true, sz: customFontSize, name: 'Broadway' }, alignment: alignCenter } }],
-            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { sz: 9.5 }, alignment: alignCenter } }],
-            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, sz: 9.5, underline: true }, alignment: alignCenter } }],
+            [{ v: "(100% Export Oriented Garments Accessories Manufacturing Industries.)", s: { font: { sz: 9.5, name: 'Arial' }, alignment: alignCenter } }],
+            [{ v: "FACTORY : HOLDING NO-375, EAST BAGBARI, KASHIMPUR, GAZIPUR.", s: { font: { bold: true, sz: 9.5, underline: true, name: 'Arial' }, alignment: alignCenter } }],
             []
         ];
 
@@ -2737,8 +2897,8 @@
         rowHeights.push({ hpt: 20 });
 
         rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
-            if (i === 0) return { v: `PI NO: ${piNo}`, s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
-            if (i === centerStart) return { v: "PROFORMA INVOICE", s: { font: { bold: true, underline: true, sz: 13 }, alignment: alignCenter } };
+            if (i === 0) return { v: `PI NO: ${piNo}`, s: { font: { bold: true, sz: 10, name: 'Arial' }, alignment: alignLeft } };
+            if (i === centerStart) return { v: "PROFORMA INVOICE", s: { font: { bold: true, underline: true, sz: 13, name: 'Arial' }, alignment: alignCenter } };
             return { v: "" };
         }));
 
@@ -2747,7 +2907,7 @@
         rowHeights.push({ hpt: 20 });
 
         rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
-            if (i === 0) return { v: `DATE: ${piDate}`, s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
+            if (i === 0) return { v: `DATE: ${piDate}`, s: { font: { bold: true, sz: 10, name: 'Arial' }, alignment: alignLeft } };
             return { v: "" };
         }));
 
@@ -2760,8 +2920,8 @@
         rowHeights.push({ hpt: 20 });
 
         rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
-            if (i === 0) return { v: "NAME & ADDRESS OF BUYER:", s: { font: { bold: true, underline: true, sz: 10 }, alignment: alignLeft } };
-            if (i === halfCol + 1) return { v: "NAME & ADDRESS OF SELLER:", s: { font: { bold: true, underline: true, sz: 10 }, alignment: alignRight } };
+            if (i === 0) return { v: "NAME & ADDRESS OF BUYER:", s: { font: { bold: true, underline: true, sz: 10, name: 'Arial' }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "NAME & ADDRESS OF SELLER:", s: { font: { bold: true, underline: true, sz: 10, name: 'Arial' }, alignment: alignRight } };
             return { v: "" };
         }));
 
@@ -2790,8 +2950,8 @@
             rowHeights.push({ hpt: bText.length > 50 ? 28 : 18 });
 
             rawData.push(Array.from({ length: lastColIndex + 1 }, (_, i) => {
-                if (i === 0) return { v: bText, s: { font: { bold: r === 0 || bText.startsWith("BUYER REF:"), sz: 9.5 }, alignment: alignLeft } };
-                if (i === halfCol + 1) return { v: sText, s: { font: { bold: r === 0, sz: 9.5 }, alignment: alignRight } };
+                if (i === 0) return { v: bText, s: { font: { bold: r === 0 || bText.startsWith("BUYER REF:"), sz: 9.5, name: 'Arial' }, alignment: alignLeft } };
+                if (i === halfCol + 1) return { v: sText, s: { font: { bold: r === 0, sz: 9.5, name: 'Arial' }, alignment: alignRight } };
                 return { v: "" };
             }));
         }
@@ -2806,7 +2966,7 @@
         rawData.push(headerCols.map(col => ({
             v: col,
             s: {
-                font: { bold: true, sz: 10 },
+                font: { bold: true, sz: 10, name: 'Arial' },
                 alignment: alignCenter,
                 fill: { fgColor: { rgb: "F2F2F2" } },
                 border: thinBlackBorder
@@ -2860,7 +3020,7 @@
                     align = alignRight;
                 }
                 else if (col === "Unit Price (USD)") {
-                    cellVal = finalUnitP;
+                    cellVal = `$${finalUnitP.toFixed(4)}`;
                     align = alignRight;
                 }
                 else if (col === "Amount (USD)") {
@@ -2873,7 +3033,7 @@
                     } else {
                         finalAmt = (item.qty || 0) * finalUnitP;
                     }
-                    cellVal = parseFloat(finalAmt.toFixed(2));
+                    cellVal = `$${finalAmt.toFixed(2)}`;
                     totalAmount += finalAmt;
                     align = alignRight;
                 }
@@ -2882,16 +3042,12 @@
                     cellVal = item[safeKey] || item[col] || "";
                 }
 
-                let numFmt = undefined;
-                if (col === "Unit Price (USD)") numFmt = "0.0000";
-                if (col === "Amount (USD)") numFmt = "$#,##0.00";
-
                 row.push({
                     v: cellVal,
                     s: {
+                        font: { name: 'Arial', sz: 9.5 },
                         alignment: align,
-                        border: thinBlackBorder,
-                        ...(numFmt ? { numberFormat: numFmt } : {})
+                        border: thinBlackBorder
                     }
                 });
             });
@@ -2909,107 +3065,147 @@
         let totalRowData = Array.from({ length: headerCols.length }, (_, i) => {
             let colName = headerCols[i];
             if (i === 0) {
-                return { v: "Total =", s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder } };
+                return { v: "Total =", s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
             } else if (i < colspanCount) {
                 return { v: "", s: { border: thinBlackBorder } };
             } else if (colName === "QTY") {
-                return { v: totalQty, s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder } };
+                return { v: totalQty, s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
             } else if (colName === "QTY (Dzn)") {
-                return { v: parseFloat((totalQty / 12).toFixed(2)), s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder } };
+                return { v: parseFloat((totalQty / 12).toFixed(2)), s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
             } else if (colName === "Amount (USD)") {
-                return { v: parseFloat(totalAmount.toFixed(2)), s: { font: { bold: true }, alignment: alignRight, border: thinBlackBorder, numberFormat: "$#,##0.00" } };
+                return { v: `$${totalAmount.toFixed(2)}`, s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
             } else {
-                return { v: "-", s: { alignment: alignCenter, border: thinBlackBorder } };
+                return { v: "-", s: { alignment: alignCenter, border: thinBlackBorder, font: { name: 'Arial', sz: 9.5 } } };
             }
         });
         rawData.push(totalRowData);
 
         let inWordRowIdx = rawData.length;
         merges.push({ s: { r: inWordRowIdx, c: 0 }, e: { r: inWordRowIdx, c: lastColIndex } });
-        rowHeights.push({ hpt: 20 });
+        rowHeights.push({ hpt: 18 });
 
         rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
-            if (i === 0) return { v: `Total Value In Word: ${numberToWords(totalAmount)}`, s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
+            if (i === 0) return { v: `Total Value In Word: ${numberToWords(totalAmount)}`, s: { font: { bold: true, sz: 9.5, name: 'Arial' }, alignment: alignLeft } };
             return { v: "" };
         }));
 
-        rowHeights.push({ hpt: 10 });
+        rowHeights.push({ hpt: 4 });
         rawData.push([]);
 
         let termsHeaderIdx = rawData.length;
         merges.push({ s: { r: termsHeaderIdx, c: 0 }, e: { r: termsHeaderIdx, c: lastColIndex } });
-        rowHeights.push({ hpt: 18 });
+        rowHeights.push({ hpt: 13 });
 
         rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
-            if (i === 0) return { v: "TERMS & CONDITIONS:", s: { font: { bold: true, underline: true, sz: 10 }, alignment: alignLeft } };
+            if (i === 0) return { v: "TERMS & CONDITIONS:", s: { font: { bold: true, underline: true, sz: 8.5, name: 'Arial' }, alignment: alignLeft } };
             return { v: "" };
         }));
 
-        const termsList = [
-            ["1. PAYMENT TERMS", ": A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery."],
-            ["", ": B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS."],
-            ["", ": C) No LC will be Entertained which value less than US $ 2,000.00"],
-            ["", ": D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00"],
-            ["2. Delivery Lead Time", ": A) Goods will be ready for delivery within 14 working days (can vary depend on quality & quantity) after received of LC & UD both for customs UP issue."],
-            ["", ": B) Utilization Declaration (UD), along with the bank attested copy of LC or Sales Contract has to be in place within 7 working Days of BTB LC."],
-            ["", ": C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant."],
-            ["", ": D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed."],
-            ["", ": E) Accessories for 100% Export Oriented Readymade Garments Industry."],
-            ["3. Delivery/Inco Term", ": CPT."],
-            ["4. Country of origin", ": Bangladesh."],
-            ["5. Presentation Period", ": 30 days from the latest Shipment date in the LC."],
-            ["6. Shipment Date", ": Should be 60 days minimum from the LC opening Date."],
-            ["7. Expiry date of LC", ": LC Expiry date Should be 30 days from the latest Shipment date in the LC."],
-            ["8. Validity", ": 30 days from the date of P/I issuance."],
-            ["9. Advising Bank", ": DHAKA BANK PLC. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL."],
-            ["10. Bank Charge", ": All Bank Charges except beneficiary's bank are on Opener's Account."],
-            ["11. Overdue Interest", ": Payment will be made within the date of Maturity. If failed, overdue interest to be paid by opener at 16%."],
-            ["12. Deduction", ": Deduction clause for any discrepancies is not acceptable."],
-            ["13. Claim/ Complain", ": Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change."],
-            ["14. H.S. CODE", `: ${hsCodeVal}`],
-            ["N.B.", ": This Proforma Invoice deemed to be an integral part of LC."]
+        const rawTermsData = [
+            { label: "1.PAYMENT TERMS", desc: "A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." },
+            { label: "", desc: "B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS." },
+            { label: "", desc: "C) No LC will be Entertained which value less than US $ 2,000.00" },
+            { label: "", desc: "D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00" },
+            { label: "2.Delivery Lead Time", desc: "A) Goods will be ready for delivery within 14 working days (can vary depend on quality & quantity) after received of LC & UD both for customs UP issue." },
+            { label: "", desc: "B) Utilization Declaration (UD), along with the bank attested copy of LC or Sales Contract has to be in place within 7 working Days of BTB LC." },
+            { label: "", desc: "C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant." },
+            { label: "", desc: "D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed." },
+            { label: "", desc: "E) Accessories for 100% Export Oriented Readymade Garments Industry." },
+            { label: "3.Delivery/Inco Term", desc: "CPT." },
+            { label: "4.Country of origin", desc: "Bangladesh." },
+            { label: "5.Presentation Period", desc: "30 days from the latest Shipment date in the LC." },
+            { label: "6.Shipment Date", desc: "Should be 60 days minimum from the LC opening Date." },
+            { label: "7.Expiry date of LC", desc: "LC Expiry date Should be 30 days from the latest Shipment date in the LC." },
+            { label: "8.Validity", desc: "30 days from the date of P/I issuance." },
+            { label: "9.Advising Bank", desc: "DHAKA BANK PLC. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL." },
+            { label: "10.Bank Charge", desc: "All Bank Charges except beneficiary's bank are on Opener's Account." },
+            { label: "11.Overdue Interest", desc: "Payment will be made within the date of Maturity. If failed, overdue interest to be paid by opener at 16%." },
+            { label: "12.Deduction", desc: "Deduction clause for any discrepancies is not acceptable." },
+            { label: "13.Claim/ Complain", desc: "Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change." },
+            { label: "14.H.S. CODE", desc: hsCodeVal },
+            { label: "N.B.", desc: "This Proforma Invoice deemed to be an integral part of LC." }
         ];
 
-        termsList.forEach(([label, value]) => {
+        // কনসোলাস ফন্ট ব্যবহার করে প্রতিটি লাইনের কোলন ১০০% সোজা রাখা এবং নেটিভ ওয়ার্ড র‍্যাপ নিশ্চিত করা
+        const FIXED_COLON_COL = 24; 
+        const INDENT_FOR_NEXT_LINE = " ".repeat(FIXED_COLON_COL + 2);
+
+        rawTermsData.forEach((termItem) => {
             let rowIdx = rawData.length;
-            if (lastColIndex >= 2) {
-                merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: 1 } });
-                merges.push({ s: { r: rowIdx, c: 2 }, e: { r: rowIdx, c: lastColIndex } });
+            merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: lastColIndex } });
+            
+            let label = termItem.label || "";
+            let pad = Math.max(1, FIXED_COLON_COL - label.length);
+            let fullText = "";
+            
+            if (termItem.label === "14.H.S. CODE" && !termItem.desc) {
+                fullText = label + " ".repeat(pad) + ":";
             } else {
-                merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: lastColIndex } });
+                fullText = label + " ".repeat(pad) + ": " + termItem.desc;
             }
 
-            let termH = 17;
-            if (value.length > 200) termH = 34;
-            else if (value.length > 120) termH = 25;
-            else if (value.length > 60) termH = 19;
-            rowHeights.push({ hpt: termH });
+            // যদি লেখা অনেক বড় হয়, তবে এক্সেলের নিজস্ব ওয়ার্ড র‍্যাপ ও সঠিক ইনডেন্টের জন্য \n ব্যবহার করা
+            let totalTableWpx = headerCols.reduce((sum, col) => sum + ((piColumnWidths[piType] && piColumnWidths[piType][col]) ? piColumnWidths[piType][col] : 100), 0);
+            let maxLimit = Math.max(80, Math.floor(totalTableWpx / 7.2));
+
+            if (fullText.length > maxLimit) {
+                let words = fullText.split(' ');
+                let lines = [];
+                let cur = "";
+                let isFirstLine = true;
+
+                for (let w of words) {
+                    let limit = isFirstLine ? maxLimit : (maxLimit - FIXED_COLON_COL);
+                    if ((cur + (cur ? " " : "") + w).length <= limit) {
+                        cur += (cur ? " " : "") + w;
+                    } else {
+                        lines.push(cur);
+                        cur = INDENT_FOR_NEXT_LINE + w;
+                        isFirstLine = false;
+                    }
+                }
+                if (cur) lines.push(cur);
+                fullText = lines.join('\n');
+                rowHeights.push({ hpt: lines.length * 13.5 });
+            } else {
+                rowHeights.push({ hpt: 13.5 });
+            }
 
             rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
-                if (i === 0) return { v: label, s: { font: { bold: label !== "", sz: 8.5 }, alignment: alignLeft } };
-                if (i === (lastColIndex >= 2 ? 2 : 1)) return { v: value, s: { font: { sz: 8.5 }, alignment: { ...alignLeft, wrapText: true } } };
+                if (i === 0) {
+                    return { 
+                        v: fullText, 
+                        s: { 
+                            font: { 
+                                name: 'Consolas', 
+                                sz: 8.5, 
+                                bold: Boolean(termItem.label) 
+                            }, 
+                            alignment: { vertical: 'center', horizontal: 'left', wrapText: true } 
+                        } 
+                    };
+                }
                 return { v: "" };
             }));
         });
-
-        rowHeights.push({ hpt: 12 });
+        rowHeights.push({ hpt: 6 });
         rawData.push([]);
 
         let sigIdx = rawData.length;
         merges.push({ s: { r: sigIdx, c: 0 }, e: { r: sigIdx, c: halfCol } });
         merges.push({ s: { r: sigIdx, c: halfCol + 1 }, e: { r: sigIdx, c: lastColIndex } });
-        rowHeights.push({ hpt: 20 });
+        rowHeights.push({ hpt: 16 });
 
         rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
-            if (i === 0) return { v: "For Sterling Accessories Ltd.", s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
-            if (i === halfCol + 1) return { v: "Buyer Approval", s: { font: { bold: true, sz: 10 }, alignment: alignRight } };
+            if (i === 0) return { v: "For Sterling Accessories Ltd.", s: { font: { bold: true, sz: 9.5, name: 'Arial' }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "Buyer Approval", s: { font: { bold: true, sz: 9.5, name: 'Arial' }, alignment: alignRight } };
             return { v: "" };
         }));
 
         let sigSpaceIdx = rawData.length;
-        rowHeights.push({ hpt: 20 });
-        rowHeights.push({ hpt: 20 });
-        rowHeights.push({ hpt: 20 });
+        rowHeights.push({ hpt: 14 });
+        rowHeights.push({ hpt: 14 });
+        rowHeights.push({ hpt: 14 });
         rawData.push([]);
         rawData.push([]);
         rawData.push([]);
@@ -3017,11 +3213,11 @@
         let sigTitleIdx = rawData.length;
         merges.push({ s: { r: sigTitleIdx, c: 0 }, e: { r: sigTitleIdx, c: halfCol } });
         merges.push({ s: { r: sigTitleIdx, c: halfCol + 1 }, e: { r: sigTitleIdx, c: lastColIndex } });
-        rowHeights.push({ hpt: 20 });
+        rowHeights.push({ hpt: 16 });
 
         rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
-            if (i === 0) return { v: "Authorised Signature", s: { font: { bold: true, sz: 10 }, alignment: alignLeft } };
-            if (i === halfCol + 1) return { v: "Signature of Buyer", s: { font: { bold: true, sz: 10 }, alignment: alignRight } };
+            if (i === 0) return { v: "Authorised Signature", s: { font: { bold: true, sz: 9.5, name: 'Arial' }, alignment: alignLeft } };
+            if (i === halfCol + 1) return { v: "Signature of Buyer", s: { font: { bold: true, sz: 9.5, name: 'Arial' }, alignment: alignRight } };
             return { v: "" };
         }));
 
