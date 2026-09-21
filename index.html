@@ -182,7 +182,6 @@
             white-space: nowrap;
         }
 
-        /* ইউনিক এবং ছোট প্রফেশনাল ফর্ম কার্ড লেআউট */
         .container {
             max-width: 1400px;
             margin: 10px auto 30px auto;
@@ -726,6 +725,46 @@
         if (!e.target.closest('.form-group')) {
             document.querySelectorAll('.auto-suggest-box').forEach(b => b.style.display = 'none');
         }
+
+        if (!e.target.closest('table') && !e.target.closest('.excel-ribbon')) {
+            const currentType = document.getElementById('piType').value;
+            const table = document.getElementById(`table-${currentType}`);
+            if (table) {
+                table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+            }
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const currentType = document.getElementById('piType').value;
+            const table = document.getElementById(`table-${currentType}`);
+            if (table) {
+                table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+            }
+            if (document.activeElement && (document.activeElement.tagName === 'TH' || document.activeElement.tagName === 'TD')) {
+                document.activeElement.blur();
+            }
+        }
+
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        const isCtrl = e.ctrlKey || e.metaKey;
+
+        if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
+            if (activeTag === 'td' || activeTag === 'th') {
+                document.activeElement.blur();
+            }
+            if (e.shiftKey) { 
+                e.preventDefault(); 
+                performRedo(); 
+            } else { 
+                e.preventDefault(); 
+                performUndo(); 
+            }
+        } else if (isCtrl && (e.key === 'y' || e.key === 'Y')) {
+            e.preventDefault(); 
+            performRedo();
+        }
     });
 
     const productAutoSuggestions = {
@@ -1004,6 +1043,8 @@
     let cellAlignmentsStore = { allPi: {}, poly: {} };
     let piColumnWidths = { allPi: {}, poly: {} };
     let piRowHeights = { allPi: {}, poly: {} };
+    let customHeadersStore = { allPi: {}, poly: {} };
+    let customFootersStore = { allPi: {}, poly: {} };
 
     let undoStack = [];
     let redoStack = [];
@@ -1020,7 +1061,7 @@
             attn: document.getElementById('attn').value,
             hsCode: document.getElementById('hsCodeInput')?.value || ''
         };
-        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths, piRowHeights, cellAlignmentsStore, headerState }));
+        undoStack.push(JSON.stringify({ items, customColumnsStore, mergedCellsStore, piColumnWidths, piRowHeights, cellAlignmentsStore, customHeadersStore, customFootersStore, headerState }));
         if (undoStack.length > MAX_HISTORY) undoStack.shift();
         redoStack = []; 
     }
@@ -1034,6 +1075,8 @@
             piColumnWidths,
             piRowHeights,
             cellAlignmentsStore,
+            customHeadersStore,
+            customFootersStore,
             headerState: {
                 piType: document.getElementById('piType').value,
                 piNo: document.getElementById('piNo').value,
@@ -1054,6 +1097,8 @@
         piColumnWidths = prevState.piColumnWidths || piColumnWidths;
         piRowHeights = prevState.piRowHeights || piRowHeights;
         cellAlignmentsStore = prevState.cellAlignmentsStore || cellAlignmentsStore;
+        customHeadersStore = prevState.customHeadersStore || customHeadersStore;
+        customFootersStore = prevState.customFootersStore || customFootersStore;
         
         if (prevState.headerState) {
             if (prevState.headerState.piType) document.getElementById('piType').value = prevState.headerState.piType;
@@ -1080,6 +1125,8 @@
             piColumnWidths,
             piRowHeights,
             cellAlignmentsStore,
+            customHeadersStore,
+            customFootersStore,
             headerState: {
                 piType: document.getElementById('piType').value,
                 piNo: document.getElementById('piNo').value,
@@ -1100,6 +1147,8 @@
         piColumnWidths = nextState.piColumnWidths || piColumnWidths;
         piRowHeights = nextState.piRowHeights || piRowHeights;
         cellAlignmentsStore = nextState.cellAlignmentsStore || cellAlignmentsStore;
+        customHeadersStore = nextState.customHeadersStore || customHeadersStore;
+        customFootersStore = nextState.customFootersStore || customFootersStore;
 
         if (nextState.headerState) {
             if (nextState.headerState.piType) document.getElementById('piType').value = nextState.headerState.piType;
@@ -1116,37 +1165,6 @@
         saveHeaderToStorage();
         updateTable();
     }
-
-    document.addEventListener('keydown', function(e) {
-        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        const isCtrl = e.ctrlKey || e.metaKey;
-
-        if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
-            if (activeTag === 'td' || activeTag === 'th') {
-                document.activeElement.blur();
-            }
-            if (e.shiftKey) { 
-                e.preventDefault(); 
-                performRedo(); 
-            } else { 
-                e.preventDefault(); 
-                performUndo(); 
-            }
-        } else if (isCtrl && (e.key === 'y' || e.key === 'Y')) {
-            e.preventDefault(); 
-            performRedo();
-        }
-    });
-
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('table') && !e.target.closest('.excel-ribbon')) {
-            const currentType = document.getElementById('piType').value;
-            const table = document.getElementById(`table-${currentType}`);
-            if (table) {
-                table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
-            }
-        }
-    });
 
     window.onload = function() {
         initBuyerDatalist();
@@ -1167,12 +1185,16 @@
         const savedCustomCols = localStorage.getItem('pi_custom_cols_data');
         const savedMergedCells = localStorage.getItem('pi_merged_cells_data');
         const savedAlignments = localStorage.getItem('pi_cell_alignments_data');
+        const savedCustomHeaders = localStorage.getItem('pi_custom_headers_data');
+        const savedCustomFooters = localStorage.getItem('pi_custom_footers_data');
 
         if (savedColWidths) { try { piColumnWidths = JSON.parse(savedColWidths); } catch(e) {} }
         if (savedRowHeights) { try { piRowHeights = JSON.parse(savedRowHeights); } catch(e) {} }
         if (savedCustomCols) { try { customColumnsStore = JSON.parse(savedCustomCols); } catch(e) {} }
         if (savedMergedCells) { try { mergedCellsStore = JSON.parse(savedMergedCells); } catch(e) {} }
         if (savedAlignments) { try { cellAlignmentsStore = JSON.parse(savedAlignments); } catch(e) {} }
+        if (savedCustomHeaders) { try { customHeadersStore = JSON.parse(savedCustomHeaders); } catch(e) {} }
+        if (savedCustomFooters) { try { customFootersStore = JSON.parse(savedCustomFooters); } catch(e) {} }
 
         if (savedItems) {
             try {
@@ -1285,7 +1307,9 @@
             colWidths: piColumnWidths[currentType],
             rowHeights: piRowHeights[currentType],
             mergedCells: mergedCellsStore[currentType],
-            cellAlignments: cellAlignmentsStore[currentType] || {}
+            cellAlignments: cellAlignmentsStore[currentType] || {},
+            customHeaders: customHeadersStore[currentType] || {},
+            customFooters: customFootersStore[currentType] || {}
         };
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 4));
         const downloadAnchor = document.createElement('a');
@@ -1314,6 +1338,8 @@
                     if(content.colWidths) piColumnWidths[targetType] = content.colWidths;
                     if(content.rowHeights) piRowHeights[targetType] = content.rowHeights;
                     if(content.cellAlignments) cellAlignmentsStore[targetType] = content.cellAlignments;
+                    if(content.customHeaders) customHeadersStore[targetType] = content.customHeaders;
+                    if(content.customFooters) customFootersStore[targetType] = content.customFooters;
 
                     saveDataToStorage();
                 }
@@ -1490,7 +1516,7 @@
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column;">
                     <label for="totalPercent">Total (%)</label>
-                    <input type="number" step="0.01" id="totalPercent" placeholder="0" style="width: 100%;" oninput="saveStateForUndo()">
+                    <input type="number" step="0.01" id="totalPercent" placeholder="0" style="width: 100%;" oninput="applyGlobalTotalPercent()" onchange="applyGlobalTotalPercent()">
                 </div>
                 <div style="display: flex; flex-direction: column; width: 45px;">
                     <label for="insertAfterInput" style="font-size: 10px;">Pos</label>
@@ -1508,6 +1534,34 @@
 
         saveHeaderToStorage();
         populateDynamicAddColumnUI();
+        updateTable();
+    }
+
+    function applyGlobalTotalPercent() {
+        const piType = document.getElementById('piType').value;
+        const totalVal = parseFloat(document.getElementById('totalPercent')?.value) || 0;
+
+        saveStateForUndo();
+        items.forEach(item => {
+            if (item.piType === piType) {
+                item.totalPercent = totalVal;
+                let baseP = item.price || 0;
+                let oPct = item.othersPercent || 0;
+                let effectivePrice = baseP + (baseP * oPct / 100) + (baseP * totalVal / 100);
+                item.effectivePrice = parseFloat(effectivePrice.toFixed(4));
+
+                let customCols = customColumnsStore[piType] || [];
+                let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
+                if (hasQtyDzn) {
+                    let dznVal = (item.qty || 0) / 12;
+                    item.amount = parseFloat((dznVal * effectivePrice).toFixed(4));
+                } else {
+                    item.amount = parseFloat(((item.qty || 0) * effectivePrice).toFixed(4));
+                }
+            }
+        });
+
+        saveDataToStorage();
         updateTable();
     }
 
@@ -1538,6 +1592,8 @@
         localStorage.setItem('pi_row_heights_data', JSON.stringify(piRowHeights));
         localStorage.setItem('pi_custom_cols_data', JSON.stringify(customColumnsStore));
         localStorage.setItem('pi_cell_alignments_data', JSON.stringify(cellAlignmentsStore));
+        localStorage.setItem('pi_custom_headers_data', JSON.stringify(customHeadersStore));
+        localStorage.setItem('pi_custom_footers_data', JSON.stringify(customFootersStore));
     }
 
     function addItem() {
@@ -1549,7 +1605,6 @@
         let othersVal = parseFloat(document.getElementById('othersPercent')?.value) || 0;
         let totalVal = parseFloat(document.getElementById('totalPercent')?.value) || 0;
         
-        // Others (%) এবং Total (%) উভয় পার্সেন্টেজ একসাথে Unit Price-এর সাথে যোগ করা হবে
         let effectivePrice = basePrice + (basePrice * othersVal / 100) + (basePrice * totalVal / 100);
         
         let customCols = customColumnsStore[piType] || [];
@@ -1671,6 +1726,8 @@
             items = items.filter(item => item.piType !== piType);
             mergedCellsStore[piType] = [];
             cellAlignmentsStore[piType] = {};
+            customHeadersStore[piType] = {};
+            customFootersStore[piType] = {};
             piRowHeights[piType] = {};
             slCounters[piType] = 1;
             document.getElementById('slNo').value = 1;
@@ -1730,7 +1787,13 @@
             colsList.forEach((col, cIdx) => { 
                 let w = (piColumnWidths[type] && piColumnWidths[type][col]) ? piColumnWidths[type][col] : getDefaultColWidth(col);
                 let rowResizerHeaderHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
-                theadHTML += `<th data-col="${cIdx}" data-colname="${col}" contenteditable="true" style="width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateHeaderContent(event, '${type}', ${cIdx})">${col}<div class="resizer"></div>${rowResizerHeaderHtml}</th>`; 
+                
+                let headerText = col;
+                if (customHeadersStore[type] && customHeadersStore[type][cIdx] !== undefined) {
+                    headerText = customHeadersStore[type][cIdx];
+                }
+
+                theadHTML += `<th data-col="${cIdx}" data-colname="${col}" contenteditable="true" style="width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateHeaderContent(event, '${type}', ${cIdx})">${headerText}<div class="resizer"></div>${rowResizerHeaderHtml}</th>`; 
             });
             theadHTML += `<th class="no-print" data-col="${colsList.length}" data-colname="Action" style="width: ${actW}px; text-align:center;">Action<div class="resizer"></div></th></tr>`;
             table.querySelector('thead').innerHTML = theadHTML;
@@ -1837,7 +1900,7 @@
                         let alignStyle = `text-align: ${alignStyleVal}; width: ${w}px;`;
 
                         let rowResizerHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
-                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})">${customContent}${rowResizerHtml}</td>`;
+                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
                     }
                 });
 
@@ -1862,18 +1925,24 @@
 
             colsList.forEach((col, idx) => {
                 let w = (piColumnWidths[type] && piColumnWidths[type][col]) ? piColumnWidths[type][col] : getDefaultColWidth(col);
+                
+                let footerText = "";
+                if (customFootersStore[type] && customFootersStore[type][idx] !== undefined) {
+                    footerText = customFootersStore[type][idx];
+                } else {
+                    if (idx === 0) footerText = "Total =";
+                    else if (col === "QTY") footerText = totalQtySum;
+                    else if (col === "QTY (Dzn)") footerText = totalDznSum;
+                    else if (col === "Amount (USD)") footerText = `$${totalAmountSum.toFixed(2)}`;
+                    else footerText = "-";
+                }
+
                 if (idx === 0) {
                     let colspanCount = firstQtyIdx > 0 ? firstQtyIdx : 1;
-                    tfootHTML += `<td colspan="${colspanCount}" contenteditable="true" style="text-align: right; font-weight: bold; padding-right: 10px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">Total =<div class="row-resizer"></div></td>`;
+                    tfootHTML += `<td colspan="${colspanCount}" contenteditable="true" style="text-align: right; font-weight: bold; padding-right: 10px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event, '${type}', ${idx})" onkeydown="handleFooterKeydown(event, '${type}', ${idx})">${footerText}<div class="row-resizer"></div></td>`;
                 } else if (idx > 0 && idx < firstQtyIdx) {
-                } else if (col === "QTY") {
-                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">${totalQtySum}</td>`;
-                } else if (col === "QTY (Dzn)") {
-                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">${totalDznSum}</td>`;
-                } else if (col === "Amount (USD)") {
-                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">$${totalAmountSum.toFixed(2)}</td>`;
                 } else {
-                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event)">-</td>`;
+                    tfootHTML += `<td contenteditable="true" style="font-weight: bold; text-align: right; width: ${w}px;" onfocus="onCellFocus(event)" oninput="updateFooterContent(event, '${type}', ${idx})" onkeydown="handleFooterKeydown(event, '${type}', ${idx})">${footerText}</td>`;
                 }
             });
 
@@ -1894,20 +1963,78 @@
         saveStateForUndo();
     }
 
-    function updateHeaderContent(event, type, cIdx) {}
-    function updateFooterContent(e) {}
+    function handleCellKeydown(e, rIdx, cIdx, type) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.target.blur();
+            updateCellContent(e, rIdx, cIdx);
+            saveDataToStorage();
+        }
+    }
+
+    function handleHeaderKeydown(e, type, cIdx) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.target.blur();
+            updateHeaderContent(e, type, cIdx);
+            saveDataToStorage();
+        }
+    }
+
+    function handleFooterKeydown(e, type, idx) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.target.blur();
+            updateFooterContent(e, type, idx);
+            saveDataToStorage();
+        }
+    }
+
+    function updateHeaderContent(event, type, cIdx) {
+        if (!customHeadersStore[type]) customHeadersStore[type] = {};
+        customHeadersStore[type][cIdx] = event.target.innerText.replace(/[\r\n]+/gm, "").trim();
+        saveDataToStorage();
+    }
+
+    function updateFooterContent(event, type, idx) {
+        if (!customFootersStore[type]) customFootersStore[type] = {};
+        customFootersStore[type][idx] = event.target.innerText.replace(/[\r\n]+/gm, "").trim();
+        saveDataToStorage();
+    }
 
     function updateCellContent(e, rIdx, cIdx) {
         const currentType = document.getElementById('piType').value;
-        const newText = e.target.innerText;
+        const newText = e.target.innerText.trim();
         if (mergedCellsStore[currentType]) {
             mergedCellsStore[currentType].forEach(m => {
                 if (m.startRow === rIdx && m.startCol === cIdx) {
                     m.content = newText;
                 }
             });
-            saveDataToStorage();
         }
+        
+        const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === currentType);
+        if (filteredItems[rIdx]) {
+            let actualIndex = filteredItems[rIdx].originalIndex;
+            let colsList = getColumnsForType(currentType);
+            let colName = colsList[cIdx];
+            
+            if (colName === "Description of Goods") items[actualIndex].desc = newText;
+            else if (colName === "Measurement") items[actualIndex].measurement = newText;
+            else if (colName === "Style/PO No.") items[actualIndex].stylepo = newText;
+            else if (colName === "Color") items[actualIndex].color = newText;
+            else if (colName === "Unit") items[actualIndex].unit = newText;
+            else if (colName === "QTY") items[actualIndex].qty = parseFloat(newText) || 0;
+            else if (colName === "Unit Price (USD)") {
+                let cleanPrice = parseFloat(newText.replace(/[^0-9.]/g, '')) || 0;
+                items[actualIndex].price = cleanPrice;
+                items[actualIndex].effectivePrice = cleanPrice;
+            } else {
+                if (!items[actualIndex].customValues) items[actualIndex].customValues = {};
+                items[actualIndex].customValues[colName] = newText;
+            }
+        }
+        saveDataToStorage();
     }
 
     let isMouseDown = false;
@@ -1938,7 +2065,6 @@
         });
     }
 
-    // নিখুঁত স্বতন্ত্র কলাম রিসাইজার (অন্যান্য কলাম অপরিবর্তিত রেখে ডান পাশের টেবিল প্রসারিত করবে)
     function makeColumnsResizable() {
         const currentType = document.getElementById('piType').value;
         const table = document.getElementById(`table-${currentType}`);
@@ -1975,7 +2101,6 @@
                         tc.style.width = newWidth + 'px';
                     });
 
-                    // Update specific column in tfoot
                     let tfootCells = table.querySelectorAll(`tfoot tr.total-row td`);
                     let currCellIdx = 0;
                     tfootCells.forEach((tc) => {
