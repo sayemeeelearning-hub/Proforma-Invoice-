@@ -602,23 +602,23 @@
             </div>
             <div class="form-group">
                 <label for="buyerName">Name of Buyer</label>
-                <input type="text" id="buyerName" placeholder="Select or type Buyer Name..." 
-                       onfocus="handleBuyerFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="onBuyerChange()" oninput="onBuyerInput(this)" value="BANDO DESIGN LTD">
-                <div id="buyerName_auto_box" class="auto-suggest-box"></div>
+                <input type="text" id="buyerName" list="buyerList" placeholder="Select or type Buyer Name..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="onBuyerChange()" oninput="onBuyerChange()" value="Bando Design Ltd">
+                <datalist id="buyerList"></datalist>
             </div>
             <div class="form-group">
                 <label for="buyerRef">Buyer Ref</label>
-                <input type="text" id="buyerRef" placeholder="Select or type Ref..." 
-                       onfocus="handleBuyerRefFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="saveHeaderToStorage()" oninput="onBuyerRefInput(this)" value="ZARA BABY">
-                <div id="buyerRef_auto_box" class="auto-suggest-box"></div>
+                <input type="text" id="buyerRef" list="buyerRefList" placeholder="Select or type Ref..." 
+                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="GAP">
+                <datalist id="buyerRefList"></datalist>
             </div>
             <div class="form-group">
                 <label for="attn">Attn</label>
-                <input type="text" id="attn" list="attnList" placeholder="Select or type Person name..." 
+                <input type="text" id="attn" list="attnList" placeholder="Merchant name..." 
                        onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="Md. Rion">
+                       onchange="onAttnChange()" oninput="onAttnChange()" value="Md. Rion">
                 <datalist id="attnList"></datalist>
             </div>
             <div class="form-group full-width">
@@ -857,15 +857,15 @@ Ashulia, Dhaka-1341</textarea>
     function getSuggestionsForField(fieldId) {
         let suggestList = [];
         if (fieldId === 'buyerName') {
-            suggestList = buyerDatabase.map(b => b.name.toUpperCase());
+            suggestList = buyerDatabase.map(b => b.name);
         } else if (fieldId === 'buyerRef') {
-            suggestList = buyerRefDatabase.map(r => r.toUpperCase());
+            suggestList = buyerRefDatabase;
         } else if (fieldId === 'attn') {
-            suggestList = personNameDatabase.map(p => p.toUpperCase());
+            suggestList = personNameDatabase;
         } else if (fieldId === 'unit') {
-            suggestList = [...productAutoSuggestions.unit].map(u => u.toUpperCase());
+            suggestList = [...productAutoSuggestions.unit];
         } else if (productAutoSuggestions[fieldId]) {
-            suggestList = [...productAutoSuggestions[fieldId]].map(s => s.toUpperCase());
+            suggestList = [...productAutoSuggestions[fieldId]];
         }
 
         items.forEach(item => {
@@ -882,79 +882,60 @@ Ashulia, Dhaka-1341</textarea>
                     }
                 });
             }
-            if (val && !suggestList.includes(val.toUpperCase())) {
-                suggestList.push(val.toUpperCase());
+            if (val && !suggestList.includes(val)) {
+                suggestList.push(val);
             }
         });
 
         return Array.from(new Set(suggestList));
     }
 
-    function showDropdownList(target, listData) {
-        const parent = target.parentElement;
-        if (!parent) return;
-        let box = parent.querySelector('.auto-suggest-box');
-        if (!box) {
-            box = document.createElement('div');
-            box.className = 'auto-suggest-box';
-            parent.appendChild(box);
-        }
+    function setupInlineTypeahead(element) {
+        if (!element || element.dataset.typeaheadBound) return;
+        element.dataset.typeaheadBound = "true";
 
-        if (listData.length > 0) {
-            box.innerHTML = '';
-            listData.forEach(sugText => {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'auto-suggest-item';
-                itemDiv.innerText = sugText;
-                itemDiv.onmousedown = function(evt) {
-                    evt.preventDefault();
-                    target.value = sugText;
-                    target.dispatchEvent(new Event('input', { bubbles: true }));
-                    target.dispatchEvent(new Event('change', { bubbles: true }));
-                    box.style.display = 'none';
-                    if (target.id === 'buyerName') {
-                        onBuyerChange();
-                    }
-                };
-                box.appendChild(itemDiv);
-            });
-            box.style.display = 'block';
-        } else {
-            box.style.display = 'none';
-        }
+        element.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                element.dataset.isDeleting = "true";
+            } else {
+                element.dataset.isDeleting = "false";
+            }
+
+            if ((e.key === 'Enter' || e.key === 'Tab' || e.key === 'ArrowRight') && element.selectionStart !== element.selectionEnd) {
+                e.preventDefault();
+                element.selectionStart = element.value.length;
+                element.selectionEnd = element.value.length;
+                element.dispatchEvent(new Event('input', { bubbles: true }));
+                element.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+
+        element.addEventListener('input', function(e) {
+            if (element.dataset.isDeleting === "true") return;
+
+            const inputVal = element.value;
+            const fieldId = element.id;
+            const selStart = element.selectionStart;
+
+            if (!inputVal || selStart < inputVal.length) return;
+
+            const suggestions = getSuggestionsForField(fieldId);
+            const match = suggestions.find(s => s.toLowerCase().startsWith(inputVal.toLowerCase()));
+
+            if (match) {
+                const completedText = inputVal + match.slice(inputVal.length);
+                element.value = completedText;
+                element.setSelectionRange(inputVal.length, completedText.length);
+            }
+        });
     }
 
-    function handleBuyerFocus(inputElem) {
-        tempInputValueStore[inputElem.id] = inputElem.value;
-        inputElem.value = '';
-        let list = getSuggestionsForField('buyerName');
-        showDropdownList(inputElem, list);
-    }
-
-    function handleBuyerRefFocus(inputElem) {
-        tempInputValueStore[inputElem.id] = inputElem.value;
-        inputElem.value = '';
-        let list = getSuggestionsForField('buyerRef');
-        showDropdownList(inputElem, list);
-    }
-
-    function onBuyerInput(target) {
-        const inputVal = target.value.trim().toUpperCase();
-        target.value = inputVal;
-        let suggestList = getSuggestionsForField('buyerName');
-        const filtered = suggestList.filter(item => item.toString().toUpperCase().includes(inputVal));
-        showDropdownList(target, filtered);
-        onBuyerChange();
-    }
-
-    function onBuyerRefInput(target) {
-        const inputVal = target.value.trim().toUpperCase();
-        target.value = inputVal;
-        let suggestList = getSuggestionsForField('buyerRef');
-        const filtered = suggestList.filter(item => item.toString().toUpperCase().includes(inputVal));
-        showDropdownList(target, filtered);
-        saveHeaderToStorage();
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) setupInlineTypeahead(elem);
+        });
+    });
 
     document.addEventListener('input', function(e) {
         const target = e.target;
@@ -971,11 +952,10 @@ Ashulia, Dhaka-1341</textarea>
         }
 
         const fieldId = target.id;
-        const inputVal = target.value.trim().toUpperCase();
-        target.value = inputVal;
+        const inputVal = target.value.trim().toLowerCase();
 
         let suggestList = getSuggestionsForField(fieldId);
-        const filtered = suggestList.filter(item => item.toString().toUpperCase().includes(inputVal));
+        const filtered = suggestList.filter(item => item.toString().toLowerCase().includes(inputVal));
 
         if (filtered.length > 0 && inputVal.length > 0) {
             box.innerHTML = '';
@@ -1026,10 +1006,21 @@ Ashulia, Dhaka-1341</textarea>
         "STRADIVARIUS", "ZARA BABY", "ZARA MAN", "ZARA BOY", "JCPPENNY", 
         "TCHIBO", "GAP", "IMPULSE", "BLL SOLAMODA", "PULL & BEAR", 
         "H&M", "COSTCO/FAM", "BENNETON", "FAM", "TALLY", 
-        "JULES", "TARGET AUSTRALIA", "TRIPLE TOP", "SRG", "FAM","COSTCO", 
+        "JULES", "TARGET AUSTRALIA", "TRIPLE TOP", "SRG", "FAM", "COSTCO", 
         "MEGA CAP", "PUBLIK", "ALL BUYER", "RIVER ISLAM", "GDM", 
         "SAMPLE ORDER", "DAMART", "LIDL", "BIG STAR", "BURGER KING"
     ];
+
+    function initBuyerRefDatalist() {
+        const refListElem = document.getElementById('buyerRefList');
+        if(!refListElem) return;
+        refListElem.innerHTML = '';
+        buyerRefDatabase.forEach(ref => {
+            const opt = document.createElement('option');
+            opt.value = ref;
+            refListElem.appendChild(opt);
+        });
+    }
 
     const personNameDatabase = [
         "Md Rabiul Hasan", "Mr. Rumee", "Md Jahangir", "Mr.Emam", "Md Samiul", "Md Sakil", 
@@ -1061,7 +1052,7 @@ Ashulia, Dhaka-1341</textarea>
         { name: "Bando Design Ltd", address: "Purbo Narsinghapur,\nEarpur Union Parishad Road,\nAshulia, Dhaka-1341" },
         { name: "Sterling Creation Ltd", address: "Baron,Earpur Union,Ashulia,\nSavar,Dhaka,Bangladesh" },
         { name: "Laila Style Ltd.", address: "Bahadurpur,Shikderbari,Gazipur,Bangladesh" },
-        { name: "Tec Max Ltd", address: "Diyakhali,Yearpur Union,Baron,\nAshulia,Savar,Dhaka,Bangladesh" },
+        { name: "Tech Max Ltd", address: "Diyakhali,Yearpur Union,Baron,\nAshulia,Savar,Dhaka,Bangladesh" },
         { name: "Sterling Apparels Ltd", address: "Baron,Earpur Union,Ashulia,\nSavar,Dhaka,Bangladesh" },
         { name: "Sterling Style  Ltd", address: "Baron,Earpur Union,Ashulia,\nSavar,Dhaka,Bangladesh" },
         { name: "Sterling Denims Ltd", address: "Dhania,Nayarhat,Ashulia,\nSavar,Dhaka,Bangladesh" },
@@ -1069,16 +1060,28 @@ Ashulia, Dhaka-1341</textarea>
         { name: "HENG TONG BD LTD.", address: "Diyakhali,Yearpur Union,Baron,\nAshulia,Savar,Dhaka,Bangladesh" }
     ];
 
-    function onBuyerChange() {
-        const buyerInput = document.getElementById('buyerName');
-        let buyerInputVal = buyerInput.value.trim().toUpperCase();
-        buyerInput.value = buyerInputVal;
+    function initBuyerDatalist() {
+        const buyerListElem = document.getElementById('buyerList');
+        if(!buyerListElem) return;
+        buyerListElem.innerHTML = '';
+        buyerDatabase.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.name;
+            buyerListElem.appendChild(opt);
+        });
+    }
 
-        const foundBuyer = buyerDatabase.find(b => b.name.toUpperCase() === buyerInputVal);
+    function onBuyerChange() {
+        const buyerInputVal = document.getElementById('buyerName').value.trim();
+        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
 
         if (foundBuyer) {
             document.getElementById('buyerAddress').value = foundBuyer.address;
         }
+        saveHeaderToStorage();
+    }
+
+    function onAttnChange() {
         saveHeaderToStorage();
     }
 
@@ -1214,10 +1217,17 @@ Ashulia, Dhaka-1341</textarea>
     }
 
     window.onload = function() {
+        initBuyerDatalist();
+        initBuyerRefDatalist();
         initAttnDatalist();
 
         preloadImage(companyLogoUrl);
         preloadImage(stampImageUrl);
+
+        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) setupInlineTypeahead(elem);
+        });
 
         const savedItems = localStorage.getItem('pi_items_data');
         const savedHeader = localStorage.getItem('pi_header_data');
@@ -1258,9 +1268,9 @@ Ashulia, Dhaka-1341</textarea>
                 else if (headerObj.piType) document.getElementById('piType').value = headerObj.piType;
                 document.getElementById('piNo').value = headerObj.piNo || 'SACL/296/2026';
                 document.getElementById('piDate').value = headerObj.piDate || '08.08.2026';
-                document.getElementById('buyerName').value = (headerObj.buyerName || 'BANDO DESIGN LTD').toUpperCase();
+                document.getElementById('buyerName').value = headerObj.buyerName || 'Bando Design Ltd';
                 document.getElementById('buyerAddress').value = headerObj.buyerAddress || '';
-                document.getElementById('buyerRef').value = (headerObj.buyerRef || 'ZARA BABY').toUpperCase();
+                document.getElementById('buyerRef').value = headerObj.buyerRef || '';
                 document.getElementById('attn').value = headerObj.attn || '';
                 if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = headerObj.hsCode || '';
                 if (headerObj.bar1HeaderFont) document.getElementById('bar1HeaderFont').value = headerObj.bar1HeaderFont;
@@ -1569,6 +1579,10 @@ Ashulia, Dhaka-1341</textarea>
 
         inputContainer.innerHTML = baseInputs + specificInputs + customInputsHTML + buttonHTML;
         
+        inputContainer.querySelectorAll('input[type="text"], textarea').forEach(elem => {
+            setupInlineTypeahead(elem);
+        });
+
         saveHeaderToStorage();
         populateDynamicAddColumnUI();
         updateTable();
@@ -1937,7 +1951,7 @@ Ashulia, Dhaka-1341</textarea>
                         let alignStyle = `text-align: ${alignStyleVal}; width: ${w}px;`;
 
                         let rowResizerHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
-                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${rIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')" onpaste="handleTablePaste(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
+                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')" onpaste="handleTableCopyPaste(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
                     }
                 });
 
@@ -2035,68 +2049,98 @@ Ashulia, Dhaka-1341</textarea>
         saveDataToStorage();
     }
 
-    function handleTablePaste(e, startRIdx, startCIdx, type) {
-        e.preventDefault();
-        const clipboardData = e.clipboardData || window.clipboardData;
-        if (!clipboardData) return;
-        const pastedText = clipboardData.getData('text');
-        if (!pastedText) return;
+    function handleTableCopyPaste(e, startRIdx, startCIdx, type) {
+        if (e.type === 'paste') {
+            e.preventDefault();
+            const clipboardData = e.clipboardData || window.clipboardData;
+            if (!clipboardData) return;
+            const pastedText = clipboardData.getData('text');
+            if (!pastedText) return;
 
-        saveStateForUndo();
+            saveStateForUndo();
 
-        const rows = pastedText.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
-        const gridData = rows.map(row => row.split('\t'));
+            const rows = pastedText.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
+            const gridData = rows.map(row => row.split('\t'));
 
-        const colsList = getColumnsForType(type);
-        const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === type);
+            const colsList = getColumnsForType(type);
+            const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === type);
 
-        gridData.forEach((rowCells, rOffset) => {
-            let targetRIdx = startRIdx + rOffset;
-            let actualItemIndex = -1;
+            gridData.forEach((rowCells, rOffset) => {
+                let targetRIdx = startRIdx + rOffset;
+                let actualItemIndex = -1;
 
-            if (targetRIdx < filteredItems.length) {
-                actualItemIndex = filteredItems[targetRIdx].originalIndex;
-            } else {
-                let newSlNo = items.length > 0 ? Math.max(...items.map(i => i.slNo || 0)) + 1 : 1;
-                let newItem = { piType: type, slNo: newSlNo, qty: 0, price: 0, effectivePrice: 0, amount: 0, unit: 'Pcs', customValues: {} };
-                items.push(newItem);
-                actualItemIndex = items.length - 1;
-                filteredItems.push({ ...newItem, originalIndex: actualItemIndex });
-            }
-
-            rowCells.forEach((cellVal, cOffset) => {
-                let targetCIdx = startCIdx + cOffset;
-                if (targetCIdx < colsList.length) {
-                    let colName = colsList[targetCIdx];
-                    let cleanVal = cellVal.trim();
-
-                    if (colName === "Description of Goods") items[actualItemIndex].desc = cleanVal;
-                    else if (colName === "Measurement") items[actualItemIndex].measurement = cleanVal;
-                    else if (colName === "Style/PO No.") items[actualItemIndex].stylepo = cleanVal;
-                    else if (colName === "Color") items[actualItemIndex].color = cleanVal;
-                    else if (colName === "Unit") items[actualItemIndex].unit = cleanVal;
-                    else if (colName === "QTY") {
-                        let q = parseFloat(cleanVal) || 0;
-                        items[actualItemIndex].qty = q;
-                        recalculateItemAmount(actualItemIndex, type);
-                    }
-                    else if (colName === "Unit Price (USD)") {
-                        let p = parseFloat(cleanVal.replace(/[^0-9.]/g, '')) || 0;
-                        items[actualItemIndex].price = p;
-                        items[actualItemIndex].effectivePrice = p;
-                        recalculateItemAmount(actualItemIndex, type);
-                    }
-                    else {
-                        if (!items[actualItemIndex].customValues) items[actualItemIndex].customValues = {};
-                        items[actualItemIndex].customValues[colName] = cleanVal;
-                    }
+                if (targetRIdx < filteredItems.length) {
+                    actualItemIndex = filteredItems[targetRIdx].originalIndex;
+                } else {
+                    let newSlNo = items.length > 0 ? Math.max(...items.map(i => i.slNo || 0)) + 1 : 1;
+                    let newItem = { piType: type, slNo: newSlNo, qty: 0, price: 0, effectivePrice: 0, amount: 0, unit: 'Pcs', customValues: {} };
+                    items.push(newItem);
+                    actualItemIndex = items.length - 1;
+                    filteredItems.push({ ...newItem, originalIndex: actualItemIndex });
                 }
-            });
-        });
 
-        saveDataToStorage();
-        updateTable();
+                rowCells.forEach((cellVal, cOffset) => {
+                    let targetCIdx = startCIdx + cOffset;
+                    if (targetCIdx < colsList.length) {
+                        let colName = colsList[targetCIdx];
+                        let cleanVal = cellVal.trim();
+
+                        if (colName === "Description of Goods") items[actualItemIndex].desc = cleanVal;
+                        else if (colName === "Measurement") items[actualItemIndex].measurement = cleanVal;
+                        else if (colName === "Style/PO No.") items[actualItemIndex].stylepo = cleanVal;
+                        else if (colName === "Color") items[actualItemIndex].color = cleanVal;
+                        else if (colName === "Unit") items[actualItemIndex].unit = cleanVal;
+                        else if (colName === "QTY") {
+                            let q = parseFloat(cleanVal) || 0;
+                            items[actualItemIndex].qty = q;
+                            recalculateItemAmount(actualItemIndex, type);
+                        }
+                        else if (colName === "Unit Price (USD)") {
+                            let p = parseFloat(cleanVal.replace(/[^0-9.]/g, '')) || 0;
+                            items[actualItemIndex].price = p;
+                            items[actualItemIndex].effectivePrice = p;
+                            recalculateItemAmount(actualItemIndex, type);
+                        }
+                        else {
+                            if (!items[actualItemIndex].customValues) items[actualItemIndex].customValues = {};
+                            items[actualItemIndex].customValues[colName] = cleanVal;
+                        }
+                    }
+                });
+            });
+
+            saveDataToStorage();
+            updateTable();
+        }
     }
+
+    document.addEventListener('copy', function(e) {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (!table) return;
+
+        const selectedCells = table.querySelectorAll('td.cell-selected, th.cell-selected');
+        if (selectedCells.length > 0) {
+            e.preventDefault();
+            let rowMap = {};
+            selectedCells.forEach(cell => {
+                let r = parseInt(cell.getAttribute('data-row'));
+                let c = parseInt(cell.getAttribute('data-col'));
+                if (isNaN(r) || isNaN(c)) return;
+                if (!rowMap[r]) rowMap[r] = {};
+                rowMap[r][c] = cell.innerText.trim();
+            });
+
+            let sortedRows = Object.keys(rowMap).sort((a, b) => a - b);
+            let pasteString = sortedRows.map(r => {
+                let cols = rowMap[r];
+                let sortedCols = Object.keys(cols).sort((a, b) => a - b);
+                return sortedCols.map(c => cols[c]).join('\t');
+            }).join('\n');
+
+            e.clipboardData.setData('text/plain', pasteString);
+        }
+    });
 
     function recalculateItemAmount(actualIndex, type) {
         let item = items[actualIndex];
@@ -2340,7 +2384,7 @@ Ashulia, Dhaka-1341</textarea>
 
         saveStateForUndo(); 
         let isCurrentlyBold = window.getComputedStyle(selectedCells[0]).fontWeight;
-        let makeBold = (isCurrentlyBold === 'normal' || isCurrentlyBold === '400' || !isCurrentStyleBold);
+        let makeBold = (isCurrentlyBold === 'normal' || isCurrentlyBold === '400' || !isCurrentlyBold);
 
         selectedCells.forEach(cell => {
             cell.style.fontWeight = makeBold ? 'bold' : 'normal';
@@ -2604,7 +2648,7 @@ Ashulia, Dhaka-1341</textarea>
         
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
-        const buyerName = document.getElementById('buyerName').value.toUpperCase();
+        const buyerName = document.getElementById('buyerName').value;
         const buyerAddress = document.getElementById('buyerAddress').value;
         const buyerRef = document.getElementById('buyerRef').value;
         const attn = document.getElementById('attn').value;
@@ -2842,7 +2886,7 @@ Ashulia, Dhaka-1341</textarea>
         const customFontSize = parseInt(document.getElementById('bar1HeaderFont')?.value) || 20;
         const piNo = document.getElementById('piNo').value || '';
         const piDate = document.getElementById('piDate').value || '';
-        const buyerName = document.getElementById('buyerName').value.toUpperCase() || '';
+        const buyerName = document.getElementById('buyerName').value || '';
         const buyerAddressInput = document.getElementById('buyerAddress').value || '';
         const buyerRef = document.getElementById('buyerRef').value || '';
         const attn = document.getElementById('attn').value || '';
@@ -3099,90 +3143,70 @@ Ashulia, Dhaka-1341</textarea>
         }));
 
         const rawTermsData = [
-            { label: "1.PAYMENT TERMS", desc: "A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." },
-            { label: "", desc: "B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS." },
-            { label: "", desc: "C) No LC will be Entertained which value less than US $ 2,000.00" },
-            { label: "", desc: "D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00" },
-            { label: "2.Delivery Lead Time", desc: "A) Goods will be ready for delivery within 14 working days (can vary depend on quality & quantity) after received of LC & UD both for customs UP issue." },
-            { label: "", desc: "B) Utilization Declaration (UD), along with the bank attested copy of LC or Sales Contract has to be in place within 7 working Days of BTB LC." },
-            { label: "", desc: "C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant." },
-            { label: "", desc: "D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed." },
-            { label: "", desc: "E) Accessories for 100% Export Oriented Readymade Garments Industry." },
-            { label: "3.Delivery/Inco Term", desc: "CPT." },
-            { label: "4.Country of origin", desc: "Bangladesh." },
-            { label: "5.Presentation Period", desc: "30 days from the latest Shipment date in the LC." },
-            { label: "6.Shipment Date", desc: "Should be 60 days minimum from the LC opening Date." },
-            { label: "7.Expiry date of LC", desc: "LC Expiry date Should be 30 days from the latest Shipment date in the LC." },
-            { label: "8.Validity", desc: "30 days from the date of P/I issuance." },
-            { label: "9.Advising Bank", desc: "DHAKA BANK PLC. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL." },
-            { label: "10.Bank Charge", desc: "All Bank Charges except beneficiary's bank are on Opener's Account." },
-            { label: "11.Overdue Interest", desc: "Payment will be made within the date of Maturity. If failed, overdue interest to be paid by opener at 16%." },
-            { label: "12.Deduction", desc: "Deduction clause for any discrepancies is not acceptable." },
-            { label: "13.Claim/ Complain", desc: "Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change." },
-            { label: "14.H.S. CODE", desc: hsCodeVal },
-            { label: "N.B.", desc: "This Proforma Invoice deemed to be an integral part of LC." }
+            { label: "1.PAYMENT TERMS", colon: ":", desc: "A) By Irrevocable Letter of Credit at 90 Days sight & Maturity date to be counted from the date of delivery." },
+            { label: "", colon: ":", desc: "B) Payment to be made in U.S Dollar Drawn on Bangladesh Bank Through RTGS." },
+            { label: "", colon: ":", desc: "C) No LC will be Entertained which value less than US $ 2,000.00" },
+            { label: "", colon: ":", desc: "D) Partial document for acceptance is allowed in case of LC value over US $ 10,000.00" },
+            { label: "2.Delivery Lead Time", colon: ":", desc: "A) Goods will be ready for delivery within 14 working days (can vary depend on quality & quantity) after received of LC & UD both for customs UP issue." },
+            { label: "", colon: ":", desc: "B) Utilization Declaration (UD), along with the bank attested copy of LC or Sales Contract has to be in place within 7 working Days of BTB LC." },
+            { label: "", colon: ":", desc: "C) The beneficiary will not be responsible for any delay delivery due to late presentation of LC & UD copy by the Applicant." },
+            { label: "", colon: ":", desc: "D) 1) Partial shipment: Allowed. 2) Transshipment: Not Allowed." },
+            { label: "", colon: ":", desc: "E) Accessories for 100% Export Oriented Readymade Garments Industry." },
+            { label: "3.Delivery/Inco Term", colon: ":", desc: "CPT." },
+            { label: "4.Country of origin", colon: ":", desc: "Bangladesh." },
+            { label: "5.Presentation Period", colon: ":", desc: "30 days from the latest Shipment date in the LC." },
+            { label: "6.Shipment Date", colon: ":", desc: "Should be 60 days minimum from the LC opening Date." },
+            { label: "7.Expiry date of LC", colon: ":", desc: "LC Expiry date Should be 30 days from the latest Shipment date in the LC." },
+            { label: "8.Validity", colon: ":", desc: "30 days from the date of P/I issuance." },
+            { label: "9.Advising Bank", colon: ":", desc: "DHAKA BANK PLC. Gulshan Branch, 24 Gulshan Avenue, Gulshan-1, Dhaka 1212. USD A/C No. 2151300000657. SWIFT Code: DHBLBDDHGUL." },
+            { label: "10.Bank Charge", colon: ":", desc: "All Bank Charges except beneficiary's bank are on Opener's Account." },
+            { label: "11.Overdue Interest", colon: ":", desc: "Payment will be made within the date of Maturity. If failed, overdue interest to be paid by opener at 16%." },
+            { label: "12.Deduction", colon: ":", desc: "Deduction clause for any discrepancies is not acceptable." },
+            { label: "13.Claim/ Complain", colon: ":", desc: "Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change." },
+            { label: "14.H.S. CODE", colon: ":", desc: hsCodeVal },
+            { label: "N.B.", colon: "", desc: "This Proforma Invoice deemed to be an integral part of LC." }
         ];
 
-        const FIXED_COLON_COL = 24; 
-        const INDENT_FOR_NEXT_LINE = " ".repeat(FIXED_COLON_COL + 2);
+        const colColonIndex = Math.min(1, lastColIndex);
+        const colDescIndex = Math.min(2, lastColIndex);
 
         rawTermsData.forEach((termItem) => {
             let rowIdx = rawData.length;
-            merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: lastColIndex } });
-            
             let label = termItem.label || "";
-            let pad = Math.max(1, FIXED_COLON_COL - label.length);
-            let fullText = "";
-            
-            if (termItem.label === "14.H.S. CODE" && !termItem.desc) {
-                fullText = label + " ".repeat(pad) + ":";
-            } else {
-                fullText = label + " ".repeat(pad) + ": " + termItem.desc;
+            let colon = termItem.colon || "";
+            let desc = termItem.desc || "";
+
+            let rowArr = Array.from({ length: headerCols.length }, () => ({ v: "", s: { font: { name: 'Arial', sz: 9 } } }));
+
+            rowArr[0] = { 
+                v: label, 
+                s: { font: { name: 'Arial', sz: 9, bold: Boolean(label) }, alignment: alignLeft } 
+            };
+
+            rowArr[colColonIndex] = { 
+                v: colon, 
+                s: { font: { name: 'Arial', sz: 9, bold: Boolean(label) }, alignment: alignCenter } 
+            };
+
+            rowArr[colDescIndex] = { 
+                v: desc, 
+                s: { font: { name: 'Arial', sz: 9 }, alignment: alignLeft, wrapText: true } 
+            };
+
+            if (lastColIndex >= colDescIndex) {
+                merges.push({ s: { r: rowIdx, c: colDescIndex }, e: { r: rowIdx, c: lastColIndex } });
+            }
+            if (colColonIndex > 0 && colColonIndex < colDescIndex - 1) {
+                merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: colColonIndex - 1 } });
             }
 
-            let totalTableWpx = headerCols.reduce((sum, col) => sum + ((piColumnWidths[piType] && piColumnWidths[piType][col]) ? piColumnWidths[piType][col] : 100), 0);
-            let maxLimit = Math.max(80, Math.floor(totalTableWpx / 7.2));
+            let charPerLine = 70;
+            let totalLines = Math.ceil(desc.length / charPerLine) || 1;
+            rowHeights.push({ hpt: Math.max(16, totalLines * 14.5) });
 
-            if (fullText.length > maxLimit) {
-                let words = fullText.split(' ');
-                let lines = [];
-                let cur = "";
-                let isFirstLine = true;
-
-                for (let w of words) {
-                    let limit = isFirstLine ? maxLimit : (maxLimit - FIXED_COLON_COL);
-                    if ((cur + (cur ? " " : "") + w).length <= limit) {
-                        cur += (cur ? " " : "") + w;
-                    } else {
-                        lines.push(cur);
-                        cur = INDENT_FOR_NEXT_LINE + w;
-                        isFirstLine = false;
-                    }
-                }
-                if (cur) lines.push(cur);
-                fullText = lines.join('\n');
-                rowHeights.push({ hpt: lines.length * 13.5 });
-            } else {
-                rowHeights.push({ hpt: 13.5 });
-            }
-
-            rawData.push(Array.from({ length: headerCols.length }, (_, i) => {
-                if (i === 0) {
-                    return { 
-                        v: fullText, 
-                        s: { 
-                            font: { 
-                                name: 'Consolas', 
-                                sz: 8.5, 
-                                bold: Boolean(termItem.label) 
-                            }, 
-                            alignment: { vertical: 'center', horizontal: 'left', wrapText: true } 
-                        } 
-                    };
-                }
-                return { v: "" };
-            }));
+            rawData.push(rowArr);
         });
+
         rowHeights.push({ hpt: 6 });
         rawData.push([]);
 
