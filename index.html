@@ -555,7 +555,6 @@
                 </select>
             </div>
 
-            <!-- কেস চেঞ্জ করার ড্রপডাউন অপশন -->
             <div class="ribbon-group">
                 <span class="ribbon-title">Case</span>
                 <select id="textCaseSelect" onchange="applyTextCase(this.value)" style="padding: 2px 4px; font-size: 10px;">
@@ -603,28 +602,30 @@
             </div>
             <div class="form-group">
                 <label for="buyerName">Name of Buyer</label>
-                <input type="text" id="buyerName" list="buyerList" placeholder="Select or type Buyer Name..." 
-                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="onBuyerChange()" oninput="onBuyerChange()" value="BANDO DESIGN LTD.">
-                <datalist id="buyerList"></datalist>
+                <input type="text" id="buyerName" placeholder="Select or type Buyer Name..." 
+                       onfocus="handleBuyerFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="onBuyerChange()" oninput="onBuyerInput(this)" value="BANDO DESIGN LTD">
+                <div id="buyerName_auto_box" class="auto-suggest-box"></div>
             </div>
             <div class="form-group">
                 <label for="buyerRef">Buyer Ref</label>
-                <input type="text" id="buyerRef" list="buyerRefList" placeholder="Select or type Ref..." 
-                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="GAP SPR'26.">
-                <datalist id="buyerRefList"></datalist>
+                <input type="text" id="buyerRef" placeholder="Select or type Ref..." 
+                       onfocus="handleBuyerRefFocus(this)" onblur="handleInputBlur(this)"
+                       onchange="saveHeaderToStorage()" oninput="onBuyerRefInput(this)" value="ZARA BABY">
+                <div id="buyerRef_auto_box" class="auto-suggest-box"></div>
             </div>
             <div class="form-group">
                 <label for="attn">Attn</label>
-                <input type="text" id="attn" list="attnList" placeholder="Merchant name..." 
+                <input type="text" id="attn" list="attnList" placeholder="Select or type Person name..." 
                        onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="onAttnChange()" oninput="onAttnChange()" value="Mr. Rion">
+                       onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="Md. Rion">
                 <datalist id="attnList"></datalist>
             </div>
             <div class="form-group full-width">
                 <label for="buyerAddress">Address of Buyer</label>
-                <textarea id="buyerAddress" rows="2" placeholder="Enter buyer address..." oninput="saveHeaderToStorage()">PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.</textarea>
+                <textarea id="buyerAddress" rows="2" placeholder="Enter buyer address..." oninput="saveHeaderToStorage()">Purbo Narsinghapur,
+Earpur Union Parishad Road,
+Ashulia, Dhaka-1341</textarea>
             </div>
         </div>
 
@@ -746,7 +747,6 @@
         }
     });
 
-    // --- ডিলিট এবং আনডু/রিডু হ্যান্ডলিং (পুরো ইন্টারফেসে ডিলিট বাটন কাজ করার জন্য) ---
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const currentType = document.getElementById('piType').value;
@@ -763,10 +763,8 @@
         const activeTag = activeElem ? activeElem.tagName.toLowerCase() : '';
         const isCtrl = e.ctrlKey || e.metaKey;
 
-        // কিবোর্ডের Delete বা Backspace চাপলে সিলেক্টেড সেল বা ইনপুটের ডেটা মুছে ফেলা এবং আনডু তে যুক্ত করা
         if (e.key === 'Delete' || e.key === 'Backspace') {
             if (activeTag === 'input' || activeTag === 'textarea') {
-                // ইনপুট বা টেক্সটএরিয়ায় টাইপ করার সময় ডিলিট কাজ করতে দিলে সমস্যা হতে পারে, তাই ব্ল্যাংক হলে বা ফুল সিলেক্টেড থাকলে হ্যান্ডেল হবে
                 return;
             }
 
@@ -859,21 +857,15 @@
     function getSuggestionsForField(fieldId) {
         let suggestList = [];
         if (fieldId === 'buyerName') {
-            suggestList = buyerDatabase.map(b => b.name);
+            suggestList = buyerDatabase.map(b => b.name.toUpperCase());
         } else if (fieldId === 'buyerRef') {
-            suggestList = buyerRefDatabase;
+            suggestList = buyerRefDatabase.map(r => r.toUpperCase());
         } else if (fieldId === 'attn') {
-            const buyerInputVal = document.getElementById('buyerName')?.value.trim() || '';
-            const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
-            if (foundBuyer) {
-                suggestList = foundBuyer.merchants;
-            } else {
-                buyerDatabase.forEach(b => suggestList.push(...b.merchants));
-            }
+            suggestList = personNameDatabase.map(p => p.toUpperCase());
         } else if (fieldId === 'unit') {
-            suggestList = [...productAutoSuggestions.unit];
+            suggestList = [...productAutoSuggestions.unit].map(u => u.toUpperCase());
         } else if (productAutoSuggestions[fieldId]) {
-            suggestList = [...productAutoSuggestions[fieldId]];
+            suggestList = [...productAutoSuggestions[fieldId]].map(s => s.toUpperCase());
         }
 
         items.forEach(item => {
@@ -890,60 +882,79 @@
                     }
                 });
             }
-            if (val && !suggestList.includes(val)) {
-                suggestList.push(val);
+            if (val && !suggestList.includes(val.toUpperCase())) {
+                suggestList.push(val.toUpperCase());
             }
         });
 
         return Array.from(new Set(suggestList));
     }
 
-    function setupInlineTypeahead(element) {
-        if (!element || element.dataset.typeaheadBound) return;
-        element.dataset.typeaheadBound = "true";
+    function showDropdownList(target, listData) {
+        const parent = target.parentElement;
+        if (!parent) return;
+        let box = parent.querySelector('.auto-suggest-box');
+        if (!box) {
+            box = document.createElement('div');
+            box.className = 'auto-suggest-box';
+            parent.appendChild(box);
+        }
 
-        element.addEventListener('keydown', function(e) {
-            if (e.key === 'Backspace' || e.key === 'Delete') {
-                element.dataset.isDeleting = "true";
-            } else {
-                element.dataset.isDeleting = "false";
-            }
-
-            if ((e.key === 'Enter' || e.key === 'Tab' || e.key === 'ArrowRight') && element.selectionStart !== element.selectionEnd) {
-                e.preventDefault();
-                element.selectionStart = element.value.length;
-                element.selectionEnd = element.value.length;
-                element.dispatchEvent(new Event('input', { bubbles: true }));
-                element.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        });
-
-        element.addEventListener('input', function(e) {
-            if (element.dataset.isDeleting === "true") return;
-
-            const inputVal = element.value;
-            const fieldId = element.id;
-            const selStart = element.selectionStart;
-
-            if (!inputVal || selStart < inputVal.length) return;
-
-            const suggestions = getSuggestionsForField(fieldId);
-            const match = suggestions.find(s => s.toLowerCase().startsWith(inputVal.toLowerCase()));
-
-            if (match) {
-                const completedText = inputVal + match.slice(inputVal.length);
-                element.value = completedText;
-                element.setSelectionRange(inputVal.length, completedText.length);
-            }
-        });
+        if (listData.length > 0) {
+            box.innerHTML = '';
+            listData.forEach(sugText => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'auto-suggest-item';
+                itemDiv.innerText = sugText;
+                itemDiv.onmousedown = function(evt) {
+                    evt.preventDefault();
+                    target.value = sugText;
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    target.dispatchEvent(new Event('change', { bubbles: true }));
+                    box.style.display = 'none';
+                    if (target.id === 'buyerName') {
+                        onBuyerChange();
+                    }
+                };
+                box.appendChild(itemDiv);
+            });
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
-            const elem = document.getElementById(id);
-            if (elem) setupInlineTypeahead(elem);
-        });
-    });
+    function handleBuyerFocus(inputElem) {
+        tempInputValueStore[inputElem.id] = inputElem.value;
+        inputElem.value = '';
+        let list = getSuggestionsForField('buyerName');
+        showDropdownList(inputElem, list);
+    }
+
+    function handleBuyerRefFocus(inputElem) {
+        tempInputValueStore[inputElem.id] = inputElem.value;
+        inputElem.value = '';
+        let list = getSuggestionsForField('buyerRef');
+        showDropdownList(inputElem, list);
+    }
+
+    function onBuyerInput(target) {
+        const inputVal = target.value.trim().toUpperCase();
+        target.value = inputVal;
+        let suggestList = getSuggestionsForField('buyerName');
+        const filtered = suggestList.filter(item => item.toString().toUpperCase().includes(inputVal));
+        showDropdownList(target, filtered);
+        onBuyerChange();
+    }
+
+    function onBuyerRefInput(target) {
+        const inputVal = target.value.trim().toUpperCase();
+        target.value = inputVal;
+        let suggestList = getSuggestionsForField('buyerRef');
+        const filtered = suggestList.filter(item => item.toString().toUpperCase().includes(inputVal));
+        showDropdownList(target, filtered);
+        saveHeaderToStorage();
+    }
 
     document.addEventListener('input', function(e) {
         const target = e.target;
@@ -960,10 +971,11 @@
         }
 
         const fieldId = target.id;
-        const inputVal = target.value.trim().toLowerCase();
+        const inputVal = target.value.trim().toUpperCase();
+        target.value = inputVal;
 
         let suggestList = getSuggestionsForField(fieldId);
-        const filtered = suggestList.filter(item => item.toString().toLowerCase().includes(inputVal));
+        const filtered = suggestList.filter(item => item.toString().toUpperCase().includes(inputVal));
 
         if (filtered.length > 0 && inputVal.length > 0) {
             box.innerHTML = '';
@@ -1011,66 +1023,61 @@
     }
 
     const buyerRefDatabase = [
-        "GAP SPR",
-        "Buyer: H&M AUTUMN'26.",
-        "Buyer: ZARA WINTER'26.",
-        "Buyer: PULL&BEAR 2026.",
-        "Buyer: TARGET CORP."
+        "STRADIVARIUS", "ZARA BABY", "ZARA MAN", "ZARA BOY", "JCPPENNY", 
+        "TCHIBO", "GAP", "IMPULSE", "BLL SOLAMODA", "PULL & BEAR", 
+        "H&M", "COSTCO/FAM", "BENNETON", "FAM", "TALLY", 
+        "JULES", "TARGET AUSTRALIA", "TRIPLE TOP", "SRG", "FAM","COSTCO", 
+        "MEGA CAP", "PUBLIK", "ALL BUYER", "RIVER ISLAM", "GDM", 
+        "SAMPLE ORDER", "DAMART", "LIDL", "BIG STAR", "BURGER KING"
     ];
 
-    function initBuyerRefDatalist() {
-        const refListElem = document.getElementById('buyerRefList');
-        if(!refListElem) return;
-        refListElem.innerHTML = '';
-        buyerRefDatabase.forEach(ref => {
+    const personNameDatabase = [
+        "Md Rabiul Hasan", "Mr. Rumee", "Md Jahangir", "Mr.Emam", "Md Samiul", "Md Sakil", 
+        "Md. Rion", "Md Sazzad", "Md Yousuf", "Md Kaium", "Md. Hasan", "Md. Hosen", 
+        "Mr. Mithu", "Mr. Jakaria", "Md Naiem", "Md Rasel", "Md Sahin", "Ms Farzana", 
+        "Md Asif", "Md Mahabul", "Md Sohel", "Ms Tanha", "Md Badsha", "Md Sarif", 
+        "Md Sakib", "MD Emam", "Md Zahid", "Md Alomgir", "Dev", "Md Saikat", 
+        "Md Musa", "Md Rezaul", "Md Mezba", "Md Rifat", "Md Istiak", "Md Shawon", 
+        "Md Zehad", "Md Saiful", "Md Kamrul", "Md Arif", "Md Polash", "Md Arif Foysal", 
+        "Md Pelu", "Md Masum", "Md Chayon", "Md Emon", "Mr.Zakaria", "Mr.Sharfuddin Ahmed", 
+        "Mr.Raisul Islam", "Mr.Shahadat", "Mr.Sanaul", "Mr.Asif Akbar", "Mr.Suzan Ahmed", 
+        "Mr.Aslam Ahmed", "Mr.NAYEEM/ ARMAN", "Mr.Rajee", "Mr.Azad Babul", "Mr.Sohrab", 
+        "Mr.Najmus Sakib", "Mr.Adnan", "Mr.Shamim Imtiaz", "Mr.Zehad Hossain", 
+        "Mr.Shaiful Islam", "Mr.Firoz/Shaiful Islam", "Mr.Raju/Zehad"
+    ];
+
+    function initAttnDatalist() {
+        const attnListElem = document.getElementById('attnList');
+        if(!attnListElem) return;
+        attnListElem.innerHTML = '';
+        personNameDatabase.forEach(name => {
             const opt = document.createElement('option');
-            opt.value = ref;
-            refListElem.appendChild(opt);
+            opt.value = name;
+            attnListElem.appendChild(opt);
         });
     }
 
     const buyerDatabase = [
-        { name: "Green Orion INDUSTRIES LTD.", address: "716, MOTIJHEEL C/A, DHAKA-1073, BANGLADESH.", merchants: ["Ms. Sathi", "Mr. Kamal", "Ms. Rina", "Mr. Tanvir"] },
-        { name: "Orion M Meghna ENTERPRISES", address: "785, AGARGAON, DHAKA-1023, BANGLADESH.", merchants: ["Mr. Kamal", "Mr. Kabir", "Ms. Sathi", "Mr. Tanvir"] },
-        { name: "BANDO DESIGN LTD.", address: "PURBO NARSINGHAPUR, EARPUR, UNION PARISHAD ROAD, ASHULIA, SAVAR, DHAKA.", merchants: ["Mr. Rion", "Ms. Sathi", "Mr. Kamal"] }
+        { name: "Bando Design Ltd", address: "Purbo Narsinghapur,\nEarpur Union Parishad Road,\nAshulia, Dhaka-1341" },
+        { name: "Sterling Creation Ltd", address: "Baron,Earpur Union,Ashulia,\nSavar,Dhaka,Bangladesh" },
+        { name: "Laila Style Ltd.", address: "Bahadurpur,Shikderbari,Gazipur,Bangladesh" },
+        { name: "Tec Max Ltd", address: "Diyakhali,Yearpur Union,Baron,\nAshulia,Savar,Dhaka,Bangladesh" },
+        { name: "Sterling Apparels Ltd", address: "Baron,Earpur Union,Ashulia,\nSavar,Dhaka,Bangladesh" },
+        { name: "Sterling Style  Ltd", address: "Baron,Earpur Union,Ashulia,\nSavar,Dhaka,Bangladesh" },
+        { name: "Sterling Denims Ltd", address: "Dhania,Nayarhat,Ashulia,\nSavar,Dhaka,Bangladesh" },
+        { name: "Unicorn Sweaters Ltd", address: "Gorat,Navana Village,Jamgora,\nAshulia,Dhaka,Bangladesh" },
+        { name: "HENG TONG BD LTD.", address: "Diyakhali,Yearpur Union,Baron,\nAshulia,Savar,Dhaka,Bangladesh" }
     ];
 
-    function initBuyerDatalist() {
-        const buyerListElem = document.getElementById('buyerList');
-        if(!buyerListElem) return;
-        buyerListElem.innerHTML = '';
-        buyerDatabase.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.name;
-            buyerListElem.appendChild(opt);
-        });
-    }
-
     function onBuyerChange() {
-        const buyerInputVal = document.getElementById('buyerName').value.trim();
-        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
-        const attnListElem = document.getElementById('attnList');
-        attnListElem.innerHTML = '';
+        const buyerInput = document.getElementById('buyerName');
+        let buyerInputVal = buyerInput.value.trim().toUpperCase();
+        buyerInput.value = buyerInputVal;
+
+        const foundBuyer = buyerDatabase.find(b => b.name.toUpperCase() === buyerInputVal);
 
         if (foundBuyer) {
-            foundBuyer.merchants.forEach(m => {
-                const opt = document.createElement('option');
-                opt.value = m;
-                attnListElem.appendChild(opt);
-            });
-        }
-        saveHeaderToStorage();
-    }
-
-    function onAttnChange() {
-        const buyerInputVal = document.getElementById('buyerName').value.trim();
-        const attnInputVal = document.getElementById('attn').value.trim();
-        const foundBuyer = buyerDatabase.find(b => b.name.toLowerCase() === buyerInputVal.toLowerCase());
-
-        if (foundBuyer) {
-            if (foundBuyer.merchants.some(m => m.toLowerCase() === attnInputVal.toLowerCase())) {
-                document.getElementById('buyerAddress').value = foundBuyer.address;
-            }
+            document.getElementById('buyerAddress').value = foundBuyer.address;
         }
         saveHeaderToStorage();
     }
@@ -1207,16 +1214,10 @@
     }
 
     window.onload = function() {
-        initBuyerDatalist();
-        initBuyerRefDatalist();
+        initAttnDatalist();
 
         preloadImage(companyLogoUrl);
         preloadImage(stampImageUrl);
-
-        ['buyerName', 'buyerRef', 'attn'].forEach(id => {
-            const elem = document.getElementById(id);
-            if (elem) setupInlineTypeahead(elem);
-        });
 
         const savedItems = localStorage.getItem('pi_items_data');
         const savedHeader = localStorage.getItem('pi_header_data');
@@ -1257,9 +1258,9 @@
                 else if (headerObj.piType) document.getElementById('piType').value = headerObj.piType;
                 document.getElementById('piNo').value = headerObj.piNo || 'SACL/296/2026';
                 document.getElementById('piDate').value = headerObj.piDate || '08.08.2026';
-                document.getElementById('buyerName').value = headerObj.buyerName || 'BANDO DESIGN LTD.';
+                document.getElementById('buyerName').value = (headerObj.buyerName || 'BANDO DESIGN LTD').toUpperCase();
                 document.getElementById('buyerAddress').value = headerObj.buyerAddress || '';
-                document.getElementById('buyerRef').value = headerObj.buyerRef || '';
+                document.getElementById('buyerRef').value = (headerObj.buyerRef || 'ZARA BABY').toUpperCase();
                 document.getElementById('attn').value = headerObj.attn || '';
                 if (document.getElementById('hsCodeInput')) document.getElementById('hsCodeInput').value = headerObj.hsCode || '';
                 if (headerObj.bar1HeaderFont) document.getElementById('bar1HeaderFont').value = headerObj.bar1HeaderFont;
@@ -1568,10 +1569,6 @@
 
         inputContainer.innerHTML = baseInputs + specificInputs + customInputsHTML + buttonHTML;
         
-        inputContainer.querySelectorAll('input[type="text"], textarea').forEach(elem => {
-            setupInlineTypeahead(elem);
-        });
-
         saveHeaderToStorage();
         populateDynamicAddColumnUI();
         updateTable();
@@ -1940,7 +1937,7 @@
                         let alignStyle = `text-align: ${alignStyleVal}; width: ${w}px;`;
 
                         let rowResizerHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
-                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')" onpaste="handleTablePaste(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
+                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${rIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')" onpaste="handleTablePaste(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
                     }
                 });
 
@@ -2343,7 +2340,7 @@
 
         saveStateForUndo(); 
         let isCurrentlyBold = window.getComputedStyle(selectedCells[0]).fontWeight;
-        let makeBold = (isCurrentlyBold === 'normal' || isCurrentlyBold === '400' || !isCurrentlyBold);
+        let makeBold = (isCurrentlyBold === 'normal' || isCurrentlyBold === '400' || !isCurrentStyleBold);
 
         selectedCells.forEach(cell => {
             cell.style.fontWeight = makeBold ? 'bold' : 'normal';
@@ -2607,7 +2604,7 @@
         
         const piNo = document.getElementById('piNo').value;
         const piDate = document.getElementById('piDate').value;
-        const buyerName = document.getElementById('buyerName').value;
+        const buyerName = document.getElementById('buyerName').value.toUpperCase();
         const buyerAddress = document.getElementById('buyerAddress').value;
         const buyerRef = document.getElementById('buyerRef').value;
         const attn = document.getElementById('attn').value;
@@ -2845,7 +2842,7 @@
         const customFontSize = parseInt(document.getElementById('bar1HeaderFont')?.value) || 20;
         const piNo = document.getElementById('piNo').value || '';
         const piDate = document.getElementById('piDate').value || '';
-        const buyerName = document.getElementById('buyerName').value || '';
+        const buyerName = document.getElementById('buyerName').value.toUpperCase() || '';
         const buyerAddressInput = document.getElementById('buyerAddress').value || '';
         const buyerRef = document.getElementById('buyerRef').value || '';
         const attn = document.getElementById('attn').value || '';
@@ -3126,7 +3123,6 @@
             { label: "N.B.", desc: "This Proforma Invoice deemed to be an integral part of LC." }
         ];
 
-        // কনসোলাস ফন্ট ব্যবহার করে প্রতিটি লাইনের কোলন ১০০% সোজা রাখা এবং নেটিভ ওয়ার্ড র‍্যাপ নিশ্চিত করা
         const FIXED_COLON_COL = 24; 
         const INDENT_FOR_NEXT_LINE = " ".repeat(FIXED_COLON_COL + 2);
 
@@ -3144,7 +3140,6 @@
                 fullText = label + " ".repeat(pad) + ": " + termItem.desc;
             }
 
-            // যদি লেখা অনেক বড় হয়, তবে এক্সেলের নিজস্ব ওয়ার্ড র‍্যাপ ও সঠিক ইনডেন্টের জন্য \n ব্যবহার করা
             let totalTableWpx = headerCols.reduce((sum, col) => sum + ((piColumnWidths[piType] && piColumnWidths[piType][col]) ? piColumnWidths[piType][col] : 100), 0);
             let maxLimit = Math.max(80, Math.floor(totalTableWpx / 7.2));
 
