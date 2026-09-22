@@ -7,6 +7,7 @@
     <!-- SheetJS Style CDN -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
+        
         * {
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,6 +16,60 @@
             background-color: #f8fafc;
             margin: 0;
             padding-top: 85px;
+        }
+                /* Welcome Screen / Splash Screen Styles */
+        #welcomeOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            transition: opacity 0.5s ease;
+        }
+        .welcome-circle-box {
+            width: 320px;
+            height: 320px;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 4px solid #3b82f6;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), inset 0 0 20px rgba(59, 130, 246, 0.3);
+            animation: pulseGlow 2s infinite alternate;
+        }
+        @keyframes pulseGlow {
+            0% { transform: scale(0.98); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+            100% { transform: scale(1.02); box-shadow: 0 0 35px rgba(59, 130, 246, 0.7); }
+        }
+        .welcome-circle-box h2 {
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 15px 0;
+            line-height: 1.3;
+            letter-spacing: 0.5px;
+        }
+        .welcome-loader-spinner {
+            width: 35px;
+            height: 35px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spinLoader 1s linear infinite;
+        }
+        @keyframes spinLoader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .top-dev-ribbon {
@@ -34,30 +89,58 @@
             z-index: 10000;
             border-bottom: 2px solid #3b82f6;
         }
+        /* রিবনের নাম্বার ইনপুট বক্সগুলোর সাইজ ও ডিজাইন */
+.excel-ribbon input[type="number"] {
+    width: 42px !important;
+    min-width: 42px !important;
+    max-width: 55px !important;
+    text-align: center;
+    padding: 2px 3px !important;
+    font-size: 11px !important;
+    font-weight: 600;
+}
 
-        .excel-ribbon {
-            position: fixed;
-            top: 26px;
-            left: 0;
-            width: 100%;
-            background: #ffffff; 
-            border-bottom: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            padding: 5px 10px;
-            gap: 3px;
-        }
+/* SEAL বা বড় সংখ্যার বক্সের জন্য সামান্য চওড়া বাড়ানো */
+#bar6StampSize {
+    width: 48px !important;
+}
 
-        .ribbon-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 4px;
-            width: 100%;
-            flex-wrap: nowrap;
-        }
+/* FONT (F) এবং SIZE (C/R) ইনপুট বক্সের সাইজ */
+#fontSizeInputBox, #sizeIndicatorBox {
+    width: 44px !important;
+    text-align: center;
+}
+
+       .excel-ribbon {
+    position: fixed;
+    top: 26px;
+    left: 0;
+    width: 100%;
+    background: #ffffff; 
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    padding: 5px 10px;
+    gap: 3px;
+}
+
+.ribbon-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* space-between থেকে flex-start করা হলো যাতে উপাদানগুলো বাম দিকে ঘেঁষে থাকে */
+    gap: 15px; /* উপাদানগুলোর মধ্যকার দূরত্ব কমানো বা বাড়ানোর জন্য */
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto; /* স্ক্রিন ছোট হলে স্ক্রল করার সুবিধা রাখবে */
+}
+
+/* নিচের লাইনের Add Col গ্রুপটিকে আরও বামে চাপাতে */
+.ribbon-row .ribbon-group[style*="justify-content: flex-end"] {
+    justify-content: flex-start !important;
+    flex: unset !important;
+}
 
         .excel-ribbon button {
             padding: 4px 8px !important;
@@ -450,9 +533,17 @@
                 line-height: 1.15 !important;
             }
         }
+     
     </style>
 </head>
 <body>
+    <!-- Welcome / Splash Screen Overlay -->
+    <div id="welcomeOverlay">
+        <div class="welcome-circle-box">
+            <h2>Welcome to Garments Accessories Master</h2>
+            <div class="welcome-loader-spinner"></div>
+        </div>
+    </div>
 
     <div class="top-dev-ribbon">
         <span>Proforma Invoice (PI) Generator Pro</span>
@@ -460,131 +551,129 @@
     </div>
 
     <div class="excel-ribbon no-print">
-        <div class="ribbon-row" style="justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;">
-                <button type="button" class="btn-print" onclick="printPDF()">🖨️ PDF Print</button>
-                <button type="button" class="btn-export" onclick="exportToExcel()">📥 Excel Export</button>
-                <button type="button" class="btn-save-main" onclick="saveAllPersistentData(true)">💾 Save Data</button>
-                <button type="button" class="btn-export" onclick="downloadJSON()">💾 Backup JSON</button>
-                <button type="button" class="btn-export" onclick="document.getElementById('jsonFileInput').click()">📂 Load JSON</button>
-                <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
+    <div class="ribbon-row" style="justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 4px; flex-wrap: nowrap;">
+            <button type="button" class="btn-print" onclick="printPDF()">🖨️ PDF Print</button>
+            <button type="button" class="btn-export" onclick="exportToExcel()">📥 Excel Export</button>
+            <button type="button" class="btn-save-main" onclick="saveAllPersistentData(true)">💾 Save Data</button>
+            <button type="button" class="btn-export" onclick="downloadJSON()">💾 Backup JSON</button>
+            <button type="button" class="btn-export" onclick="document.getElementById('jsonFileInput').click()">📂 Load JSON</button>
+            <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="uploadJSON(event)">
 
-                <div style="display: flex; align-items: center; gap: 2px; padding: 0 4px; background: #f1f5f9; border-radius: 4px; border: 1px solid #cbd5e1;">
-                    <input type="checkbox" id="fitToOnePage" style="margin: 0; cursor: pointer;">
-                    <label for="fitToOnePage" style="font-size: 10px; font-weight: 700; cursor: pointer; margin: 0; color: #c2410c;">Fit 1P</label>
-                </div>
-
-                <div class="ribbon-group">
-                    <span class="ribbon-title">HDR</span>
-                    <input type="number" id="bar1HeaderFont" value="22" min="10" max="42" style="width: 38px;" onclick="showNumberDropdown(this, 10, 42, 2)" oninput="updateAllCustomBars()">
-                    <div id="bar1HeaderFont_dropdown" class="number-dropdown-list"></div>
-                </div>
-                <div class="ribbon-group">
-                    <span class="ribbon-title">PI</span>
-                    <input type="number" id="bar2PiTitleFont" value="14" min="8" max="30" style="width: 38px;" onclick="showNumberDropdown(this, 8, 30, 1)" oninput="updateAllCustomBars()">
-                    <div id="bar2PiTitleFont_dropdown" class="number-dropdown-list"></div>
-                </div>
-                <div class="ribbon-group">
-                    <span class="ribbon-title">INFO</span>
-                    <input type="number" id="bar3InfoFont" value="11" min="6" max="24" style="width: 38px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
-                    <div id="bar3InfoFont_dropdown" class="number-dropdown-list"></div>
-                </div>
-                <div class="ribbon-group">
-                    <span class="ribbon-title">TERM</span>
-                    <input type="number" id="bar4TermsFont" value="11" min="6" max="24" style="width: 38px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
-                    <div id="bar4TermsFont_dropdown" class="number-dropdown-list"></div>
-                </div>
-                <div class="ribbon-group">
-                    <span class="ribbon-title">SIG</span>
-                    <input type="number" id="bar5SigFont" value="11" min="6" max="24" style="width: 38px;" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
-                    <div id="bar5SigFont_dropdown" class="number-dropdown-list"></div>
-                </div>
-                <div class="ribbon-group">
-                    <span class="ribbon-title">SEAL</span>
-                    <input type="number" id="bar6StampSize" value="55" min="20" max="200" style="width: 42px;" onclick="showNumberDropdown(this, 20, 200, 5)" oninput="updateAllCustomBars()">
-                    <div id="bar6StampSize_dropdown" class="number-dropdown-list"></div>
-                </div>
-
-                <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ Reset</button>
+            <div style="display: flex; align-items: center; gap: 2px; padding: 0 4px; background: #f1f5f9; border-radius: 4px; border: 1px solid #cbd5e1;">
+                <input type="checkbox" id="fitToOnePage" style="margin: 0; cursor: pointer;">
+                <label for="fitToOnePage" style="font-size: 10px; font-weight: 700; cursor: pointer; margin: 0; color: #c2410c;">Fit 1P</label>
             </div>
 
-            <div class="pi-type-container" style="display: flex; align-items: center; gap: 4px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">
-                <label for="piType" style="font-weight: 700; font-size: 10px; color: #1e293b; margin:0;">Model:</label>
-                <select id="piType" onchange="handlePiTypeChange()" style="padding: 2px 4px; font-size: 10px;">
-                    <option value="allPi" selected>1. All PI (Color)</option>
-                    <option value="poly">2. Poly (Style/PO)</option>
-                </select>
+            <div class="ribbon-group">
+                <span class="ribbon-title">HDR</span>
+                <input type="number" id="bar1HeaderFont" value="22" min="10" max="42" onclick="showNumberDropdown(this, 10, 42, 2)" oninput="updateAllCustomBars()">
+                <div id="bar1HeaderFont_dropdown" class="number-dropdown-list"></div>
             </div>
+            <div class="ribbon-group">
+                <span class="ribbon-title">PI</span>
+                <input type="number" id="bar2PiTitleFont" value="14" min="8" max="30" onclick="showNumberDropdown(this, 8, 30, 1)" oninput="updateAllCustomBars()">
+                <div id="bar2PiTitleFont_dropdown" class="number-dropdown-list"></div>
+            </div>
+            <div class="ribbon-group">
+                <span class="ribbon-title">INFO</span>
+                <input type="number" id="bar3InfoFont" value="11" min="6" max="24" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                <div id="bar3InfoFont_dropdown" class="number-dropdown-list"></div>
+            </div>
+            <div class="ribbon-group">
+                <span class="ribbon-title">TERM</span>
+                <input type="number" id="bar4TermsFont" value="11" min="6" max="24" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                <div id="bar4TermsFont_dropdown" class="number-dropdown-list"></div>
+            </div>
+            <div class="ribbon-group">
+                <span class="ribbon-title">SIG</span>
+                <input type="number" id="bar5SigFont" value="11" min="6" max="24" onclick="showNumberDropdown(this, 6, 24, 1)" oninput="updateAllCustomBars()">
+                <div id="bar5SigFont_dropdown" class="number-dropdown-list"></div>
+            </div>
+            <div class="ribbon-group">
+                <span class="ribbon-title">SEAL</span>
+                <input type="number" id="bar6StampSize" value="55" min="20" max="200" onclick="showNumberDropdown(this, 20, 200, 5)" oninput="updateAllCustomBars()">
+                <div id="bar6StampSize_dropdown" class="number-dropdown-list"></div>
+            </div>
+
+            <button type="button" class="btn-reset" onclick="resetAllData()">🗑️ Reset</button>
         </div>
 
-        <div class="ribbon-row">
-            <div class="ribbon-group">
-                <span class="ribbon-title">Font (F)</span>
-                <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
-                    <input type="number" id="fontSizeInputBox" value="12" min="8" max="72" 
-                           style="width: 42px; text-align: center; font-size: 11px; font-weight: bold;" 
-                           onclick="showNumberDropdown(this, 8, 72, 2)"
-                           oninput="applyDirectFontSize(this.value)" onchange="applyDirectFontSize(this.value)">
-                    <div id="fontSizeInputBox_dropdown" class="number-dropdown-list"></div>
-                    <span style="font-size: 10px; font-weight: bold;">px</span>
-                </div>
-            </div>
-
-            <div class="ribbon-group">
-                <span class="ribbon-title">Size (C/R)</span>
-                <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
-                    <input type="number" id="sizeIndicatorBox" value="0" min="10" max="1000" 
-                           style="width: 45px; text-align: center; font-size: 11px; font-weight: bold;" 
-                           onmousedown="event.stopPropagation();"
-                           onclick="showNumberDropdown(this, 20, 300, 10)"
-                           oninput="applyDirectDimension(this.value)" 
-                           onchange="applyDirectDimension(this.value)">
-                    <div id="sizeIndicatorBox_dropdown" class="number-dropdown-list"></div>
-                    <span style="font-size: 10px; font-weight: bold;">px</span>
-                </div>
-            </div>
-
-            <div class="ribbon-group">
-                <span class="ribbon-title">Style (B/A)</span>
-                <button type="button" onclick="toggleSelectionBold()" style="font-weight: bold;">𝐁 Bold</button>
-                <select id="cellAlignmentSelect" onchange="applySelectionAlignment(this.value)" style="padding: 2px 4px; font-size: 10px;">
-                    <option value="" disabled selected>Align</option>
-                    <option value="left">Left</option>
-                    <option value="center">Center</option>
-                    <option value="right">Right</option>
-                </select>
-            </div>
-
-            <div class="ribbon-group">
-                <span class="ribbon-title">Case</span>
-                <select id="textCaseSelect" onchange="applyTextCase(this.value)" style="padding: 2px 4px; font-size: 10px;">
-                    <option value="" disabled selected>Change Case</option>
-                    <option value="upper">UPPERCASE</option>
-                    <option value="lower">lowercase</option>
-                    <option value="sentence">Sentence case</option>
-                </select>
-            </div>
-
-            <div class="ribbon-group">
-                <span class="ribbon-title">Cell (M)</span>
-                <button type="button" class="btn-merge" onclick="mergeSelectedCells()">🔗 Merge</button>
-                <button type="button" class="btn-unmerge" onclick="unmergeSelectedCells()">🔓 Split</button>
-            </div>
-
-            <div class="ribbon-group" style="flex: 1; justify-content: flex-end;">
-                <span class="ribbon-title">Add Col</span>
-                <input type="text" id="newColTemplateSelect" list="colTemplateList" placeholder="Col name..." style="padding: 2px 6px; font-size: 10px; width: 100px;">
-                <datalist id="colTemplateList"></datalist>
-                <select id="targetReferenceCol" style="padding: 2px 4px; font-size: 10px;"></select>
-                <select id="beforeAfterSelect" style="padding: 2px 4px; font-size: 10px;">
-                    <option value="after">After</option>
-                    <option value="before">Before</option>
-                </select>
-                <button type="button" style="background-color: #2563eb; color: white;" onclick="addNewCustomColumn()">+ Add</button>
-                <button type="button" style="background-color: #dc2626; color: white;" onclick="removeCustomColumn()">- Remove</button>
-            </div>
+        <div class="pi-type-container" style="display: flex; align-items: center; gap: 4px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">
+            <label for="piType" style="font-weight: 700; font-size: 10px; color: #1e293b; margin:0;">Model:</label>
+            <select id="piType" onchange="handlePiTypeChange()" style="padding: 2px 4px; font-size: 10px;">
+                <option value="allPi" selected>1. All PI (Color)</option>
+                <option value="poly">2. Poly (Style/PO)</option>
+            </select>
         </div>
     </div>
+
+    <div class="ribbon-row">
+        <div class="ribbon-group">
+            <span class="ribbon-title">Font (F)</span>
+            <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
+                <input type="number" id="fontSizeInputBox" value="12" min="8" max="72" 
+                       onclick="showNumberDropdown(this, 8, 72, 2)"
+                       oninput="applyDirectFontSize(this.value)" onchange="applyDirectFontSize(this.value)">
+                <div id="fontSizeInputBox_dropdown" class="number-dropdown-list"></div>
+                <span style="font-size: 10px; font-weight: bold;">px</span>
+            </div>
+        </div>
+
+        <div class="ribbon-group">
+            <span class="ribbon-title">Size (C/R)</span>
+            <div style="display: flex; align-items: center; gap: 2px; position: relative;" class="pi-type-container">
+                <input type="number" id="sizeIndicatorBox" value="0" min="10" max="1000" 
+                       onmousedown="event.stopPropagation();"
+                       onclick="showNumberDropdown(this, 20, 300, 10)"
+                       oninput="applyDirectDimension(this.value)" 
+                       onchange="applyDirectDimension(this.value)">
+                <div id="sizeIndicatorBox_dropdown" class="number-dropdown-list"></div>
+                <span style="font-size: 10px; font-weight: bold;">px</span>
+            </div>
+        </div>
+
+        <div class="ribbon-group">
+            <span class="ribbon-title">Style (B/A)</span>
+            <button type="button" onclick="toggleSelectionBold()" style="font-weight: bold;">𝐁 Bold</button>
+            <select id="cellAlignmentSelect" onchange="applySelectionAlignment(this.value)" style="padding: 2px 4px; font-size: 10px;">
+                <option value="" disabled selected>Align</option>
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+            </select>
+        </div>
+
+        <div class="ribbon-group">
+            <span class="ribbon-title">Case</span>
+            <select id="textCaseSelect" onchange="applyTextCase(this.value)" style="padding: 2px 4px; font-size: 10px;">
+                <option value="" disabled selected>Change Case</option>
+                <option value="upper">UPPERCASE</option>
+                <option value="lower">lowercase</option>
+                <option value="sentence">Sentence case</option>
+            </select>
+        </div>
+
+        <div class="ribbon-group">
+            <span class="ribbon-title">Cell (M)</span>
+            <button type="button" class="btn-merge" onclick="mergeSelectedCells()">🔗 Merge</button>
+            <button type="button" class="btn-unmerge" onclick="unmergeSelectedCells()">🔓 Split</button>
+        </div>
+
+        <div class="ribbon-group" style="flex: 1; justify-content: flex-end;">
+            <span class="ribbon-title">Add Col</span>
+            <input type="text" id="newColTemplateSelect" list="colTemplateList" placeholder="Col name..." style="padding: 2px 6px; font-size: 10px; width: 100px;">
+            <datalist id="colTemplateList"></datalist>
+            <select id="targetReferenceCol" style="padding: 2px 4px; font-size: 10px;"></select>
+            <select id="beforeAfterSelect" style="padding: 2px 4px; font-size: 10px;">
+                <option value="after">After</option>
+                <option value="before">Before</option>
+            </select>
+            <button type="button" style="background-color: #2563eb; color: white;" onclick="addNewCustomColumn()">+ Add</button>
+            <button type="button" style="background-color: #dc2626; color: white;" onclick="removeCustomColumn()">- Remove</button>
+        </div>
+    </div>
+</div>
       
     <div class="container">
         <div class="section-title" onclick="toggleBuyerInfoSection()">
@@ -668,6 +757,29 @@ Ashulia, Dhaka-1341</textarea>
     <div id="printTemplate"></div>
 
 <script>
+     // সফটওয়্যার লোড হওয়ার সাথে সাথে ৩ সেকেন্ডের জন্য ওয়েলকাম স্ক্রিন শো করার স্ক্রিপ্ট
+    window.addEventListener('DOMContentLoaded', () => {
+        // চেক করা হচ্ছে সেশনের প্রথম ভিজিট কিনা
+        if (!sessionStorage.getItem('hasVisitedWelcome')) {
+            // প্রথমবার ভিজিট হলে ফ্ল্যাগ সেট করে দেওয়া হলো
+            sessionStorage.setItem('hasVisitedWelcome', 'true');
+            
+            // ৩ সেকেন্ড (২-৩ সেকেন্ড ব্রাউজিং টাইম) পর ফেইড আউট হয়ে রিমুভ হবে
+            setTimeout(() => {
+                const overlay = document.getElementById('welcomeOverlay');
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.remove(), 600);
+                }
+            }, 3000); // ৩ সেকেন্ড
+        } else {
+            // রিফ্রেশ করলে বা একই সেশনে থাকলে সাথে সাথে রিমুভ হয়ে যাবে (কোনো ডিলে বা ব্রাউজিং দেখাবে না)
+            const overlay = document.getElementById('welcomeOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+    });
     const stampImageUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Seal-/main/Picture1.png";
     const companyLogoUrl = "https://raw.githubusercontent.com/sayemeeelearning-hub/Logo/main/Logo.png";
 
@@ -748,63 +860,65 @@ Ashulia, Dhaka-1341</textarea>
     });
 
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const currentType = document.getElementById('piType').value;
-            const table = document.getElementById(`table-${currentType}`);
-            if (table) {
-                table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
-            }
-            if (document.activeElement && (document.activeElement.tagName === 'TH' || document.activeElement.tagName === 'TD')) {
-                document.activeElement.blur();
-            }
+    if (e.key === 'Escape') {
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (table) {
+            table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
+        }
+        if (document.activeElement && (document.activeElement.tagName === 'TH' || document.activeElement.tagName === 'TD')) {
+            document.activeElement.blur();
+        }
+    }
+
+    const activeElem = document.activeElement;
+    const activeTag = activeElem ? activeElem.tagName.toLowerCase() : '';
+    const isCtrl = e.ctrlKey || e.metaKey;
+
+    // যদি Delete বাটন প্রেস করা হয়, তবে সিলেক্ট করা পুরো সেল একসাথে মুছে যাবে
+    if (e.key === 'Delete') {
+        if (activeTag === 'input' || activeTag === 'textarea') {
+            return;
         }
 
-        const activeElem = document.activeElement;
-        const activeTag = activeElem ? activeElem.tagName.toLowerCase() : '';
-        const isCtrl = e.ctrlKey || e.metaKey;
-
-        if (e.key === 'Delete' || e.key === 'Backspace') {
-            if (activeTag === 'input' || activeTag === 'textarea') {
-                return;
-            }
-
-            const currentType = document.getElementById('piType').value;
-            const table = document.getElementById(`table-${currentType}`);
-            if (table) {
-                const selectedCells = table.querySelectorAll('td.cell-selected');
-                if (selectedCells.length > 0) {
-                    e.preventDefault();
-                    saveStateForUndo();
-                    selectedCells.forEach(cell => {
-                        cell.innerText = '';
-                        let rIdx = parseInt(cell.getAttribute('data-row'));
-                        let cIdx = parseInt(cell.getAttribute('data-col'));
-                        if (!isNaN(rIdx) && !isNaN(cIdx)) {
-                            updateCellContent({ target: cell }, rIdx, cIdx);
-                        }
-                    });
-                    saveDataToStorage();
-                }
+        const currentType = document.getElementById('piType').value;
+        const table = document.getElementById(`table-${currentType}`);
+        if (table) {
+            const selectedCells = table.querySelectorAll('td.cell-selected');
+            if (selectedCells.length > 0) {
+                e.preventDefault();
+                saveStateForUndo();
+                selectedCells.forEach(cell => {
+                    cell.innerText = '';
+                    let rIdx = parseInt(cell.getAttribute('data-row'));
+                    let cIdx = parseInt(cell.getAttribute('data-col'));
+                    if (!isNaN(rIdx) && !isNaN(cIdx)) {
+                        updateCellContent({ target: cell }, rIdx, cIdx);
+                    }
+                });
+                saveDataToStorage();
             }
         }
+    }
+    
+    // ব্যাকস্পেস (Backspace) এর ক্ষেত্রে সেল এডিট করার সময় স্বাভাবিকভাবে একটি একটি করে ডিজিট/লেটার কাটবে (কোনো বাধা দেওয়া হবে না)
 
-        if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
-            if (activeTag === 'td' || activeTag === 'th' || activeTag === 'input' || activeTag === 'textarea') {
-                activeElem.blur();
-            }
-            if (e.shiftKey) { 
-                e.preventDefault(); 
-                performRedo(); 
-            } else { 
-                e.preventDefault(); 
-                performUndo(); 
-            }
-        } else if (isCtrl && (e.key === 'y' || e.key === 'Y')) {
+    if (isCtrl && (e.key === 'z' || e.key === 'Z')) {
+        if (activeTag === 'td' || activeTag === 'th' || activeTag === 'input' || activeTag === 'textarea') {
+            activeElem.blur();
+        }
+        if (e.shiftKey) { 
             e.preventDefault(); 
-            performRedo();
+            performRedo(); 
+        } else { 
+            e.preventDefault(); 
+            performUndo(); 
         }
-    });
-
+    } else if (isCtrl && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault(); 
+        performRedo();
+    }
+});
     const productAutoSuggestions = {
         desc: [
             "CARTON BOX 7-PLY",
@@ -964,11 +1078,11 @@ Ashulia, Dhaka-1341</textarea>
                 itemDiv.className = 'auto-suggest-item';
                 itemDiv.innerText = sugText;
                 itemDiv.onmousedown = function(evt) {
-                    evt.preventDefault();
-                    target.value = sugText;
-                    target.dispatchEvent(new Event('input', { bubbles: true }));
-                    box.style.display = 'none';
-                };
+    evt.preventDefault();
+    target.value = sugText.toUpperCase(); // এখানে .toUpperCase() যুক্ত করা হলো
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    box.style.display = 'none';
+};
                 box.appendChild(itemDiv);
             });
             box.style.display = 'block';
@@ -1542,7 +1656,7 @@ Ashulia, Dhaka-1341</textarea>
                 </datalist>
             </div>
             <div class="form-group"><label for="qty">QTY</label><input type="number" id="qty" placeholder="0" oninput="saveStateForUndo()"></div>
-            <div class="form-group"><label for="price">Unit Price (USD)</label><input type="number" step="0.0001" id="price" placeholder="0.0000" oninput="saveStateForUndo()"></div>
+            <div class="form-group"><label for="price">Unit Price (USD)</label><input type="text" id="price" placeholder="0" oninput="saveStateForUndo()"></div>
         `;
 
         let customCols = customColumnsStore[piType] || [];
@@ -1599,15 +1713,15 @@ Ashulia, Dhaka-1341</textarea>
                 let baseP = item.price || 0;
                 let oPct = item.othersPercent || 0;
                 let effectivePrice = baseP + (baseP * oPct / 100) + (baseP * totalVal / 100);
-                item.effectivePrice = parseFloat(effectivePrice.toFixed(4));
+                item.effectivePrice = parseFloat(effectivePrice);
 
                 let customCols = customColumnsStore[piType] || [];
                 let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
                 if (hasQtyDzn) {
                     let dznVal = (item.qty || 0) / 12;
-                    item.amount = parseFloat((dznVal * effectivePrice).toFixed(4));
+                    item.amount = parseFloat((dznVal * effectivePrice));
                 } else {
-                    item.amount = parseFloat(((item.qty || 0) * effectivePrice).toFixed(4));
+                    item.amount = parseFloat(((item.qty || 0) * effectivePrice));
                 }
             }
         });
@@ -1652,7 +1766,8 @@ Ashulia, Dhaka-1341</textarea>
         const slNo = parseInt(document.getElementById('slNo').value) || slCounters[piType];
         
         let qty = parseFloat(document.getElementById('qty')?.value) || 0;
-        let basePrice = parseFloat(document.getElementById('price')?.value) || 0;
+        let rawPriceInput = document.getElementById('price')?.value || '0';
+        let basePrice = parseFloat(rawPriceInput.replace(/[^0-9.]/g, '')) || 0;
         let othersVal = parseFloat(document.getElementById('othersPercent')?.value) || 0;
         let totalVal = parseFloat(document.getElementById('totalPercent')?.value) || 0;
         
@@ -1677,8 +1792,8 @@ Ashulia, Dhaka-1341</textarea>
             price: basePrice, 
             othersPercent: othersVal,
             totalPercent: totalVal,
-            effectivePrice: parseFloat(effectivePrice.toFixed(4)),
-            amount: parseFloat(calculatedAmount.toFixed(4)), 
+            effectivePrice: parseFloat(effectivePrice),
+            amount: parseFloat(calculatedAmount), 
             customValues: {} 
         };
 
@@ -1740,7 +1855,7 @@ Ashulia, Dhaka-1341</textarea>
         }
         document.getElementById('slNo').value = item.slNo;
         if(document.getElementById('qty')) document.getElementById('qty').value = item.qty || '';
-        if(document.getElementById('price')) document.getElementById('price').value = item.price || '';
+        if(document.getElementById('price')) document.getElementById('price').value = item.price !== undefined ? item.price : '';
         if(document.getElementById('othersPercent')) document.getElementById('othersPercent').value = item.othersPercent || '';
         if(document.getElementById('totalPercent')) document.getElementById('totalPercent').value = item.totalPercent || '';
         if(document.getElementById('desc')) document.getElementById('desc').value = item.desc || '';
@@ -1899,10 +2014,10 @@ Ashulia, Dhaka-1341</textarea>
                     }
                     else if (col === "QTY (Dzn)") {
                         let dznVal = (item.qty || 0) / 12;
-                        cellVal = dznVal.toFixed(2);
+                        cellVal = dznVal % 1 === 0 ? dznVal.toString() : dznVal.toFixed(2).replace(/\.?0+$/, '');
                     }
                     else if (col === "Unit Price (USD)") {
-                        cellVal = finalUnitP > 0 ? `$${finalUnitP.toFixed(4)}` : "$0.0000";
+                        cellVal = finalUnitP > 0 ? `$${finalUnitP.toString()}` : "$0";
                     }
                     else if (col === "Amount (USD)") {
                         let finalAmt = 0;
@@ -1914,10 +2029,10 @@ Ashulia, Dhaka-1341</textarea>
                             finalAmt = dznVal * finalUnitP;
                         } else {
                             finalAmt = (item.qty || 0) * finalUnitP;
-                        }
-                        item.amount = finalAmt;
-                        cellVal = `$${finalAmt.toFixed(2)}`;
                     }
+    item.amount = parseFloat(finalAmt.toFixed(2));
+    cellVal = `$${item.amount.toFixed(2)}`;
+}
                     else {
                         let safeKey = col.toLowerCase().replace(/[^a-z0-9]/g, '');
                         cellVal = item[safeKey] || item[col] || '';
@@ -1966,7 +2081,8 @@ Ashulia, Dhaka-1341</textarea>
 
             let totalQtySum = filteredItems.reduce((acc, curr) => acc + (curr.qty || 0), 0);
             let totalAmountSum = filteredItems.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-            let totalDznSum = (totalQtySum / 12).toFixed(2);
+            let totalDznSum = totalQtySum / 12;
+            let formattedTotalDzn = totalDznSum % 1 === 0 ? totalDznSum.toString() : totalDznSum.toFixed(2).replace(/\.?0+$/, '');
 
             let tfoot = table.querySelector('tfoot');
             let savedTotalRowH = (piRowHeights[type] && piRowHeights[type]['total']) ? `height: ${piRowHeights[type]['total']}px;` : '';
@@ -1983,8 +2099,8 @@ Ashulia, Dhaka-1341</textarea>
                 } else {
                     if (idx === 0) footerText = "Total =";
                     else if (col === "QTY") footerText = totalQtySum;
-                    else if (col === "QTY (Dzn)") footerText = totalDznSum;
-                    else if (col === "Amount (USD)") footerText = `$${totalAmountSum.toFixed(2)}`;
+                    else if (col === "QTY (Dzn)") footerText = formattedTotalDzn;
+                    else if (col === "Amount (USD)") footerText = `$${totalAmountSum.toString()}`;
                     else footerText = "-";
                 }
 
@@ -2148,15 +2264,15 @@ Ashulia, Dhaka-1341</textarea>
         let oPct = item.othersPercent || 0;
         let tPct = item.totalPercent || 0;
         let effectivePrice = baseP + (baseP * oPct / 100) + (baseP * tPct / 100);
-        item.effectivePrice = parseFloat(effectivePrice.toFixed(4));
+        item.effectivePrice = parseFloat(effectivePrice);
 
         let customCols = customColumnsStore[type] || [];
         let hasQtyDzn = customCols.some(c => c.name === "QTY (Dzn)");
         if (hasQtyDzn) {
             let dznVal = (item.qty || 0) / 12;
-            item.amount = parseFloat((dznVal * effectivePrice).toFixed(4));
+            item.amount = parseFloat((dznVal * effectivePrice));
         } else {
-            item.amount = parseFloat(((item.qty || 0) * effectivePrice).toFixed(4));
+            item.amount = parseFloat(((item.qty || 0) * effectivePrice));
         }
     }
 
@@ -2227,9 +2343,13 @@ Ashulia, Dhaka-1341</textarea>
             else if (colName === "Unit") items[actualIndex].unit = newText;
             else if (colName === "QTY") items[actualIndex].qty = parseFloat(newText) || 0;
             else if (colName === "Unit Price (USD)") {
-                let cleanPrice = parseFloat(newText.replace(/[^0-9.]/g, '')) || 0;
+                let cleanPriceText = newText.replace(/[^0-9.]/g, '');
+                let cleanPrice = parseFloat(cleanPriceText) || 0;
                 items[actualIndex].price = cleanPrice;
                 items[actualIndex].effectivePrice = cleanPrice;
+                if (!newText.startsWith('$') && cleanPriceText !== '') {
+                    e.target.innerText = '$' + cleanPriceText;
+                }
             } else {
                 if (!items[actualIndex].customValues) items[actualIndex].customValues = {};
                 items[actualIndex].customValues[colName] = newText;
@@ -2613,6 +2733,26 @@ Ashulia, Dhaka-1341</textarea>
 
         saveDataToStorage();
     }
+    document.addEventListener('DOMContentLoaded', function() {
+    ['buyerName', 'buyerRef'].forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+            setupInlineTypeahead(elem);
+            
+            // টাইপ বা সিলেক্ট করার সময় সাথে সাথে ক্যাপিটাল করার জন্য
+            elem.addEventListener('input', function() {
+                let start = this.selectionStart;
+                let end = this.selectionEnd;
+                this.value = this.value.toUpperCase();
+                this.setSelectionRange(start, end);
+            });
+
+            elem.addEventListener('change', function() {
+                this.value = this.value.toUpperCase();
+            });
+        }
+    });
+});
 
     async function printPDF() {
         const piType = document.getElementById('piType').value;
@@ -3057,11 +3197,11 @@ Ashulia, Dhaka-1341</textarea>
                 }
                 else if (col === "QTY (Dzn)") {
                     let dznVal = ((item.qty || 0) / 12);
-                    cellVal = parseFloat(dznVal.toFixed(2));
+                    cellVal = dznVal % 1 === 0 ? dznVal.toString() : parseFloat(dznVal.toFixed(2));
                     align = alignRight;
                 }
                 else if (col === "Unit Price (USD)") {
-                    cellVal = `$${finalUnitP.toFixed(4)}`;
+                    cellVal = `$${finalUnitP.toString()}`;
                     align = alignRight;
                 }
                 else if (col === "Amount (USD)") {
@@ -3074,7 +3214,7 @@ Ashulia, Dhaka-1341</textarea>
                     } else {
                         finalAmt = (item.qty || 0) * finalUnitP;
                     }
-                    cellVal = `$${finalAmt.toFixed(2)}`;
+                    cellVal = `$${finalAmt.toString()}`;
                     totalAmount += finalAmt;
                     align = alignRight;
                 }
@@ -3112,9 +3252,11 @@ Ashulia, Dhaka-1341</textarea>
             } else if (colName === "QTY") {
                 return { v: totalQty, s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
             } else if (colName === "QTY (Dzn)") {
-                return { v: parseFloat((totalQty / 12).toFixed(2)), s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
+                let dznTotalVal = totalQty / 12;
+                let formattedDznTotal = dznTotalVal % 1 === 0 ? dznTotalVal.toString() : parseFloat(dznTotalVal.toFixed(2));
+                return { v: formattedDznTotal, s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
             } else if (colName === "Amount (USD)") {
-                return { v: `$${totalAmount.toFixed(2)}`, s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
+                return { v: `$${totalAmount.toString()}`, s: { font: { bold: true, name: 'Arial', sz: 9.5 }, alignment: alignRight, border: thinBlackBorder } };
             } else {
                 return { v: "-", s: { alignment: alignCenter, border: thinBlackBorder, font: { name: 'Arial', sz: 9.5 } } };
             }
