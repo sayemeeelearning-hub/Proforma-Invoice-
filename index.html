@@ -292,20 +292,23 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
 
-        .form-grid {
+.form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
             margin-bottom: 12px;
+            align-items: start !important; /* গ্রিড আইটেমগুলোকে ওপর থেকে সমানভাবে সাজাতে */
         }
         #dynamicInputContainer.form-grid {
             grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
             gap: 8px;
         }
-        .form-group {
+   .form-group {
             display: flex;
             flex-direction: column;
             position: relative;
+            justify-content: flex-start !important; /* উপর থেকে সিরিয়াল করার জন্য */
+            vertical-align: top !important;
         }
         .form-group.full-width {
             grid-column: 1 / -1;
@@ -317,7 +320,8 @@
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.4px;
-        }
+     }
+
         input, select, textarea {
             padding: 5px 8px;
             border: 1px solid #cbd5e1;
@@ -326,6 +330,7 @@
             font-size: 11px;
             background-color: #fafafa;
             transition: border-color 0.2s, box-shadow 0.2s;
+            vertical-align: top !important; /* টপ অ্যালাইনমেন্ট নিশ্চিত করতে */
         }
         input:focus, select:focus, textarea:focus {
             border-color: #3b82f6;
@@ -602,8 +607,10 @@
         <div class="pi-type-container" style="display: flex; align-items: center; gap: 4px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">
             <label for="piType" style="font-weight: 700; font-size: 10px; color: #1e293b; margin:0;">Model:</label>
             <select id="piType" onchange="handlePiTypeChange()" style="padding: 2px 4px; font-size: 10px;">
-                <option value="allPi" selected>1. All PI (Color)</option>
-                <option value="poly">2. Poly (Style/PO)</option>
+                <option value="allPi" selected>All PI</option>
+                <option value="poly">Poly</option>
+                <option value="poly">GA-Calculator</option>
+
             </select>
         </div>
     </div>
