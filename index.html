@@ -684,48 +684,49 @@
       
     <div class="container">
         <div class="section-title" onclick="toggleBuyerInfoSection()">
-            <span>Invoice & Buyer Information</span>
+            <span>INVOICE & BUYER INFOMATION  (PI নাম্বার,তারিখ এবং বায়ারের সকল তথ্য এখানে ইনফুট করুন)</span>
             <span id="buyerInfoToggleArrow" style="font-size: 14px;">▲</span>
         </div>
-        <div class="form-grid" id="buyerInfoContentGrid">
-            <div class="form-group">
-                <label for="piNo">PI No</label>
-                <input type="text" id="piNo" value="SACL/296/2026" oninput="saveHeaderToStorage()">
-            </div>
-            <div class="form-group">
-                <label for="piDate">Date</label>
-                <input type="text" id="piDate" value="08.08.2026" oninput="saveHeaderToStorage()">
-            </div>
-            <div class="form-group">
-                <label for="buyerName">Name of Buyer</label>
-                <input type="text" id="buyerName" list="buyerList" placeholder="Select or type Buyer Name..." 
-                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="onBuyerChange()" oninput="onBuyerChange()" value="Bando Design Ltd">
-                <datalist id="buyerList"></datalist>
-            </div>
-            <div class="form-group">
-                <label for="buyerRef">Buyer Ref</label>
-                <input type="text" id="buyerRef" list="buyerRefList" placeholder="Select or type Ref..." 
-                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="GAP">
-                <datalist id="buyerRefList"></datalist>
-            </div>
-            <div class="form-group">
-                <label for="attn">Attn</label>
-                <input type="text" id="attn" list="attnList" placeholder="Merchant name..." 
-                       onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
-                       onchange="onAttnChange()" oninput="onAttnChange()" value="Md. Rion">
-                <datalist id="attnList"></datalist>
-            </div>
-            <div class="form-group full-width">
-                <label for="buyerAddress">Address of Buyer</label>
-                <textarea id="buyerAddress" rows="2" placeholder="Enter buyer address..." oninput="saveHeaderToStorage()">Purbo Narsinghapur,
+       <div class="form-grid" id="buyerInfoContentGrid">
+    <div class="form-group">
+        <label for="piNo">PI No</label>
+        <input type="text" id="piNo" value="SACL/296/2026" oninput="saveHeaderToStorage()">
+    </div>
+    <div class="form-group">
+        <label for="piDate">Date</label>
+        <input type="text" id="piDate" value="08.08.2026" oninput="saveHeaderToStorage()">
+    </div>
+    <div class="form-group">
+        <label for="buyerName">Name of Buyer</label>
+        <input type="text" id="buyerName" list="buyerList" placeholder="Select or type Buyer Name..." 
+               onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+               onchange="onBuyerChange()" oninput="onBuyerChange()" value="Bando Design Ltd">
+        <datalist id="buyerList"></datalist>
+    </div>
+    <div class="form-group">
+        <label for="buyerRef">Buyer Ref</label>
+        <input type="text" id="buyerRef" list="buyerRefList" placeholder="Select or type Ref..." 
+               onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+               onchange="saveHeaderToStorage()" oninput="saveHeaderToStorage()" value="GAP">
+        <datalist id="buyerRefList"></datalist>
+    </div>
+    <div class="form-group">
+        <label for="attn">Attn</label>
+        <input type="text" id="attn" list="attnList" placeholder="Merchant name..." 
+               onfocus="handleInputFocus(this)" onblur="handleInputBlur(this)"
+               onchange="onAttnChange()" oninput="onAttnChange()" value="Md. Rion">
+        <datalist id="attnList"></datalist>
+    </div>
+    <!-- Address of Buyer ইনপুট বক্সটি এখানে Attn এর ডানে নিয়ে আসা হলো -->
+    <div class="form-group">
+        <label for="buyerAddress">Address of Buyer</label>
+        <textarea id="buyerAddress" rows="2" placeholder="Enter buyer address..." oninput="saveHeaderToStorage()">Purbo Narsinghapur,
 Earpur Union Parishad Road,
 Ashulia, Dhaka-1341</textarea>
-            </div>
-        </div>
+    </div>
+</div>
 
-        <div class="section-title" style="cursor: default;">Product Details & Item Builder</div>
+        <div class="section-title" style="cursor: default;">Product Details  (প্রোডাক্ট এর সকল বিবরণ এখানে ইনফুট করুন)</div>
         <div class="form-grid" id="hsCodeContainer" style="margin-bottom: 10px;">
             <div class="form-group full-width">
                 <label for="hsCodeInput">H.S Code</label>
@@ -952,6 +953,7 @@ Ashulia, Dhaka-1341</textarea>
             "STYLE-WINTER-102"
         ],
         color: [
+            "DTM",
             "WHITE",
             "TRANSPARENT",
             "BLACK",
