@@ -2180,7 +2180,8 @@ Ashulia, Dhaka-1341</textarea>
 
             saveStateForUndo();
 
-            const rows = pastedText.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
+            // এক্সেল বা অন্যান্য ডকুমেন্ট থেকে কপি করা রো এবং কলামগুলোর ডেটা সঠিকভাবে পার্স করা
+            const rows = pastedText.split(/\r\n|\n|\r/).filter(row => row !== '');
             const gridData = rows.map(row => row.split('\t'));
 
             const colsList = getColumnsForType(type);
@@ -2211,8 +2212,10 @@ Ashulia, Dhaka-1341</textarea>
                         else if (colName === "Style/PO No.") items[actualItemIndex].stylepo = cleanVal;
                         else if (colName === "Color") items[actualItemIndex].color = cleanVal;
                         else if (colName === "Unit") items[actualItemIndex].unit = cleanVal;
-                        else if (colName === "QTY") {
-                            let q = parseFloat(cleanVal) || 0;
+                        else if (colName === "QTY" || colName === "QTY (Dzn)") {
+                            // কমা (,) বা অন্য কোনো ক্যারেক্টার থাকলে তা পরিষ্কার করে সঠিক সংখ্যা নিশ্চিত করা
+                            let numStr = cleanVal.replace(/,/g, '');
+                            let q = parseFloat(numStr) || 0;
                             items[actualItemIndex].qty = q;
                             recalculateItemAmount(actualItemIndex, type);
                         }
