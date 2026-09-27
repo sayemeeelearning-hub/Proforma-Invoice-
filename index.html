@@ -2071,7 +2071,7 @@ Ashulia, Dhaka-1341</textarea>
                         let alignStyle = `text-align: ${alignStyleVal}; width: ${w}px;`;
 
                         let rowResizerHtml = (cIdx === 0) ? `<div class="row-resizer"></div>` : '';
-                        rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')" onpaste="handleTableCopyPaste(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
+                       rowHTML += `<td data-row="${rIdx}" data-col="${cIdx}" style="${alignStyle}"${spanString} contenteditable="true" onfocus="onCellFocus(event)" oninput="updateCellContent(event, ${rIdx}, ${cIdx})" onblur="updateTable()" onkeydown="handleCellKeydown(event, ${rIdx}, ${cIdx}, '${type}')" onpaste="handleTableCopyPaste(event, ${rIdx}, ${cIdx}, '${type}')">${customContent}${rowResizerHtml}</td>`;
                     }
                 });
 
@@ -2105,7 +2105,7 @@ Ashulia, Dhaka-1341</textarea>
                     if (idx === 0) footerText = "Total =";
                     else if (col === "QTY") footerText = totalQtySum;
                     else if (col === "QTY (Dzn)") footerText = formattedTotalDzn;
-                    else if (col === "Amount (USD)") footerText = `$${totalAmountSum.toString()}`;
+                    else if (col === "Amount (USD)") footerText = `$${totalAmountSum.toFixed(2)}`;
                     else footerText = "-";
                 }
 
@@ -2179,18 +2179,14 @@ Ashulia, Dhaka-1341</textarea>
             if (!pastedText) return;
 
             saveStateForUndo();
-
-            // এক্সেল বা অন্যান্য ডকুমেন্ট থেকে কপি করা রো এবং কলামগুলোর ডেটা সঠিকভাবে পার্স করা
             const rows = pastedText.split(/\r\n|\n|\r/).filter(row => row !== '');
             const gridData = rows.map(row => row.split('\t'));
-
             const colsList = getColumnsForType(type);
             const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === type);
 
             gridData.forEach((rowCells, rOffset) => {
                 let targetRIdx = startRIdx + rOffset;
                 let actualItemIndex = -1;
-
                 if (targetRIdx < filteredItems.length) {
                     actualItemIndex = filteredItems[targetRIdx].originalIndex;
                 } else {
@@ -2206,17 +2202,13 @@ Ashulia, Dhaka-1341</textarea>
                     if (targetCIdx < colsList.length) {
                         let colName = colsList[targetCIdx];
                         let cleanVal = cellVal.trim();
-
                         if (colName === "Description of Goods") items[actualItemIndex].desc = cleanVal;
                         else if (colName === "Measurement") items[actualItemIndex].measurement = cleanVal;
                         else if (colName === "Style/PO No.") items[actualItemIndex].stylepo = cleanVal;
                         else if (colName === "Color") items[actualItemIndex].color = cleanVal;
                         else if (colName === "Unit") items[actualItemIndex].unit = cleanVal;
                         else if (colName === "QTY" || colName === "QTY (Dzn)") {
-                            // কমা (,) বা অন্য কোনো ক্যারেক্টার থাকলে তা পরিষ্কার করে সঠিক সংখ্যা নিশ্চিত করা
-                            let numStr = cleanVal.replace(/,/g, '');
-                            let q = parseFloat(numStr) || 0;
-                            items[actualItemIndex].qty = q;
+                            items[actualItemIndex].qty = parseFloat(cleanVal.replace(/,/g, '')) || 0;
                             recalculateItemAmount(actualItemIndex, type);
                         }
                         else if (colName === "Unit Price (USD)") {
@@ -2224,15 +2216,13 @@ Ashulia, Dhaka-1341</textarea>
                             items[actualItemIndex].price = p;
                             items[actualItemIndex].effectivePrice = p;
                             recalculateItemAmount(actualItemIndex, type);
-                        }
-                        else {
+                        } else {
                             if (!items[actualItemIndex].customValues) items[actualItemIndex].customValues = {};
                             items[actualItemIndex].customValues[colName] = cleanVal;
                         }
                     }
                 });
             });
-
             saveDataToStorage();
             updateTable();
         }
@@ -2289,13 +2279,14 @@ Ashulia, Dhaka-1341</textarea>
     }
 
     function handleCellKeydown(e, rIdx, cIdx, type) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            e.target.blur();
-            updateCellContent(e, rIdx, cIdx);
-            saveDataToStorage();
-        }
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        e.target.blur(); // কার্সর সরিয়ে নিয়ে ডেটা ও সামেশন আপডেট করবে
+        updateCellContent(e, rIdx, cIdx);
+        saveDataToStorage();
+        updateTable(); // সামেশন ও টোটাল তাৎক্ষণিকভাবে রিফ্রেশ করার জন্য
     }
+}
 
     function handleHeaderKeydown(e, type, cIdx) {
         if (e.key === 'Enter') {
@@ -2328,44 +2319,49 @@ Ashulia, Dhaka-1341</textarea>
     }
 
     function updateCellContent(e, rIdx, cIdx) {
-        const currentType = document.getElementById('piType').value;
-        const newText = e.target.innerText.trim();
-        if (mergedCellsStore[currentType]) {
-            mergedCellsStore[currentType].forEach(m => {
-                if (m.startRow === rIdx && m.startCol === cIdx) {
-                    m.content = newText;
-                }
-            });
-        }
-        
-        const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === currentType);
-        if (filteredItems[rIdx]) {
-            let actualIndex = filteredItems[rIdx].originalIndex;
-            let colsList = getColumnsForType(currentType);
-            let colName = colsList[cIdx];
-            
-            if (colName === "Description of Goods") items[actualIndex].desc = newText;
-            else if (colName === "Measurement") items[actualIndex].measurement = newText;
-            else if (colName === "Style/PO No.") items[actualIndex].stylepo = newText;
-            else if (colName === "Color") items[actualIndex].color = newText;
-            else if (colName === "Unit") items[actualIndex].unit = newText;
-            else if (colName === "QTY") items[actualIndex].qty = parseFloat(newText) || 0;
-            else if (colName === "Unit Price (USD)") {
-                let cleanPriceText = newText.replace(/[^0-9.]/g, '');
-                let cleanPrice = parseFloat(cleanPriceText) || 0;
-                items[actualIndex].price = cleanPrice;
-                items[actualIndex].effectivePrice = cleanPrice;
-                if (!newText.startsWith('$') && cleanPriceText !== '') {
-                    e.target.innerText = '$' + cleanPriceText;
-                }
-            } else {
-                if (!items[actualIndex].customValues) items[actualIndex].customValues = {};
-                items[actualIndex].customValues[colName] = newText;
+    const currentType = document.getElementById('piType').value;
+    const newText = e.target.innerText.trim();
+    
+    if (mergedCellsStore[currentType]) {
+        mergedCellsStore[currentType].forEach(m => {
+            if (m.startRow === rIdx && m.startCol === cIdx) {
+                m.content = newText;
             }
-        }
-        saveDataToStorage();
+        });
     }
-
+    
+    const filteredItems = items.map((item, originalIndex) => ({ ...item, originalIndex })).filter(item => item.piType === currentType);
+    if (filteredItems[rIdx]) {
+        let actualIndex = filteredItems[rIdx].originalIndex;
+        let colsList = getColumnsForType(currentType);
+        let colName = colsList[cIdx];
+        
+        if (colName === "Description of Goods") items[actualIndex].desc = newText;
+        else if (colName === "Measurement") items[actualIndex].measurement = newText;
+        else if (colName === "Style/PO No.") items[actualIndex].stylepo = newText;
+        else if (colName === "Color") items[actualIndex].color = newText;
+        else if (colName === "Unit") items[actualIndex].unit = newText;
+        else if (colName === "QTY") {
+            items[actualIndex].qty = parseFloat(newText.replace(/,/g, '')) || 0;
+            recalculateItemAmount(actualIndex, currentType);
+        }
+        else if (colName === "Unit Price (USD)") {
+            let cleanPriceText = newText.replace(/[^0-9.]/g, '');
+            let cleanPrice = parseFloat(cleanPriceText) || 0;
+            items[actualIndex].price = cleanPrice;
+            items[actualIndex].effectivePrice = cleanPrice;
+            recalculateItemAmount(actualIndex, currentType);
+            
+            if (!newText.startsWith('$') && cleanPriceText !== '') {
+                e.target.innerText = '$' + cleanPriceText;
+            }
+        } else {
+            if (!items[actualIndex].customValues) items[actualIndex].customValues = {};
+            items[actualIndex].customValues[colName] = newText;
+        }
+    }
+    saveDataToStorage();
+}
     let isMouseDown = false;
     function initCellSelection() {
         const currentType = document.getElementById('piType').value;
@@ -2377,9 +2373,7 @@ Ashulia, Dhaka-1341</textarea>
             el.onmousedown = function(e) {
                 if (e.target.classList.contains('resizer') || e.target.classList.contains('row-resizer')) return;
                 isMouseDown = true;
-                if (!e.shiftKey) {
-                    table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
-                }
+                if (!e.shiftKey) table.querySelectorAll('.cell-selected').forEach(c => c.classList.remove('cell-selected'));
                 this.classList.toggle('cell-selected');
                 updateFontSizeDisplay();
                 updateDimensionDisplay();
@@ -2681,66 +2675,51 @@ Ashulia, Dhaka-1341</textarea>
 
     function applyDirectDimension(val) {
         let newSize = parseFloat(val);
-        if (isNaN(newSize)) return;
-        if (newSize < 10) newSize = 10;
-
+        if (isNaN(newSize) || newSize < 10) return;
         const currentType = document.getElementById('piType').value;
         const table = document.getElementById(`table-${currentType}`);
         if (!table) return;
-
         const selectedCells = table.querySelectorAll('.cell-selected');
-        if (selectedCells.length === 0) return;
+        if (selectedCells.length === 0) { alert("Please select table cells first to resize!"); return; }
 
         saveStateForUndo();
-
         selectedCells.forEach(cell => {
             let cIdx = parseInt(cell.getAttribute('data-col'));
             let isHeader = (cell.tagName === 'TH');
+            let rowElem = cell.closest('tr');
 
-            if (isHeader) {
-                let rowElem = cell.parentElement;
-                if (rowElem) {
-                    rowElem.style.height = newSize + 'px';
-                    if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
-                    piRowHeights[currentType]['header'] = newSize;
-                }
-            } else if (cell.parentElement && cell.parentElement.getAttribute('data-rowidx') === 'total') {
-                let rowElem = cell.parentElement;
+            if (isHeader && rowElem) {
+                rowElem.style.height = newSize + 'px';
+                if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
+                piRowHeights[currentType]['header'] = newSize;
+            } else if (rowElem && rowElem.getAttribute('data-rowidx') === 'total') {
                 rowElem.style.height = newSize + 'px';
                 if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
                 piRowHeights[currentType]['total'] = newSize;
-            } else if (cIdx === 0) {
-                let rowElem = cell.parentElement;
-                if (rowElem && (rowElem.tagName === 'TR')) {
-                    rowElem.style.height = newSize + 'px';
-                    let rIdx = rowElem.getAttribute('data-rowidx');
-                    if (rIdx !== null) {
-                        if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
-                        piRowHeights[currentType][rIdx] = newSize;
-                    }
+            } else if (rowElem && rowElem.hasAttribute('data-rowidx')) {
+                rowElem.style.height = newSize + 'px';
+                let rIdx = rowElem.getAttribute('data-rowidx');
+                if (rIdx !== null) {
+                    if (!piRowHeights[currentType]) piRowHeights[currentType] = {};
+                    piRowHeights[currentType][rIdx] = newSize;
                 }
             } else {
                 let colsList = getColumnsForType(currentType);
                 let colName = cell.getAttribute('data-colname') || colsList[cIdx] || (cIdx === colsList.length ? 'Action' : '');
-
                 if (colName) {
                     let oldW = (piColumnWidths[currentType] && piColumnWidths[currentType][colName]) ? piColumnWidths[currentType][colName] : cell.offsetWidth;
                     let delta = newSize - oldW;
-
                     if (!piColumnWidths[currentType]) piColumnWidths[currentType] = {};
                     piColumnWidths[currentType][colName] = newSize;
-
                     let colElem = table.querySelector(`colgroup col:nth-child(${cIdx + 1})`);
-                    if (colElem) {
-                        colElem.style.width = newSize + 'px';
-                    }
+                    if (colElem) colElem.style.width = newSize + 'px';
                     table.style.width = (table.offsetWidth + delta) + 'px';
                 }
             }
         });
-
         saveDataToStorage();
     }
+
     document.addEventListener('DOMContentLoaded', function() {
     ['buyerName', 'buyerRef'].forEach(id => {
         const elem = document.getElementById(id);
