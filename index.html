@@ -1572,7 +1572,7 @@ Ashulia, Dhaka-1341</textarea>
             });
         });
         
-        ["Bleach/ Non Bleach", "Project No.", "Article No.", "Others", "QTY (Dzn)", "Remarks", "Brand", "Style No.", "PO No.", "Buyer Style", "Shipment Mode"].forEach(h => {
+        ["Bleach/ Non Bleach", "Project No.", "Article No.", "Others", "QTY (Dzn)", "Remarks", "Brand", "Style No.", "PO No.", "Buyer Style", "H.S. CODE"].forEach(h => {
             if (!uniqueHeaders.includes(h) && !currentCols.includes(h)) uniqueHeaders.push(h);
         });
 
@@ -2967,11 +2967,7 @@ Ashulia, Dhaka-1341</textarea>
                             <td style="border: none; padding: 1px 0; text-align: center; font-size: ${bar4Font}px;">:</td>
                             <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px;">Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change.</td>
                         </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="border: none; padding: 1px 0; font-weight: bold; font-size: ${bar4Font}px;">14.H.S. CODE</td>
-                            <td style="border: none; padding: 1px 0; text-align: center; font-weight: bold; font-size: ${bar4Font}px;">:</td>
-                            <td style="border: none; padding: 1px 0; font-size: ${bar4Font}px; white-space: pre-line;"><b>${hsCodeVal}</b></td>
-                        </tr>
+
                     </table>
                     <div style="margin-top: 3px; font-weight: bold; font-size: ${bar4Font}px;">N.B. This Proforma Invoice deemed to be an integral part of LC.</div>
                 </div>
@@ -3003,7 +2999,7 @@ Ashulia, Dhaka-1341</textarea>
         }, 1000);
     }
 
-     async function exportToExcel() {
+    async function exportToExcel() {
     const piType = document.getElementById('piType').value;
     const selectedItems = items.filter(item => item.piType === piType);
 
