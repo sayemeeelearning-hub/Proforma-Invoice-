@@ -3003,7 +3003,7 @@ Ashulia, Dhaka-1341</textarea>
         }, 1000);
     }
 
-    async function exportToExcel() {
+     async function exportToExcel() {
     const piType = document.getElementById('piType').value;
     const selectedItems = items.filter(item => item.piType === piType);
 
@@ -3024,15 +3024,15 @@ Ashulia, Dhaka-1341</textarea>
 
     let headerCols = getColumnsForType(piType);
     let customColWidths = headerCols.map((col, idx) => {
-        if (idx === 0) return { wch: 22 }; // কলাম A-এর উইথ ফিক্সড থাকবে
-
-        if (piColumnWidths[piType] && piColumnWidths[piType][col]) {
-            return { wpx: Math.round(piColumnWidths[piType][col] * 0.95) };
-        }
-        if (col === "Description of Goods") return { wch: 30 };
-        if (col === "Measurement") return { wch: 18 };
-        return { wch: 14 };
-    });
+    // ইউজার যদি সাইজ সেট করে থাকে তবে তা পাবে, না হলে ডিফল্ট কাজ করবে
+    if (piColumnWidths[piType] && piColumnWidths[piType][col]) {
+        return { wpx: Math.round(piColumnWidths[piType][col] * 0.95) };
+    }
+    if (idx === 0 || col === "SL No.") return { wch: 4 }; // SL No. এর জন্য আলাদা উইথ
+    if (col === "Description of Goods") return { wch: 30 };
+    if (col === "Measurement") return { wch: 18 };
+    return { wch: 14 };
+});
 
     const customFontSize = parseInt(document.getElementById('bar1HeaderFont')?.value) || 20;
     const piNo = document.getElementById('piNo').value || '';
@@ -3320,7 +3320,7 @@ Ashulia, Dhaka-1341</textarea>
         { label: "11.Overdue Interest", colon: ":", desc: "Payment will be made within the date of Maturity. If failled, overdue interest to be paid by opener at 16%." },
         { label: "12.Deduction", colon: ":", desc: "Deduction clause for any discrepancies is not acceptable." },
         { label: "13.Claim/ Complain", colon: ":", desc: "Claim/Complain regarding Quantity/Quality of the merchandise must be inform to beneficiary within 3 days after receiving of supplied goods. No claim will be acceptable after this period. Any Valid claim value must not be more than the PI Value. Goods Shrinkage tolerance is 5/6% in normal GMT wash. With the verification of washing method if may will be change." },
-        { label: "14.H.S. CODE", colon: ":", desc: hsCodeVal },
+       
         { label: "N.B.", colon: "", desc: "This Proforma Invoice deemed to be an integral part of LC." }
     ];
 
@@ -3338,37 +3338,37 @@ Ashulia, Dhaka-1341</textarea>
         let label = termItem.label || "";
         let colon = termItem.colon || "";
         let desc = termItem.desc;
-        
-        // যদি 14 নম্বর রো হয়, তবে ইনপুট দেওয়া hsCodeVal বসবে
-        if (label === "14.H.S. CODE") {
-            desc = hsCodeVal;
-        }
 
+        // কলামের ডেটা রাখার জন্য অ্যারে তৈরি করা হলো
         let rowArr = Array.from({ length: lastColIndex + 1 }, () => ({ v: "", s: { font: { name: 'Arial', sz: 9 } } }));
 
-        // A কলাম: লেবেল ফিক্সড থাকবে
+        // A এবং B কলামজুড়ে টার্মসের লেবেল বা নম্বরটি মার্জ হবে এবং A থেকে B পর্যন্ত ওভারফ্লো/ফিট হবে
         rowArr[0] = { 
             v: label, 
             s: { font: { name: 'Arial', sz: 9, bold: Boolean(label) }, alignment: alignTermsTop } 
         };
-
-        // B কলাম: সেমিকোলন এবং ডেসক্রিপশন
-        let fullDesc = colon ? `${colon} ${desc}` : desc;
         
-        // নির্দিষ্ট শর্ত সাপেক্ষে পুরো ডেসক্রিপশন বা নির্দিষ্ট অংশ বোল্ড করার লজিক
-        let isBoldDesc = boldKeywords.some(kw => fullDesc.includes(kw)) || label === "14.H.S. CODE";
+        // A এবং B কলাম মার্জ করার জন্য
+        if (lastColIndex >= 1) {
+            merges.push({ s: { r: rowIdx, c: 0 }, e: { r: rowIdx, c: 1 } });
+        }
 
-        rowArr[1] = { 
+        // C কলাম থেকে কোলন (:) সহ মূল ডেসক্রিপশন শুরু হবে
+        let fullDesc = colon ? `${colon} ${desc}` : desc;
+        let isBoldDesc = boldKeywords.some(kw => fullDesc.includes(kw));
+
+        rowArr[2] = { 
             v: fullDesc, 
             s: { font: { name: 'Arial', sz: 9, bold: isBoldDesc }, alignment: alignTermsDescTop, wrapText: true } 
         };
 
-        if (lastColIndex >= 1) {
-            merges.push({ s: { r: rowIdx, c: 1 }, e: { r: rowIdx, c: lastColIndex } });
+        // C কলাম থেকে শুরু করে শেষ কলাম পর্যন্ত টেক্সট মার্জ বা স্প্যান করে দেওয়া হলো যাতে লেখাগুলো সুন্দরভাবে ফিট হয়
+        if (lastColIndex >= 2) {
+            merges.push({ s: { r: rowIdx, c: 2 }, e: { r: rowIdx, c: lastColIndex } });
         }
 
-        // অটো-ফিট রো হাইট ক্যালকুলেশন (যাতে একাধিক লাইন থাকলে কোনো লেখা কেটে না যায়)
-        let totalColsWidth = customColWidths.slice(1, lastColIndex + 1).reduce((acc, curr) => acc + (curr.wch || 14), 0);
+        // অটো-ফিট রো হাইট ক্যালকুলেশন
+        let totalColsWidth = customColWidths.slice(2, lastColIndex + 1).reduce((acc, curr) => acc + (curr.wch || 14), 0);
         let approxCharsPerLine = Math.max(40, Math.floor(totalColsWidth * 1.8));
         let lineCount = Math.ceil(fullDesc.length / approxCharsPerLine) || 1;
         
